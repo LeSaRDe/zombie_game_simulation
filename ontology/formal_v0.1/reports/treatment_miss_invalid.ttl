@@ -5,19 +5,19 @@
 [] a sh:ValidationReport ;
     sh:conforms false ;
     sh:result [ a sh:ValidationResult ;
-            sh:focusNode <urn:zombie-game:example:treatment> ;
-            sh:resultMessage "MissOnlyAttack: Only stochastic agent attacks can MISS." ;
-            sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:MissOnlyAttack ;
-            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
-            sh:sourceShape zg:ActionOccurrenceShape ;
-            sh:value <urn:zombie-game:example:treatment> ],
-        [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:cure> ;
             sh:resultMessage "CureEpisode: Cure closes the exact active episode before its deadline." ;
             sh:resultSeverity sh:Violation ;
             sh:sourceConstraint zg:CureEpisode ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:CureTransitionShape ;
-            sh:value <urn:zombie-game:example:cure> ] .
+            sh:value <urn:zombie-game:example:cure> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "MissOnlyAttack: Only stochastic agent attacks can MISS." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:MissOnlyAttack ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ] .
 

@@ -5,14 +5,6 @@
 [] a sh:ValidationReport ;
     sh:conforms false ;
     sh:result [ a sh:ValidationResult ;
-            sh:focusNode <urn:zombie-game:example:conversion> ;
-            sh:resultMessage "ConversionTypes: Conversion changes living infected Human to active, role-free Zombie." ;
-            sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:ConversionTypes ;
-            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
-            sh:sourceShape zg:ConversionTransitionShape ;
-            sh:value <urn:zombie-game:example:conversion> ],
-        [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:zombie_after> ;
             sh:resultMessage "RoleCompatibility: Active role belongs to this agent and supports this biological type." ;
             sh:resultSeverity sh:Violation ;
@@ -20,6 +12,14 @@
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:AgentStateShape ;
             sh:value <urn:zombie-game:example:zombie_after> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:conversion> ;
+            sh:resultMessage "ConversionTypes: Conversion changes living infected Human to active, role-free Zombie." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:ConversionTypes ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ConversionTransitionShape ;
+            sh:value <urn:zombie-game:example:conversion> ],
         [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:zombie_after> ;
             sh:resultMessage "RoleOverrides: Current common/type profile fields agree with the active role overrides." ;

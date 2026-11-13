@@ -5,19 +5,19 @@
 [] a sh:ValidationReport ;
     sh:conforms false ;
     sh:result [ a sh:ValidationResult ;
-            sh:focusNode <urn:zombie-game:example:episode> ;
-            sh:resultMessage "EpisodeDeadline: Deadline equals onset plus positive incubation duration." ;
-            sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:EpisodeDeadline ;
-            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
-            sh:sourceShape zg:InfectionEpisodeShape ;
-            sh:value <urn:zombie-game:example:episode> ],
-        [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:conversion> ;
             sh:resultMessage "ConversionDeadline: Conversion occurs exactly at its episode deadline and closes that episode as CONVERTED." ;
             sh:resultSeverity sh:Violation ;
             sh:sourceConstraint zg:ConversionDeadline ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:ConversionTransitionShape ;
-            sh:value <urn:zombie-game:example:conversion> ] .
+            sh:value <urn:zombie-game:example:conversion> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:episode> ;
+            sh:resultMessage "EpisodeDeadline: Deadline equals onset plus positive incubation duration." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:EpisodeDeadline ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:InfectionEpisodeShape ;
+            sh:value <urn:zombie-game:example:episode> ] .
 
