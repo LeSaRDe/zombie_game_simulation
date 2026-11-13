@@ -1,0 +1,24 @@
+Validation Report
+Conforms: False
+Results (3):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:zombie_after
+	Value Node: ex:zombie_after
+	Source Constraint: zg:RoleCompatibility
+	Message: RoleCompatibility: Active role belongs to this agent and supports this biological type.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:zombie_after
+	Value Node: ex:zombie_after
+	Source Constraint: zg:RoleOverrides
+	Message: RoleOverrides: Current common/type profile fields agree with the active role overrides.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ConversionTransitionShape
+	Focus Node: ex:conversion
+	Value Node: ex:conversion
+	Source Constraint: zg:ConversionTypes
+	Message: ConversionTypes: Conversion changes living infected Human to active, role-free Zombie.

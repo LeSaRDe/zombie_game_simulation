@@ -1,0 +1,154 @@
+@prefix ex: <urn:zombie-game:example:> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+ex:conversion a zg:ConversionTransition,
+        zg:LifecycleTransition ;
+    zg:afterState ex:zombie_after ;
+    zg:beforeState ex:human_before ;
+    zg:episode ex:episode .
+
+ex:human_before_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:human_before_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:human_before_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:human_before_inventory a zg:Inventory ;
+    zg:stock ex:human_before_FOOD,
+        ex:human_before_MATERIAL,
+        ex:human_before_MEDICAL_SUPPLY .
+
+ex:person_DOCTOR_role a zg:RoleAssignment ;
+    zg:ofAgent ex:person ;
+    zg:roleDefinition zg:DOCTOR ;
+    zg:start_at 0.0 .
+
+ex:person_Human_model a zg:ModelAssignment ;
+    zg:modelDefinition ex:model ;
+    zg:ofAgent ex:person ;
+    zg:start_at 0.0 .
+
+ex:person_Zombie_model a zg:ModelAssignment ;
+    zg:modelDefinition ex:model ;
+    zg:ofAgent ex:person ;
+    zg:start_at 0.0 .
+
+ex:run a zg:SimulationRun ;
+    zg:scenario ex:scenario ;
+    zg:world ex:world .
+
+ex:scenario a zg:ScenarioDefinition .
+
+ex:episode a zg:InfectionEpisode ;
+    zg:conversion_due_at 301.0 ;
+    zg:end_revision 1 ;
+    zg:ended_at 300.0 ;
+    zg:episodeOutcome zg:CONVERTED ;
+    zg:incubation_duration 300.0 ;
+    zg:infectedAgent ex:person ;
+    zg:onset_at 0.0 ;
+    zg:onset_revision 0 ;
+    zg:sourceEvent ex:init ;
+    zg:source_kind "INITIAL_CONDITION" .
+
+ex:human_before a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeEpisode ex:episode ;
+    zg:activeModel ex:person_Human_model ;
+    zg:activeRole ex:person_DOCTOR_role ;
+    zg:atTime 300.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 1.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:human_before_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 64 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.9 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:person ;
+    zg:rest_rate 4.0 ;
+    zg:revision 0 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 32.0 ;
+    zg:status zg:INFECTED ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:model a zg:DecisionModel ;
+    zg:model_id "fixture-model" ;
+    zg:model_version "1" .
+
+ex:zombie_after a zg:AgentState,
+        zg:ZombieState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeModel ex:person_Zombie_model ;
+    zg:atTime 300.0 ;
+    zg:attack_skill 0.4 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 35.0 ;
+    zg:base_speed 1.6 ;
+    zg:biologicalType zg:Zombie ;
+    zg:bite_damage 6 ;
+    zg:claw_damage 14 ;
+    zg:damage_resistance 0.0 ;
+    zg:feed_energy 12.0 ;
+    zg:feed_healing 8 ;
+    zg:hasTypeProfile zg:Zombie ;
+    zg:lastEvent ex:init ;
+    zg:life 64 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:movement_cost 0.08 ;
+    zg:ofAgent ex:person ;
+    zg:rest_rate 3.0 ;
+    zg:revision 1 ;
+    zg:sense_r 35.0 ;
+    zg:speed 1.6 ;
+    zg:stamina 32.0 ;
+    zg:status zg:ACTIVE ;
+    zg:virulence 0.45 ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:init a zg:Event ;
+    zg:atTime 0.0 ;
+    zg:revision 0 .
+
+ex:world a zg:World ;
+    zg:length 1000.0 ;
+    zg:width 1000.0 .
+
+ex:person a zg:Agent ;
+    zg:agent_id 17 ;
+    zg:created_at 0.0 ;
+    zg:hasState ex:human_before,
+        ex:zombie_after ;
+    zg:inRun ex:run .
+

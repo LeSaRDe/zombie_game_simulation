@@ -1,0 +1,23 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "ActionDuration: Planned duration is within the declared baseline bounds." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:ActionDuration ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "ResultTiming: Ongoing occurrences lack final state/time; resolved attempts include them and do not end before admission." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:ResultTiming ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ] .
+

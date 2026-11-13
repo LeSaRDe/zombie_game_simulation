@@ -1,0 +1,17 @@
+Validation Report
+Conforms: False
+Results (2):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:RequiredTargets
+	Message: RequiredTargets: Agent/environment/footprint actions carry the relevant target record.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:TreatmentTargetRecords
+	Message: TreatmentTargetRecords: Treatment requires start target; successful treatment also requires resolution target records.

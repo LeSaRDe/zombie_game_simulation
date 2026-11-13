@@ -1,0 +1,17 @@
+Validation Report
+Conforms: False
+Results (2):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ConversionTransitionShape
+	Focus Node: ex:conversion
+	Value Node: ex:conversion
+	Source Constraint: zg:ConversionDeadline
+	Message: ConversionDeadline: Conversion occurs exactly at its episode deadline and closes that episode as CONVERTED.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:InfectionEpisodeShape
+	Focus Node: ex:episode
+	Value Node: ex:episode
+	Source Constraint: zg:EpisodeDeadline
+	Message: EpisodeDeadline: Deadline equals onset plus positive incubation duration.

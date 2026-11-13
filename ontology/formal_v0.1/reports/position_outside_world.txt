@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:state
+	Value Node: ex:state
+	Source Constraint: zg:PositionBounds
+	Message: PositionBounds: Coordinates lie within the world.

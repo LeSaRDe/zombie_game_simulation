@@ -1,0 +1,19 @@
+{
+  "provider": "Eclipse Adoptium / Eclipse Temurin",
+  "version": "21.0.13+9.0.LTS",
+  "os": "windows",
+  "architecture": "x64",
+  "package": {
+    "checksum": "a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9",
+    "checksum_link": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip.sha256.txt",
+    "download_count": 356110,
+    "link": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip",
+    "metadata_link": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip.json",
+    "name": "OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip",
+    "signature_link": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jdk_x64_windows_hotspot_21.0.13_9.zip.sig",
+    "size": 205421281
+  },
+  "verified_sha256": "a4dbaa05fca4bd89d84584e58c459bd732efebb1722af80ab13c6516832004f9",
+  "python_packages": "requirements.txt",
+  "hermit_source": "Owlready2 0.51 bundled hermit/HermiT.jar"
+}

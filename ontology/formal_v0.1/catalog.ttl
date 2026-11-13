@@ -1,0 +1,550 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+zg:DOCTOR a zg:HumanRoleDefinition ;
+    rdfs:label "DOCTOR" ;
+    zg:compatibleType zg:Human ;
+    zg:grants zg:cap_prophylaxis,
+        zg:cap_treat_infection ;
+    zg:medical_skill 0.9 ;
+    zg:prophylaxis_duration 120.0 ;
+    zg:prophylaxis_resistance 0.8 ;
+    zg:registry_version "baseline_v0.1" ;
+    zg:treatment_cost 1 ;
+    zg:treatment_duration 4.0 .
+
+zg:ENGINEER a zg:HumanRoleDefinition ;
+    rdfs:label "ENGINEER" ;
+    zg:build_integrity 100 ;
+    zg:build_material_cost 2 ;
+    zg:carry_capacity 16 ;
+    zg:compatibleType zg:Human ;
+    zg:grants zg:cap_build_barricade,
+        zg:cap_repair_barrier ;
+    zg:registry_version "baseline_v0.1" ;
+    zg:repair_amount 60 ;
+    zg:repair_material_cost 1 .
+
+zg:RUNNER a zg:ZombieRoleDefinition ;
+    rdfs:label "RUNNER" ;
+    zg:base_speed 3.2 ;
+    zg:claw_damage 10 ;
+    zg:compatibleType zg:Zombie ;
+    zg:dash_duration 1.0 ;
+    zg:dash_multiplier 1.5 ;
+    zg:grants zg:cap_dash ;
+    zg:registry_version "baseline_v0.1" .
+
+zg:SCOUT a zg:HumanRoleDefinition ;
+    rdfs:label "SCOUT" ;
+    zg:base_sense_r 55.0 ;
+    zg:base_speed 2.6 ;
+    zg:compatibleType zg:Human ;
+    zg:grants zg:cap_mark_target,
+        zg:cap_recon ;
+    zg:mark_radius 90.0 ;
+    zg:recon_duration 12.0 ;
+    zg:recon_radius 85.0 ;
+    zg:registry_version "baseline_v0.1" .
+
+zg:SCREAMER a zg:ZombieRoleDefinition ;
+    rdfs:label "SCREAMER" ;
+    zg:base_sense_r 50.0 ;
+    zg:call_radius 120.0 ;
+    zg:call_ttl 12.0 ;
+    zg:claw_damage 10 ;
+    zg:compatibleType zg:Zombie ;
+    zg:grants zg:cap_scream ;
+    zg:registry_version "baseline_v0.1" .
+
+zg:SPITTER a zg:ZombieRoleDefinition ;
+    rdfs:label "SPITTER" ;
+    zg:base_speed 1.4 ;
+    zg:compatibleType zg:Zombie ;
+    zg:grants zg:cap_spit ;
+    zg:max_spit_charges 3 ;
+    zg:recharge_interval 30.0 ;
+    zg:registry_version "baseline_v0.1" ;
+    zg:spit_damage 4 ;
+    zg:spit_potency 0.3 ;
+    zg:spit_range 12.0 .
+
+zg:TYRANT a zg:ZombieRoleDefinition ;
+    rdfs:label "TYRANT" ;
+    zg:attack_skill 0.65 ;
+    zg:base_damage_resistance 0.3 ;
+    zg:base_speed 1.3 ;
+    zg:claw_damage 24 ;
+    zg:compatibleType zg:Zombie ;
+    zg:demolish_damage 60 ;
+    zg:grants zg:cap_demolish,
+        zg:cap_rally ;
+    zg:rally_duration 10.0 ;
+    zg:rally_hit_bonus 0.1 ;
+    zg:rally_radius 30.0 ;
+    zg:registry_version "baseline_v0.1" .
+
+zg:WARRIOR a zg:HumanRoleDefinition ;
+    rdfs:label "WARRIOR" ;
+    zg:base_damage_resistance 0.2 ;
+    zg:combat_skill 0.85 ;
+    zg:compatibleType zg:Human ;
+    zg:grants zg:cap_guard,
+        zg:cap_power_strike ;
+    zg:guard_duration 4.0 ;
+    zg:guard_resistance 0.6 ;
+    zg:melee_damage 22 ;
+    zg:registry_version "baseline_v0.1" ;
+    zg:strike_damage 34 .
+
+zg:action_bite a zg:ActionDefinition ;
+    rdfs:label "bite" ;
+    zg:capability zg:cap_bite ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.5 ;
+    zg:duration_min 1.5 ;
+    zg:mayCause zg:InfectionOnsetEffect,
+        zg:PhysicalDamageEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `bite` | Living opponent within 1.5 m | 1.5 s | 10 / 2 s | Draw a hit. On hit, apply `zombie.bite_damage`; if the target survives and is HEALTHY Human, attempt infection with exposure potency `zombie.virulence`. A same-type target, when allowed, receives damage but cannot be infected. |" ;
+    zg:stamina_cost 10.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_build_barricade a zg:ActionDefinition ;
+    rdfs:label "build_barricade" ;
+    zg:capability zg:cap_build_barricade ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 8.0 ;
+    zg:duration_min 8.0 ;
+    zg:mayCause zg:ConstructionEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `build_barricade` | Specify center, orientation parallel to x or y, and length in [2,8] m; thickness is 1 m. Duration 8 s; 12 stamina; `build_material_cost` (2 materials); cooldown 2 s. Center must be within 2 m of the actor and the entire footprint visible and inside the world. At admission and completion its interior must not overlap any intact barrier other than an OPEN/BREACHED gate; shared edges with walls are allowed. Its closed footprint must contain no living agent, nonempty stockpile point, or nonexhausted remains point. Create a new barricade with integrity/max_integrity `build_integrity` (100). Footprints crossing a gate must satisfy Section 3.2. |" ;
+    zg:stamina_cost 12.0 ;
+    zg:target_kind "Footprint" .
+
+zg:action_claw a zg:ActionDefinition ;
+    rdfs:label "claw" ;
+    zg:capability zg:cap_claw ;
+    zg:cooldown 1.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:PhysicalDamageEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `claw` | Living opponent within 1.5 m | 1 s | 6 / 1 s | Draw a hit. On hit, apply `zombie.claw_damage` through target physical resistance. Claw does not transmit infection. |" ;
+    zg:stamina_cost 6.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_close_gate a zg:ActionDefinition ;
+    rdfs:label "close_gate" ;
+    zg:capability zg:cap_close_gate ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:GateClosingEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `close_gate` | OPEN gate within 2 m | 1 s | 1 / none | Set mode CLOSED only if its footprint has no living agent and no intact overlapping barricade. Retain integrity. Cannot close a BREACHED gate. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_dash a zg:ActionDefinition ;
+    rdfs:label "dash" ;
+    zg:capability zg:cap_dash ;
+    zg:cooldown 8.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:DashEffect,
+        zg:MovementEffect ;
+    zg:sourceText "| `dash` | A planned continuous path. Duration exactly `dash_duration` (1 s); flat 12 stamina plus distance × movement_cost; cooldown 8 s. During this action, speed limit is base speed × `dash_multiplier` (4.8 m/s at baseline). All movement boundary/obstacle rules apply. The multiplier ends with the action. No extra attack or damage occurs at its destination. |" ;
+    zg:stamina_cost 12.0 ;
+    zg:target_kind "Path" .
+
+zg:action_demolish a zg:ActionDefinition ;
+    rdfs:label "demolish" ;
+    zg:capability zg:cap_demolish ;
+    zg:cooldown 6.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 3.0 ;
+    zg:duration_min 3.0 ;
+    zg:mayCause zg:BarrierDamageEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `demolish` | CLOSED gate or intact barricade within 2 m. Duration 3 s; 18 stamina; cooldown 6 s. Deal `demolish_damage` (60) integrity damage; apply the same breach/destruction rules as smash. |" ;
+    zg:stamina_cost 18.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_drop a zg:ActionDefinition ;
+    rdfs:label "drop" ;
+    zg:capability zg:cap_drop ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 0.5 ;
+    zg:duration_min 0.5 ;
+    zg:mayCause zg:ResourceTransferEffect ;
+    zg:sourceText "| `drop` | Resource type and quantity from own inventory | 0.5 s | 0 / none | Place the quantity in a stockpile at the actor's position. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_eat a zg:ActionDefinition ;
+    rdfs:label "eat" ;
+    zg:capability zg:cap_eat ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 2.0 ;
+    zg:duration_min 2.0 ;
+    zg:mayCause zg:HungerReductionEffect ;
+    zg:sourceText "| `eat` | Self; 1 FOOD | 2 s | 0 / none | Requires hunger > 0; consume the item and reduce hunger by 40, floor 0. If hunger falls below 100, clear starvation timers. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_feed a zg:ActionDefinition ;
+    rdfs:label "feed" ;
+    zg:capability zg:cap_feed ;
+    zg:cooldown 1.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 3.0 ;
+    zg:duration_min 3.0 ;
+    zg:mayCause zg:LifeRestorationEffect,
+        zg:StaminaRestorationEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `feed` | Remains within 1.5 m, biomass >= 1 | 3 s | 0 / 1 s | Reserve and consume exactly 1 biomass. Restore `feed_healing` life and `feed_energy` stamina, each capped at its maximum. Requires life < 100 or stamina < 100 at admission and resolution. Feeding never affects the dead source agent. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_first_aid a zg:ActionDefinition ;
+    rdfs:label "first_aid" ;
+    zg:capability zg:cap_first_aid ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 3.0 ;
+    zg:duration_min 3.0 ;
+    zg:mayCause zg:LifeRestorationEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `first_aid` | Self or living human within 1.5 m with life < 100; 1 MEDICAL_SUPPLY | 3 s | 4 / 2 s | Restore `10 + round_int(20 × actor.medical_skill)` life, capped at 100. No effect on infection or hunger. |" ;
+    zg:stamina_cost 4.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_guard a zg:ActionDefinition ;
+    rdfs:label "guard" ;
+    zg:capability zg:cap_guard ;
+    zg:cooldown 8.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:GuardEffect ;
+    zg:sourceText "| `guard` | Self. Duration 1 s; 8 stamina; cooldown 8 s. At completion apply physical resistance at least `guard_resistance` (0.60) for `guard_duration` (4 s). The Warrior can act again while this effect persists. Does not shield a different agent, prevent infection, or make a physical obstacle. |" ;
+    zg:stamina_cost 8.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_mark_target a zg:ActionDefinition ;
+    rdfs:label "mark_target" ;
+    zg:capability zg:cap_mark_target ;
+    zg:cooldown 3.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 0.5 ;
+    zg:duration_min 0.5 ;
+    zg:mayCause zg:CommunicationEffect ;
+    zg:sourceText "| `mark_target` | A directly visible living agent. Duration 0.5 s; 1 stamina; cooldown 3 s. At completion, the target must still be visible. Emit a radius `mark_radius` (90 m), TTL 10 s signal containing target ID, type, position, and observation time. Allied receivers get a report; opponents get a noise cue. A mark does not track the target after emission or grant direct attack eligibility. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_melee a zg:ActionDefinition ;
+    rdfs:label "melee" ;
+    zg:capability zg:cap_melee ;
+    zg:cooldown 1.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:PhysicalDamageEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `melee` | Living opponent within 1.5 m | 1 s | 6 / 1 s | Draw hit probability `clip(0.50 + 0.45 × combat_skill,0,1)`. On hit, apply `human.melee_damage` through physical damage resistance. |" ;
+    zg:stamina_cost 6.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_move a zg:ActionDefinition ;
+    rdfs:label "move" ;
+    zg:capability zg:cap_move ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 5.0 ;
+    zg:duration_min 0.25 ;
+    zg:mayCause zg:MovementEffect ;
+    zg:sourceText "| `move` | Planned continuous path beginning at current position; duration `dt` in [0.25,5] s | Actual path length × movement_cost; no cooldown | Path remains traversable, and speed at every point is <= current `speed`. A zero-length path is legal but `wait` is the clearer choice. Follow the path without teleportation. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "Path" .
+
+zg:action_open_gate a zg:ActionDefinition ;
+    rdfs:label "open_gate" ;
+    zg:capability zg:cap_open_gate ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:GateOpeningEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `open_gate` | CLOSED gate within 2 m | 1 s | 1 / none | Set mode OPEN, retain integrity. No automatic closing. An intact overlapping barricade still blocks passage. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_pickup a zg:ActionDefinition ;
+    rdfs:label "pickup" ;
+    zg:capability zg:cap_pickup ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:ResourceTransferEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `pickup` | Visible stockpile within 1.5 m; resource type and quantity | 1 s | 1 / none | Reserve requested stock at admission. Succeed only if it remains reserved and the actor has capacity for the entire quantity. Move it to inventory. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_power_strike a zg:ActionDefinition ;
+    rdfs:label "power_strike" ;
+    zg:capability zg:cap_power_strike ;
+    zg:cooldown 6.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.5 ;
+    zg:duration_min 1.5 ;
+    zg:mayCause zg:PhysicalDamageEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `power_strike` | Living opponent within 1.5 m. Duration 1.5 s; 15 stamina; cooldown 6 s. Human melee hit formula; raw damage `strike_damage` (34). Apply ordinary physical resistance and death rules. |" ;
+    zg:stamina_cost 15.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_prophylaxis a zg:ActionDefinition ;
+    rdfs:label "prophylaxis" ;
+    zg:capability zg:cap_prophylaxis ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 4.0 ;
+    zg:duration_min 4.0 ;
+    zg:mayCause zg:ProphylaxisEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `prophylaxis` | Target self or HEALTHY living human within 1.5 m. Duration 4 s; 6 stamina; 1 medical supply; cooldown 2 s. Apply effective resistance at least `prophylaxis_resistance` (0.80) for `prophylaxis_duration` (120 s). Does not cure existing infection. Reapplication refreshes duration under the nonstacking rule. |" ;
+    zg:stamina_cost 6.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_rally a zg:ActionDefinition ;
+    rdfs:label "rally" ;
+    zg:capability zg:cap_rally ;
+    zg:cooldown 20.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 2.0 ;
+    zg:duration_min 2.0 ;
+    zg:mayCause zg:CommunicationEffect,
+        zg:RalliedEffect ;
+    zg:sourceText "| `rally` | Broadcast from self. Duration 2 s; 15 stamina; cooldown 20 s. At completion, all other living zombies within `rally_radius` (30 m), including across barriers, gain `rally_hit_bonus` (0.10) for `rally_duration` (10 s). It is a signal-like effect; recipients choose their own actions. The Tyrant receives no hidden recipient identities in its result. A simultaneous radius-30, TTL-10 noise/signal cue follows Section 3.4. |" ;
+    zg:stamina_cost 15.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_recon a zg:ActionDefinition ;
+    rdfs:label "recon" ;
+    zg:capability zg:cap_recon ;
+    zg:cooldown 20.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 2.0 ;
+    zg:duration_min 2.0 ;
+    zg:mayCause zg:ReconEffect ;
+    zg:sourceText "| `recon` | Self. Duration 2 s; 6 stamina; cooldown 20 s. On completion raise sensing radius to at least `recon_radius` (85 m) for `recon_duration` (12 s). Line of sight still applies. The effect changes subsequent observations, not past ones. |" ;
+    zg:stamina_cost 6.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_repair_barrier a zg:ActionDefinition ;
+    rdfs:label "repair_barrier" ;
+    zg:capability zg:cap_repair_barrier ;
+    zg:cooldown 1.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 5.0 ;
+    zg:duration_min 5.0 ;
+    zg:mayCause zg:BarrierRepairEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `repair_barrier` | Damaged gate or intact damaged barricade within 2 m. Duration 5 s; 8 stamina; `repair_material_cost` (1 material); cooldown 1 s. Restore `repair_amount` (60) integrity up to its maximum. A breached gate becomes OPEN. Gate restoration must satisfy occupancy/barricade checks. A destroyed barricade cannot be repaired. Permanent walls cannot be repaired or strengthened. |" ;
+    zg:stamina_cost 8.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_rest a zg:ActionDefinition ;
+    rdfs:label "rest" ;
+    zg:capability zg:cap_rest ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 5.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:StaminaRestorationEffect ;
+    zg:sourceText "| `rest` | Duration in [1,5] s | 0; none | Stay in place; regain stamina at `rest_rate` per second up to 100 throughout the interval. No automatic life healing. Biological clocks continue. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_scream a zg:ActionDefinition ;
+    rdfs:label "scream" ;
+    zg:capability zg:cap_scream ;
+    zg:cooldown 30.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 2.0 ;
+    zg:duration_min 2.0 ;
+    zg:mayCause zg:CommunicationEffect ;
+    zg:sourceText "| `scream` | Optional known target/location from observation or memory, with its observation time; otherwise the actor's own location. Duration 2 s; 15 stamina; cooldown 30 s. Emit a `HUNT_CUE` signal with `call_radius` (120 m) and `call_ttl` (12 s). Zombies receive the dated payload; humans receive the source noise cue. No forced movement, global target reveal, automatic damage, or attack bonus occurs. |" ;
+    zg:stamina_cost 15.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_signal a zg:ActionDefinition ;
+    rdfs:label "signal" ;
+    zg:capability zg:cap_signal ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 0.5 ;
+    zg:duration_min 0.5 ;
+    zg:mayCause zg:CommunicationEffect ;
+    zg:sourceText "| `signal` | Kind `WARNING`, `REQUEST_HELP`, `RESOURCE_REPORT`, or `DIRECTION`; payload consisting of an optional known entity ID, known/observed coordinate, and optional resource type/quantity; duration 0.5 s | 1 stamina; 2 s cooldown | At completion emit a signal at the actor's then-current location, radius 40 m, TTL 8 s. Payload must refer to information present in the actor's observation or memory, with its original observation time attached. No effect forces recipients to follow it. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:action_smash a zg:ActionDefinition ;
+    rdfs:label "smash" ;
+    zg:capability zg:cap_smash ;
+    zg:cooldown 1.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 2.0 ;
+    zg:duration_min 2.0 ;
+    zg:mayCause zg:BarrierDamageEffect ;
+    zg:reach 2.0 ;
+    zg:sourceText "| `smash` | CLOSED gate or intact barricade within 2 m | 2 s | 10 / 1 s | Deal 20 integrity damage. At gate integrity 0, set BREACHED; at barricade integrity 0, remove its blocking effect. Permanent obstacles/walls are ineligible. |" ;
+    zg:stamina_cost 10.0 ;
+    zg:target_kind "Environment" .
+
+zg:action_spit a zg:ActionDefinition ;
+    rdfs:label "spit" ;
+    zg:capability zg:cap_spit ;
+    zg:cooldown 8.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:InfectionOnsetEffect,
+        zg:PhysicalDamageEffect ;
+    zg:reach 12.0 ;
+    zg:sourceText "| `spit` | Living opponent directly visible within `spit_range` (12 m). Duration 1 s; 8 stamina; reserve 1 spit charge; cooldown 8 s. At a valid resolution, spend the charge and draw the zombie hit probability. On hit, deal `spit_damage` (4) physical damage; if the target remains a HEALTHY Human, attempt infection with potency `spit_potency` (0.30). Misses also spend the charge. Target-invalid attempts release it. Recharge follows Section 7.3. No persistent puddle or separate projectile entity is created. |" ;
+    zg:stamina_cost 8.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_transfer a zg:ActionDefinition ;
+    rdfs:label "transfer" ;
+    zg:capability zg:cap_transfer ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 1.0 ;
+    zg:duration_min 1.0 ;
+    zg:mayCause zg:ResourceTransferEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `transfer` | Other living human within 1.5 m; type and quantity | 1 s | 1 / none | Move the reserved items into the recipient's inventory if its free capacity is sufficient. Receiving portable items is passive and does not force consumption or action. |" ;
+    zg:stamina_cost 1.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_treat_infection a zg:ActionDefinition ;
+    rdfs:label "treat_infection" ;
+    zg:capability zg:cap_treat_infection ;
+    zg:cooldown 2.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 4.0 ;
+    zg:duration_min 4.0 ;
+    zg:mayCause zg:InfectionCureEffect ;
+    zg:reach 1.5 ;
+    zg:sourceText "| `treat_infection` | Target self or INFECTED living human within 1.5 m. Duration `treatment_duration` (4 s); 6 stamina; reserve/consume `treatment_cost` (1 medical supply); cooldown 2 s. Completion must be strictly before the target's conversion deadline. Close the active episode as CURED and set HEALTHY. Do not change life, hunger, stamina, or role. If the target converts, dies, or is cured first, release the item and fail/cancel as applicable. |" ;
+    zg:stamina_cost 6.0 ;
+    zg:target_kind "Agent" .
+
+zg:action_wait a zg:ActionDefinition ;
+    rdfs:label "wait" ;
+    zg:capability zg:cap_wait ;
+    zg:cooldown 0.0 ;
+    zg:coverage "PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json." ;
+    zg:duration_max 5.0 ;
+    zg:duration_min 0.25 ;
+    zg:mayCause zg:WaitingEffect ;
+    zg:sourceText "| `wait` | Duration in [0.25,5] s | 0; none | Stay at the current position. Hunger, infection, recharge, and incoming effects continue. Waiting does not recover stamina. |" ;
+    zg:stamina_cost 0.0 ;
+    zg:target_kind "SelfOrBroadcast" .
+
+zg:cap_bite a zg:Capability .
+
+zg:cap_build_barricade a zg:Capability .
+
+zg:cap_claw a zg:Capability .
+
+zg:cap_close_gate a zg:Capability .
+
+zg:cap_dash a zg:Capability .
+
+zg:cap_demolish a zg:Capability .
+
+zg:cap_drop a zg:Capability .
+
+zg:cap_eat a zg:Capability .
+
+zg:cap_feed a zg:Capability .
+
+zg:cap_first_aid a zg:Capability .
+
+zg:cap_guard a zg:Capability .
+
+zg:cap_mark_target a zg:Capability .
+
+zg:cap_melee a zg:Capability .
+
+zg:cap_open_gate a zg:Capability .
+
+zg:cap_pickup a zg:Capability .
+
+zg:cap_power_strike a zg:Capability .
+
+zg:cap_prophylaxis a zg:Capability .
+
+zg:cap_rally a zg:Capability .
+
+zg:cap_recon a zg:Capability .
+
+zg:cap_repair_barrier a zg:Capability .
+
+zg:cap_scream a zg:Capability .
+
+zg:cap_smash a zg:Capability .
+
+zg:cap_spit a zg:Capability .
+
+zg:cap_transfer a zg:Capability .
+
+zg:cap_treat_infection a zg:Capability .
+
+zg:cap_move a zg:Capability .
+
+zg:cap_rest a zg:Capability .
+
+zg:cap_signal a zg:Capability .
+
+zg:cap_wait a zg:Capability .
+
+zg:Human zg:grants zg:cap_close_gate,
+        zg:cap_drop,
+        zg:cap_eat,
+        zg:cap_first_aid,
+        zg:cap_melee,
+        zg:cap_move,
+        zg:cap_open_gate,
+        zg:cap_pickup,
+        zg:cap_rest,
+        zg:cap_signal,
+        zg:cap_transfer,
+        zg:cap_wait .
+
+zg:Zombie zg:grants zg:cap_bite,
+        zg:cap_claw,
+        zg:cap_feed,
+        zg:cap_move,
+        zg:cap_rest,
+        zg:cap_signal,
+        zg:cap_smash,
+        zg:cap_wait .
+

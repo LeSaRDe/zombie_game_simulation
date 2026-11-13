@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:GateStateShape
+	Focus Node: ex:gate_state
+	Value Node: ex:gate_state
+	Source Constraint: zg:GateModeIntegrity
+	Message: GateModeIntegrity: BREACHED iff gate integrity is zero.

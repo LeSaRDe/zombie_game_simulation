@@ -1,0 +1,486 @@
+{
+  "world": [
+    1000,
+    1000
+  ],
+  "population_allocations": [
+    {
+      "type": "Human",
+      "role": null,
+      "count": 400
+    },
+    {
+      "type": "Human",
+      "role": "DOCTOR",
+      "count": 80
+    },
+    {
+      "type": "Human",
+      "role": "WARRIOR",
+      "count": 120
+    },
+    {
+      "type": "Human",
+      "role": "SCOUT",
+      "count": 80
+    },
+    {
+      "type": "Human",
+      "role": "ENGINEER",
+      "count": 120
+    },
+    {
+      "type": "Zombie",
+      "role": null,
+      "count": 120
+    },
+    {
+      "type": "Zombie",
+      "role": "TYRANT",
+      "count": 20
+    },
+    {
+      "type": "Zombie",
+      "role": "RUNNER",
+      "count": 30
+    },
+    {
+      "type": "Zombie",
+      "role": "SPITTER",
+      "count": 20
+    },
+    {
+      "type": "Zombie",
+      "role": "SCREAMER",
+      "count": 10
+    }
+  ],
+  "initial_infected": 20,
+  "shelter_origins": [
+    [
+      150,
+      150
+    ],
+    [
+      750,
+      150
+    ],
+    [
+      150,
+      750
+    ],
+    [
+      750,
+      750
+    ]
+  ],
+  "barriers": [
+    {
+      "name": "shelter1_north",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        248,
+        250,
+        250
+      ]
+    },
+    {
+      "name": "shelter1_west",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        152,
+        152,
+        248
+      ]
+    },
+    {
+      "name": "shelter1_east",
+      "kind": "Obstacle",
+      "rect": [
+        248,
+        152,
+        250,
+        248
+      ]
+    },
+    {
+      "name": "shelter1_southwest",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        150,
+        197,
+        152
+      ]
+    },
+    {
+      "name": "shelter1_southeast",
+      "kind": "Obstacle",
+      "rect": [
+        203,
+        150,
+        250,
+        152
+      ]
+    },
+    {
+      "name": "shelter1_gate",
+      "kind": "Gate",
+      "rect": [
+        197,
+        150,
+        203,
+        152
+      ]
+    },
+    {
+      "name": "shelter2_north",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        248,
+        850,
+        250
+      ]
+    },
+    {
+      "name": "shelter2_west",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        152,
+        752,
+        248
+      ]
+    },
+    {
+      "name": "shelter2_east",
+      "kind": "Obstacle",
+      "rect": [
+        848,
+        152,
+        850,
+        248
+      ]
+    },
+    {
+      "name": "shelter2_southwest",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        150,
+        797,
+        152
+      ]
+    },
+    {
+      "name": "shelter2_southeast",
+      "kind": "Obstacle",
+      "rect": [
+        803,
+        150,
+        850,
+        152
+      ]
+    },
+    {
+      "name": "shelter2_gate",
+      "kind": "Gate",
+      "rect": [
+        797,
+        150,
+        803,
+        152
+      ]
+    },
+    {
+      "name": "shelter3_north",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        848,
+        250,
+        850
+      ]
+    },
+    {
+      "name": "shelter3_west",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        752,
+        152,
+        848
+      ]
+    },
+    {
+      "name": "shelter3_east",
+      "kind": "Obstacle",
+      "rect": [
+        248,
+        752,
+        250,
+        848
+      ]
+    },
+    {
+      "name": "shelter3_southwest",
+      "kind": "Obstacle",
+      "rect": [
+        150,
+        750,
+        197,
+        752
+      ]
+    },
+    {
+      "name": "shelter3_southeast",
+      "kind": "Obstacle",
+      "rect": [
+        203,
+        750,
+        250,
+        752
+      ]
+    },
+    {
+      "name": "shelter3_gate",
+      "kind": "Gate",
+      "rect": [
+        197,
+        750,
+        203,
+        752
+      ]
+    },
+    {
+      "name": "shelter4_north",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        848,
+        850,
+        850
+      ]
+    },
+    {
+      "name": "shelter4_west",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        752,
+        752,
+        848
+      ]
+    },
+    {
+      "name": "shelter4_east",
+      "kind": "Obstacle",
+      "rect": [
+        848,
+        752,
+        850,
+        848
+      ]
+    },
+    {
+      "name": "shelter4_southwest",
+      "kind": "Obstacle",
+      "rect": [
+        750,
+        750,
+        797,
+        752
+      ]
+    },
+    {
+      "name": "shelter4_southeast",
+      "kind": "Obstacle",
+      "rect": [
+        803,
+        750,
+        850,
+        752
+      ]
+    },
+    {
+      "name": "shelter4_gate",
+      "kind": "Gate",
+      "rect": [
+        797,
+        750,
+        803,
+        752
+      ]
+    },
+    {
+      "name": "obstacle1",
+      "kind": "Obstacle",
+      "rect": [
+        420,
+        180,
+        460,
+        340
+      ]
+    },
+    {
+      "name": "obstacle2",
+      "kind": "Obstacle",
+      "rect": [
+        540,
+        660,
+        580,
+        820
+      ]
+    },
+    {
+      "name": "obstacle3",
+      "kind": "Obstacle",
+      "rect": [
+        180,
+        540,
+        340,
+        580
+      ]
+    },
+    {
+      "name": "obstacle4",
+      "kind": "Obstacle",
+      "rect": [
+        660,
+        420,
+        820,
+        460
+      ]
+    }
+  ],
+  "stockpiles": [
+    {
+      "name": "shelter1_stock",
+      "point": [
+        200,
+        200
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 40
+      }
+    },
+    {
+      "name": "shelter2_stock",
+      "point": [
+        800,
+        200
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 40
+      }
+    },
+    {
+      "name": "shelter3_stock",
+      "point": [
+        200,
+        800
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 40
+      }
+    },
+    {
+      "name": "shelter4_stock",
+      "point": [
+        800,
+        800
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 40
+      }
+    },
+    {
+      "name": "exterior_stock1",
+      "point": [
+        100,
+        500
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    },
+    {
+      "name": "exterior_stock2",
+      "point": [
+        300,
+        500
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    },
+    {
+      "name": "exterior_stock3",
+      "point": [
+        500,
+        100
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    },
+    {
+      "name": "exterior_stock4",
+      "point": [
+        500,
+        300
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    },
+    {
+      "name": "exterior_stock5",
+      "point": [
+        700,
+        500
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    },
+    {
+      "name": "exterior_stock6",
+      "point": [
+        900,
+        500
+      ],
+      "quantities": {
+        "FOOD": 60,
+        "MEDICAL_SUPPLY": 20,
+        "MATERIAL": 20
+      }
+    }
+  ],
+  "initial_carried_totals": {
+    "FOOD": 0,
+    "MEDICAL_SUPPLY": 80,
+    "MATERIAL": 120
+  }
+}

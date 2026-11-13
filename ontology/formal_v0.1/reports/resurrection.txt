@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:after
+	Value Node: ex:after
+	Source Constraint: zg:NoResurrection
+	Message: NoResurrection: No recorded later state of a dead identity is alive or changes its type/location.

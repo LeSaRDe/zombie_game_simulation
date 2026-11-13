@@ -1,0 +1,45 @@
+Validation Report
+Conforms: False
+Results (6):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:ActionAdmission
+	Message: ActionAdmission: Actor is alive and idle at admission, with enough flat stamina.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:ActionState
+	Message: ActionState: BUSY iff a living state has an active action; dead action state is ACTION_DEAD.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:DeadCleanup
+	Message: DeadCleanup: Death clears active references, movement and sensing; death metadata is present.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:NoResurrection
+	Message: NoResurrection: No recorded later state of a dead identity is alive or changes its type/location.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:StateStatus
+	Message: StateStatus: Type/status/life and active episode must agree.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:DeadInventory
+	Message: DeadInventory: A dead human has an empty inventory.

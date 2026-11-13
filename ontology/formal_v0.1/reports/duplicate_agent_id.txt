@@ -1,0 +1,17 @@
+Validation Report
+Conforms: False
+Results (2):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentShape
+	Focus Node: ex:duplicate
+	Value Node: ex:duplicate
+	Source Constraint: zg:UniqueAgentID
+	Message: UniqueAgentID: Agent ID is unique within a run.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentShape
+	Focus Node: ex:person
+	Value Node: ex:person
+	Source Constraint: zg:UniqueAgentID
+	Message: UniqueAgentID: Agent ID is unique within a run.

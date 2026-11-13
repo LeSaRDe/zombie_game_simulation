@@ -1,0 +1,212 @@
+[
+  {
+    "name": "valid_state",
+    "file": "examples/valid_state.ttl",
+    "expected_conforms": true,
+    "expected_constraint": null
+  },
+  {
+    "name": "valid_treatment",
+    "file": "examples/valid_treatment.ttl",
+    "expected_conforms": true,
+    "expected_constraint": null
+  },
+  {
+    "name": "valid_conversion_preserves_identity",
+    "file": "examples/valid_conversion_preserves_identity.ttl",
+    "expected_conforms": true,
+    "expected_constraint": null
+  },
+  {
+    "name": "valid_death",
+    "file": "examples/valid_death.ttl",
+    "expected_conforms": true,
+    "expected_constraint": null
+  },
+  {
+    "name": "missing_life",
+    "file": "examples/missing_life.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "AgentState_lifeShape"
+  },
+  {
+    "name": "life_above_100",
+    "file": "examples/life_above_100.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "AgentState_lifeShape"
+  },
+  {
+    "name": "position_outside_world",
+    "file": "examples/position_outside_world.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "PositionBounds"
+  },
+  {
+    "name": "dead_with_positive_life",
+    "file": "examples/dead_with_positive_life.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "StateStatus"
+  },
+  {
+    "name": "human_with_tyrant_role",
+    "file": "examples/human_with_tyrant_role.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "RoleCompatibility"
+  },
+  {
+    "name": "infected_without_episode",
+    "file": "examples/infected_without_episode.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "StateStatus"
+  },
+  {
+    "name": "reservation_exceeds_stock",
+    "file": "examples/reservation_exceeds_stock.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ReservationBound"
+  },
+  {
+    "name": "inventory_over_capacity",
+    "file": "examples/inventory_over_capacity.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "InventoryCapacity"
+  },
+  {
+    "name": "duplicate_agent_id",
+    "file": "examples/duplicate_agent_id.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "UniqueAgentID"
+  },
+  {
+    "name": "resurrection",
+    "file": "examples/resurrection.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "NoResurrection"
+  },
+  {
+    "name": "conversion_heals",
+    "file": "examples/conversion_heals.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ConversionPreserves"
+  },
+  {
+    "name": "conversion_retains_role",
+    "file": "examples/conversion_retains_role.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ConversionTypes"
+  },
+  {
+    "name": "conversion_wrong_deadline",
+    "file": "examples/conversion_wrong_deadline.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ConversionDeadline"
+  },
+  {
+    "name": "treatment_at_deadline",
+    "file": "examples/treatment_at_deadline.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "TreatmentDeadline"
+  },
+  {
+    "name": "treatment_free_supply",
+    "file": "examples/treatment_free_supply.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "TreatmentConsume"
+  },
+  {
+    "name": "treatment_reservation_missing",
+    "file": "examples/treatment_reservation_missing.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "TreatmentReserve"
+  },
+  {
+    "name": "treatment_no_stamina_cost",
+    "file": "examples/treatment_no_stamina_cost.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "AdmissionStamina"
+  },
+  {
+    "name": "treatment_out_of_reach",
+    "file": "examples/treatment_out_of_reach.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "AgentStartReach"
+  },
+  {
+    "name": "treatment_heals_life",
+    "file": "examples/treatment_heals_life.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "TreatmentEffect"
+  },
+  {
+    "name": "treatment_missing_cure_record",
+    "file": "examples/treatment_missing_cure_record.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "TreatmentCureRecord"
+  },
+  {
+    "name": "treatment_dead_actor",
+    "file": "examples/treatment_dead_actor.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ActionAdmission"
+  },
+  {
+    "name": "treatment_invalid_duration",
+    "file": "examples/treatment_invalid_duration.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ActionDuration"
+  },
+  {
+    "name": "treatment_miss_invalid",
+    "file": "examples/treatment_miss_invalid.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "MissOnlyAttack"
+  },
+  {
+    "name": "causal_cycle",
+    "file": "examples/causal_cycle.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "NoCausalCycle"
+  },
+  {
+    "name": "treatment_missing_target",
+    "file": "examples/treatment_missing_target.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "RequiredTargets"
+  },
+  {
+    "name": "treatment_wrong_intent_actor",
+    "file": "examples/treatment_wrong_intent_actor.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "IntentAgreement"
+  },
+  {
+    "name": "doctor_wrong_skill",
+    "file": "examples/doctor_wrong_skill.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "RoleOverrides"
+  },
+  {
+    "name": "treatment_missing_cooldown",
+    "file": "examples/treatment_missing_cooldown.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ActionCooldown"
+  },
+  {
+    "name": "orphan_resource",
+    "file": "examples/orphan_resource.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "ResourceStock_holderShape"
+  },
+  {
+    "name": "valid_gate",
+    "file": "examples/valid_gate.ttl",
+    "expected_conforms": true,
+    "expected_constraint": null
+  },
+  {
+    "name": "breached_gate_with_integrity",
+    "file": "examples/breached_gate_with_integrity.ttl",
+    "expected_conforms": false,
+    "expected_constraint": "GateModeIntegrity"
+  }
+]

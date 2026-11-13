@@ -1,0 +1,23 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "TreatmentTargetRecords: Treatment requires start target; successful treatment also requires resolution target records." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:TreatmentTargetRecords ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "RequiredTargets: Agent/environment/footprint actions carry the relevant target record." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:RequiredTargets ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ] .
+

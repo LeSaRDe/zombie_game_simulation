@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentStateShape
+	Focus Node: ex:doctor_start
+	Value Node: ex:doctor_start
+	Source Constraint: zg:RoleOverrides
+	Message: RoleOverrides: Current common/type profile fields agree with the active role overrides.

@@ -1,0 +1,5 @@
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+<urn:zombie-game:example:contradiction> a zg:HumanState,
+        zg:ZombieState .
+

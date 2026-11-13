@@ -1,0 +1,15 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:init> ;
+            sh:resultMessage "NoCausalCycle: Event causal graph must be acyclic." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:NoCausalCycle ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:EventShape ;
+            sh:value <urn:zombie-game:example:init> ] .
+

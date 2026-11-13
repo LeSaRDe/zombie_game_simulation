@@ -1,0 +1,17 @@
+Validation Report
+Conforms: False
+Results (2):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:TreatmentEffect
+	Message: TreatmentEffect: Successful treatment ends infection without changing target life or position.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:CureTransitionShape
+	Focus Node: ex:cure
+	Value Node: ex:cure
+	Source Constraint: zg:CureStates
+	Message: CureStates: Cure changes INFECTED to HEALTHY while preserving type and life.

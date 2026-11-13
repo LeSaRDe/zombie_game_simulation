@@ -1,0 +1,512 @@
+@prefix ex: <urn:zombie-game:example:> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+ex:cure a zg:CureTransition,
+        zg:LifecycleTransition ;
+    zg:afterState ex:patient_post_end ;
+    zg:beforeState ex:patient_pre_end ;
+    zg:episode ex:episode ;
+    zg:triggeredBy ex:treatment .
+
+ex:doctor_admitted_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:doctor_admitted_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:doctor_admitted_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 2 ;
+    zg:reserved 1 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:doctor_admitted_inventory a zg:Inventory ;
+    zg:stock ex:doctor_admitted_FOOD,
+        ex:doctor_admitted_MATERIAL,
+        ex:doctor_admitted_MEDICAL_SUPPLY .
+
+ex:doctor_post_end_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:doctor_post_end_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:doctor_post_end_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 1 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:doctor_post_end_inventory a zg:Inventory ;
+    zg:stock ex:doctor_post_end_FOOD,
+        ex:doctor_post_end_MATERIAL,
+        ex:doctor_post_end_MEDICAL_SUPPLY .
+
+ex:doctor_pre_end_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:doctor_pre_end_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:doctor_pre_end_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 2 ;
+    zg:reserved 1 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:doctor_pre_end_inventory a zg:Inventory ;
+    zg:stock ex:doctor_pre_end_FOOD,
+        ex:doctor_pre_end_MATERIAL,
+        ex:doctor_pre_end_MEDICAL_SUPPLY .
+
+ex:doctor_start_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:doctor_start_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:doctor_start_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 2 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:doctor_start_inventory a zg:Inventory ;
+    zg:stock ex:doctor_start_FOOD,
+        ex:doctor_start_MATERIAL,
+        ex:doctor_start_MEDICAL_SUPPLY .
+
+ex:intent a zg:ActionIntent ;
+    zg:actionDefinition zg:action_treat_infection ;
+    zg:actor ex:patient ;
+    zg:observes ex:observation ;
+    zg:proposedAt 100.0 .
+
+ex:observation a zg:Observation ;
+    zg:atTime 100.0 ;
+    zg:observer ex:doctor ;
+    zg:revision 0 ;
+    zg:selfState ex:doctor_start .
+
+ex:patient_post_end_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:patient_post_end_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:patient_post_end_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:patient_post_end_inventory a zg:Inventory ;
+    zg:stock ex:patient_post_end_FOOD,
+        ex:patient_post_end_MATERIAL,
+        ex:patient_post_end_MEDICAL_SUPPLY .
+
+ex:patient_pre_end_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:patient_pre_end_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:patient_pre_end_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:patient_pre_end_inventory a zg:Inventory ;
+    zg:stock ex:patient_pre_end_FOOD,
+        ex:patient_pre_end_MATERIAL,
+        ex:patient_pre_end_MEDICAL_SUPPLY .
+
+ex:patient_start_FOOD a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+ex:patient_start_MATERIAL a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+ex:patient_start_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 0 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+ex:patient_start_inventory a zg:Inventory ;
+    zg:stock ex:patient_start_FOOD,
+        ex:patient_start_MATERIAL,
+        ex:patient_start_MEDICAL_SUPPLY .
+
+ex:scenario a zg:ScenarioDefinition .
+
+ex:treatment_cooldown a zg:Cooldown ;
+    zg:forAction zg:action_treat_infection ;
+    zg:until 106.0 .
+
+ex:doctor_admitted a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:BUSY ;
+    zg:activeAction ex:treatment ;
+    zg:activeModel ex:doctor_Human_model ;
+    zg:activeRole ex:doctor_DOCTOR_role ;
+    zg:atTime 100.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:doctor_admitted_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 100 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.9 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:doctor ;
+    zg:rest_rate 4.0 ;
+    zg:revision 1 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 74.0 ;
+    zg:status zg:HEALTHY ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:doctor_post_end a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeModel ex:doctor_Human_model ;
+    zg:activeRole ex:doctor_DOCTOR_role ;
+    zg:atTime 104.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:cooldownRecord ex:treatment_cooldown ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:doctor_post_end_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 100 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.9 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:doctor ;
+    zg:rest_rate 4.0 ;
+    zg:revision 1 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 74.0 ;
+    zg:status zg:HEALTHY ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:doctor_pre_end a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:BUSY ;
+    zg:activeAction ex:treatment ;
+    zg:activeModel ex:doctor_Human_model ;
+    zg:activeRole ex:doctor_DOCTOR_role ;
+    zg:atTime 104.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:doctor_pre_end_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 100 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.9 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:doctor ;
+    zg:rest_rate 4.0 ;
+    zg:revision 0 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 74.0 ;
+    zg:status zg:HEALTHY ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:model a zg:DecisionModel ;
+    zg:model_id "fixture-model" ;
+    zg:model_version "1" .
+
+ex:patient_start a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeEpisode ex:episode ;
+    zg:activeModel ex:patient_Human_model ;
+    zg:atTime 100.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.3333333333333333 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:patient_start_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 60 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.2 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:patient ;
+    zg:rest_rate 4.0 ;
+    zg:revision 0 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 100.0 ;
+    zg:status zg:INFECTED ;
+    zg:world ex:world ;
+    zg:x 11.0 ;
+    zg:y 10.0 .
+
+ex:run a zg:SimulationRun ;
+    zg:scenario ex:scenario ;
+    zg:world ex:world .
+
+ex:doctor_start a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeModel ex:doctor_Human_model ;
+    zg:activeRole ex:doctor_DOCTOR_role ;
+    zg:atTime 100.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:doctor_start_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 100 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.9 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:doctor ;
+    zg:rest_rate 4.0 ;
+    zg:revision 0 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 80.0 ;
+    zg:status zg:HEALTHY ;
+    zg:world ex:world ;
+    zg:x 10.0 ;
+    zg:y 10.0 .
+
+ex:episode a zg:InfectionEpisode ;
+    zg:conversion_due_at 300.0 ;
+    zg:end_revision 1 ;
+    zg:ended_at 104.0 ;
+    zg:episodeOutcome zg:CURED ;
+    zg:incubation_duration 300.0 ;
+    zg:infectedAgent ex:patient ;
+    zg:onset_at 0.0 ;
+    zg:onset_revision 0 ;
+    zg:sourceEvent ex:init ;
+    zg:source_kind "INITIAL_CONDITION" .
+
+ex:patient_Human_model a zg:ModelAssignment ;
+    zg:modelDefinition ex:model ;
+    zg:ofAgent ex:patient ;
+    zg:start_at 0.0 .
+
+ex:patient_post_end a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeModel ex:patient_Human_model ;
+    zg:atTime 104.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.0 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:patient_post_end_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 60 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.2 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:patient ;
+    zg:rest_rate 4.0 ;
+    zg:revision 1 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 100.0 ;
+    zg:status zg:HEALTHY ;
+    zg:world ex:world ;
+    zg:x 11.0 ;
+    zg:y 10.0 .
+
+ex:patient_pre_end a zg:AgentState,
+        zg:HumanState ;
+    zg:actionStatus zg:IDLE ;
+    zg:activeEpisode ex:episode ;
+    zg:activeModel ex:patient_Human_model ;
+    zg:atTime 104.0 ;
+    zg:base_damage_resistance 0.0 ;
+    zg:base_sense_r 40.0 ;
+    zg:base_speed 2.0 ;
+    zg:biologicalType zg:Human ;
+    zg:carry_capacity 10 ;
+    zg:combat_skill 0.35 ;
+    zg:damage_resistance 0.0 ;
+    zg:hasTypeProfile zg:Human ;
+    zg:hunger 20.0 ;
+    zg:hunger_rate 0.05 ;
+    zg:infection_progress 0.3466666666666667 ;
+    zg:infection_resistance 0.2 ;
+    zg:infection_resistance_effective 0.2 ;
+    zg:inventory ex:patient_pre_end_inventory ;
+    zg:lastEvent ex:init ;
+    zg:life 60 ;
+    zg:max_life 100 ;
+    zg:max_stamina 100.0 ;
+    zg:medical_skill 0.2 ;
+    zg:melee_damage 16 ;
+    zg:movement_cost 0.1 ;
+    zg:ofAgent ex:patient ;
+    zg:rest_rate 4.0 ;
+    zg:revision 0 ;
+    zg:sense_r 40.0 ;
+    zg:speed 2.0 ;
+    zg:stamina 100.0 ;
+    zg:status zg:INFECTED ;
+    zg:world ex:world ;
+    zg:x 11.0 ;
+    zg:y 10.0 .
+
+ex:treatment a zg:ActionOccurrence ;
+    zg:actionDefinition zg:action_treat_infection ;
+    zg:actionResult zg:SUCCEEDED ;
+    zg:actorAfterEnd ex:doctor_post_end ;
+    zg:actorAfterStart ex:doctor_admitted ;
+    zg:actorBeforeEnd ex:doctor_pre_end ;
+    zg:actorStart ex:doctor_start ;
+    zg:plannedEnd 104.0 ;
+    zg:realizes ex:intent ;
+    zg:resolvedAt 104.0 ;
+    zg:startTime 100.0 ;
+    zg:targetAfterEnd ex:patient_post_end ;
+    zg:targetBeforeEnd ex:patient_pre_end ;
+    zg:targetStart ex:patient_start .
+
+ex:doctor_DOCTOR_role a zg:RoleAssignment ;
+    zg:ofAgent ex:doctor ;
+    zg:roleDefinition zg:DOCTOR ;
+    zg:start_at 0.0 .
+
+ex:doctor_Human_model a zg:ModelAssignment ;
+    zg:modelDefinition ex:model ;
+    zg:ofAgent ex:doctor ;
+    zg:start_at 0.0 .
+
+ex:patient a zg:Agent ;
+    zg:agent_id 2 ;
+    zg:created_at 0.0 ;
+    zg:hasState ex:patient_post_end,
+        ex:patient_pre_end,
+        ex:patient_start ;
+    zg:inRun ex:run .
+
+ex:doctor a zg:Agent ;
+    zg:agent_id 1 ;
+    zg:created_at 0.0 ;
+    zg:hasState ex:doctor_admitted,
+        ex:doctor_post_end,
+        ex:doctor_pre_end,
+        ex:doctor_start ;
+    zg:inRun ex:run .
+
+ex:init a zg:Event ;
+    zg:atTime 0.0 ;
+    zg:revision 0 .
+
+ex:world a zg:World ;
+    zg:length 1000.0 ;
+    zg:width 1000.0 .
+

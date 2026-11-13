@@ -1,0 +1,10 @@
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+<urn:zombie-game:example:owl_state> a zg:AgentState ;
+    zg:activeRole <urn:zombie-game:example:owl_role_assignment> ;
+    zg:biologicalType zg:Human ;
+    zg:hasTypeProfile zg:Human ;
+    zg:status zg:INFECTED .
+
+<urn:zombie-game:example:owl_role_assignment> zg:roleDefinition zg:DOCTOR .
+

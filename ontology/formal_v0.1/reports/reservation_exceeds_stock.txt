@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ResourceStockShape
+	Focus Node: ex:state_MEDICAL_SUPPLY
+	Value Node: ex:state_MEDICAL_SUPPLY
+	Source Constraint: zg:ReservationBound
+	Message: ReservationBound: Reserved quantity cannot exceed total quantity.

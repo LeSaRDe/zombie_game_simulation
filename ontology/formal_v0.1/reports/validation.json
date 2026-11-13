@@ -1,0 +1,607 @@
+{
+  "generated_at_utc": "2026-11-13T02:09:12.749773+00:00",
+  "command": [
+    "ontology/formal_v0.1/validate.py"
+  ],
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+  "packages": {
+    "rdflib": "7.6.0",
+    "pyshacl": "0.40.2",
+    "owlready2": "0.51",
+    "owlrl": "7.6.2"
+  },
+  "checks": [
+    {
+      "name": "Source Markdown unchanged",
+      "passed": true
+    },
+    {
+      "name": "Current plan reference and hash verified",
+      "passed": true
+    },
+    {
+      "name": "OWL Turtle and RDF/XML equivalent",
+      "passed": true
+    },
+    {
+      "name": "OWL 2 DL profile: core",
+      "passed": true,
+      "report": "owl_core.json"
+    },
+    {
+      "name": "OWL core logically consistent",
+      "passed": true
+    },
+    {
+      "name": "All intended named classes satisfiable",
+      "passed": true,
+      "classes": 76
+    },
+    {
+      "name": "Infection-capable action classification",
+      "passed": true
+    },
+    {
+      "name": "OWL 2 DL profile: inference",
+      "passed": true,
+      "report": "owl_inference.json"
+    },
+    {
+      "name": "Doctor and infected state classifications inferred",
+      "passed": true
+    },
+    {
+      "name": "Role and type capabilities inferred",
+      "passed": true
+    },
+    {
+      "name": "OWL 2 DL profile: conversion_history",
+      "passed": true,
+      "report": "owl_conversion_history.json"
+    },
+    {
+      "name": "Time-indexed human/zombie history consistent",
+      "passed": true
+    },
+    {
+      "name": "OWL 2 DL profile: invalid_state",
+      "passed": true,
+      "report": "owl_invalid_state.json"
+    },
+    {
+      "name": "Contradictory Human/Zombie state rejected",
+      "passed": true
+    },
+    {
+      "name": "OWL 2 DL profile: impossible_extension",
+      "passed": true,
+      "report": "owl_impossible_extension.json"
+    },
+    {
+      "name": "Impossible extension detected before instantiation",
+      "passed": true
+    },
+    {
+      "name": "Every embedded SPARQL constraint parses",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "Same-actor overlapping intervals detected",
+      "passed": true,
+      "constraint": "OneActionAtATime",
+      "expected_violation": true,
+      "actual_violation": true,
+      "scope": "Isolated query boundary test; not whole-graph conformance."
+    },
+    {
+      "name": "Touching action intervals do not overlap",
+      "passed": true,
+      "constraint": "OneActionAtATime",
+      "expected_violation": false,
+      "actual_violation": false,
+      "scope": "Isolated query boundary test; not whole-graph conformance."
+    },
+    {
+      "name": "Two reciprocal misses still conflict",
+      "passed": true,
+      "constraint": "ReciprocalAttackExclusion",
+      "expected_violation": true,
+      "actual_violation": true,
+      "scope": "Isolated query boundary test; not whole-graph conformance."
+    },
+    {
+      "name": "One cancelled reciprocal attempt is allowed",
+      "passed": true,
+      "constraint": "ReciprocalAttackExclusion",
+      "expected_violation": false,
+      "actual_violation": false,
+      "scope": "Isolated query boundary test; not whole-graph conformance."
+    },
+    {
+      "name": "SHACL meta-validation and baseline catalog conformance",
+      "passed": true
+    },
+    {
+      "name": "Baseline configuration SHACL conformance",
+      "passed": true
+    },
+    {
+      "name": "Baseline population allocations",
+      "passed": true
+    },
+    {
+      "name": "Baseline portable-resource totals",
+      "passed": true,
+      "totals": {
+        "FOOD": 600,
+        "MEDICAL_SUPPLY": 280,
+        "MATERIAL": 400
+      }
+    },
+    {
+      "name": "Baseline geometry bounds and nonoverlap",
+      "passed": true
+    },
+    {
+      "name": "Baseline shelter connectivity",
+      "passed": true,
+      "closed_regions": 5,
+      "open_regions": 1
+    },
+    {
+      "name": "SHACL: valid_state",
+      "passed": true,
+      "expected_conforms": true,
+      "actual_conforms": true,
+      "expected_constraint": null,
+      "observed_constraints": []
+    },
+    {
+      "name": "SHACL: valid_treatment",
+      "passed": true,
+      "expected_conforms": true,
+      "actual_conforms": true,
+      "expected_constraint": null,
+      "observed_constraints": []
+    },
+    {
+      "name": "SHACL: valid_conversion_preserves_identity",
+      "passed": true,
+      "expected_conforms": true,
+      "actual_conforms": true,
+      "expected_constraint": null,
+      "observed_constraints": []
+    },
+    {
+      "name": "SHACL: valid_death",
+      "passed": true,
+      "expected_conforms": true,
+      "actual_conforms": true,
+      "expected_constraint": null,
+      "observed_constraints": []
+    },
+    {
+      "name": "SHACL: missing_life",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "AgentState_lifeShape",
+      "observed_constraints": [
+        "AgentState_lifeShape"
+      ]
+    },
+    {
+      "name": "SHACL: life_above_100",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "AgentState_lifeShape",
+      "observed_constraints": [
+        "AgentState_lifeShape"
+      ]
+    },
+    {
+      "name": "SHACL: position_outside_world",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "PositionBounds",
+      "observed_constraints": [
+        "AgentStateShape",
+        "PositionBounds"
+      ]
+    },
+    {
+      "name": "SHACL: dead_with_positive_life",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "StateStatus",
+      "observed_constraints": [
+        "AgentStateShape",
+        "StateStatus"
+      ]
+    },
+    {
+      "name": "SHACL: human_with_tyrant_role",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "RoleCompatibility",
+      "observed_constraints": [
+        "AgentStateShape",
+        "RoleCompatibility",
+        "RoleOverrides"
+      ]
+    },
+    {
+      "name": "SHACL: infected_without_episode",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "StateStatus",
+      "observed_constraints": [
+        "AgentStateShape",
+        "StateStatus"
+      ]
+    },
+    {
+      "name": "SHACL: reservation_exceeds_stock",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ReservationBound",
+      "observed_constraints": [
+        "ReservationBound",
+        "ResourceStockShape"
+      ]
+    },
+    {
+      "name": "SHACL: inventory_over_capacity",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "InventoryCapacity",
+      "observed_constraints": [
+        "HumanStateShape",
+        "InventoryCapacity"
+      ]
+    },
+    {
+      "name": "SHACL: duplicate_agent_id",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "UniqueAgentID",
+      "observed_constraints": [
+        "AgentShape",
+        "UniqueAgentID"
+      ]
+    },
+    {
+      "name": "SHACL: resurrection",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "NoResurrection",
+      "observed_constraints": [
+        "AgentStateShape",
+        "NoResurrection"
+      ]
+    },
+    {
+      "name": "SHACL: conversion_heals",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ConversionPreserves",
+      "observed_constraints": [
+        "ConversionPreserves",
+        "ConversionTransitionShape"
+      ]
+    },
+    {
+      "name": "SHACL: conversion_retains_role",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ConversionTypes",
+      "observed_constraints": [
+        "AgentStateShape",
+        "ConversionTransitionShape",
+        "ConversionTypes",
+        "RoleCompatibility",
+        "RoleOverrides"
+      ]
+    },
+    {
+      "name": "SHACL: conversion_wrong_deadline",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ConversionDeadline",
+      "observed_constraints": [
+        "ConversionDeadline",
+        "ConversionTransitionShape",
+        "EpisodeDeadline",
+        "InfectionEpisodeShape"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_at_deadline",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "TreatmentDeadline",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "CureEpisode",
+        "CureTransitionShape",
+        "TreatmentDeadline"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_free_supply",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "TreatmentConsume",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "TreatmentConsume"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_reservation_missing",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "TreatmentReserve",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "TreatmentReserve"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_no_stamina_cost",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "AdmissionStamina",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "AdmissionStamina"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_out_of_reach",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "AgentStartReach",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "AgentStartReach"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_heals_life",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "TreatmentEffect",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "CureStates",
+        "CureTransitionShape",
+        "TreatmentEffect"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_missing_cure_record",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "TreatmentCureRecord",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "TreatmentCureRecord"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_dead_actor",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ActionAdmission",
+      "observed_constraints": [
+        "ActionAdmission",
+        "ActionOccurrenceShape",
+        "ActionState",
+        "AgentStateShape",
+        "DeadCleanup",
+        "DeadInventory",
+        "HumanStateShape",
+        "NoResurrection",
+        "StateStatus"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_invalid_duration",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ActionDuration",
+      "observed_constraints": [
+        "ActionDuration",
+        "ActionOccurrenceShape",
+        "ResultTiming"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_miss_invalid",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "MissOnlyAttack",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "CureEpisode",
+        "CureTransitionShape",
+        "MissOnlyAttack"
+      ]
+    },
+    {
+      "name": "SHACL: causal_cycle",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "NoCausalCycle",
+      "observed_constraints": [
+        "EventShape",
+        "NoCausalCycle"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_missing_target",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "RequiredTargets",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "RequiredTargets",
+        "TreatmentTargetRecords"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_wrong_intent_actor",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "IntentAgreement",
+      "observed_constraints": [
+        "ActionOccurrenceShape",
+        "IntentAgreement"
+      ]
+    },
+    {
+      "name": "SHACL: doctor_wrong_skill",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "RoleOverrides",
+      "observed_constraints": [
+        "AgentStateShape",
+        "RoleOverrides"
+      ]
+    },
+    {
+      "name": "SHACL: treatment_missing_cooldown",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ActionCooldown",
+      "observed_constraints": [
+        "ActionCooldown",
+        "ActionOccurrenceShape"
+      ]
+    },
+    {
+      "name": "SHACL: orphan_resource",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "ResourceStock_holderShape",
+      "observed_constraints": [
+        "ResourceStock_holderShape"
+      ]
+    },
+    {
+      "name": "SHACL: valid_gate",
+      "passed": true,
+      "expected_conforms": true,
+      "actual_conforms": true,
+      "expected_constraint": null,
+      "observed_constraints": []
+    },
+    {
+      "name": "SHACL: breached_gate_with_integrity",
+      "passed": true,
+      "expected_conforms": false,
+      "actual_conforms": false,
+      "expected_constraint": "GateModeIntegrity",
+      "observed_constraints": [
+        "GateModeIntegrity",
+        "GateStateShape"
+      ]
+    }
+  ],
+  "project_root": "F:\\MU_LIFE\\research\\zombie_game\\zombie_game_simulation",
+  "working_directory": "F:\\MU_LIFE\\research\\zombie_game\\zombie_game_simulation",
+  "python_executable": "F:\\MU_LIFE\\research\\zombie_game\\zombie_game_simulation\\ontology\\formal_v0.1\\.venv\\Scripts\\python.exe",
+  "artifact_sha256": {
+    "ontology.ttl": "f8fd0875d3c7373a6778edf19b85d5dc9ffe784e9321ef33af3d5d9684571315",
+    "catalog.ttl": "b2cece0c7c728be4da57624d85ae6e2e304485d1af5014284c9a57b8a6374c2b",
+    "shapes.ttl": "4f8aa75e1440542188f98964421e710b85da9fb91c174d26feb3b05f7054f778",
+    "ontology.owl": "9c0f8e4a078b2641bd83120d8ecc9f3555b3d2c4eff3371f235022eed75d7618",
+    "manifest.json": "89e6d6d8e0d0f62916688088945344d2755e34788c70b92db7c4d025ebf9d465",
+    "baseline.ttl": "70f9edb908b92dbc04f8e6ecee15a17ba7790dca91cb50a0e522865224b014e4",
+    "examples.json": "8ce3cf312dc2e66cb5f3c99af2fe3ba6f47765b3df81c6437f74757a857142e9",
+    "requirements.txt": "5037b8680c824f72ed2b25f864d265bd2c57039f166fce835ddaea999a79defc",
+    "toolchain.json": "a39d786dfdef897e8da8aa92f075422b628b5ac3160bcf1b769c3b3ad7ae7005",
+    "build_spec.py": "0641b0c2a236b2733fe31dd276114c0a4efdc358a5e4a570307aa03dca40f2aa",
+    "build_examples.py": "f35518ddcc3a346bfeaa46eb6828b8232da4badfa49bc1703e7ef47646a83bf1",
+    "build_baseline.py": "a3407db3a3f46e93f7144dd45cfb83d88c9b49bb35772e830ddea8fd82018ab2",
+    "validate.py": "ab7123b1893dbcff45ed003328e7ed4e6ec57d0586ac742bb705954f0b2e3ea9",
+    "check_baseline.py": "1968d4949c7fa791c41ff8fbb61685ae6fdddc6e1fd14023d1079c980d0ffad6",
+    "check_constraint_boundaries.py": "5ed7826aae0cb7879cd64e1f33d85d705c7df4b1922f14525fb83eea7f009612",
+    "OwlCheck.java": "35792f2e56f3318b9abec1c73a3102ac57fce3bf17286499f1af0e3aca3784f9",
+    "../../prompts/zombie_game_plans.md": "57e073fe0f18c831dc9a2dd3a69dc3c5702f12e61b72908baf83b443257e7adf",
+    "examples/breached_gate_with_integrity.ttl": "7e6bb442ce9e1721f4915c62dc66cbd6d0088c6800bc74f9a235ee867737dde7",
+    "examples/causal_cycle.ttl": "3938d00a0cc2f8ebd675d58eb42cafe4afb3d95ea3047bfa3d0b32cf2e40f92d",
+    "examples/conversion_heals.ttl": "0b065bb3f0e5869d962623401e024e19fd7e7a466412d92e6bea2eb452ce9c9e",
+    "examples/conversion_retains_role.ttl": "3110f6b8aa50b768c842ba4a52e7983a98d1e78aabb22bc512cc8a465a0fb40c",
+    "examples/conversion_wrong_deadline.ttl": "e85ceaf238514a70fe1f471fad7bdbda5631ba2c8724d402b32a5dd1613bb561",
+    "examples/dead_with_positive_life.ttl": "ce8eb1448fdbc1f84058ff0cd17a34f5dc98ce3ddf28d71549fc18c5d0d14f82",
+    "examples/doctor_wrong_skill.ttl": "d6798a943ce43bdf456ee00bd5af1737a8420d7276dcc7629bddc60dfdcbb3c9",
+    "examples/duplicate_agent_id.ttl": "b86a563cfc70c455ec932a3f557ec4fc1370d20942fff7874b343789a3cd9ef9",
+    "examples/human_with_tyrant_role.ttl": "8d5b704efbc5d2f264373f0d15c1eece76a7a0f77fb9bd968e89aa537632e123",
+    "examples/infected_without_episode.ttl": "5e72662eab1b42bef6591708f474e5c77ca35939b008a90fbec5ab9e946d5b18",
+    "examples/inventory_over_capacity.ttl": "3d9dca5b2a3fd5142b11fdc674339527ddc6d5eee8d8fc5bd6747bf43bc4cdcf",
+    "examples/life_above_100.ttl": "9bf5435a0e2deed834f7ca6ca115b3abd7278b03401c6d4b38ba09f93c50eb2c",
+    "examples/missing_life.ttl": "ec322efeac48887d6cfdfd9807f48a2c4ac7bb41ddf22333c6be129358e393a1",
+    "examples/orphan_resource.ttl": "32a349fefbaf642ddd3b3988db550723bcca5fbe4934f9d9dfe882980a8efc13",
+    "examples/owl_inconsistent_state.ttl": "7671b13632e1fa0c1e3c16ef983b2151920b8a927248c38af204cfc22116ccb1",
+    "examples/owl_inference.ttl": "05fa43d1182696e5a2c6105982496ba8252f1e6e3f69aac46f84e046092577cf",
+    "examples/owl_unsatisfiable_extension.ttl": "9609fbdcdd5bb2d48ac5c74d8c325158896fca8c1def68b6a731f7507cf48dfe",
+    "examples/position_outside_world.ttl": "37a18d228d152fc16d43f6360fbce29d8c108842a994fdeb335d2f08d10c1994",
+    "examples/reservation_exceeds_stock.ttl": "2c41e4f7aaf7ff592a5ec9bdb70e647093c0e11f230a1888800cfa1bb3bc822e",
+    "examples/resurrection.ttl": "68529defdbfe9986a65feec96c55c7007f7b85a67b451009da02c817ca6dcd41",
+    "examples/treatment_at_deadline.ttl": "2f52089e7ed26edeb178d8af30c541d6f595c31e14c624df15a5a0a44baa9c5f",
+    "examples/treatment_dead_actor.ttl": "5edd54e9ac40af16e965a3283ef3097d2910db94279799439c13b7f5a2401572",
+    "examples/treatment_free_supply.ttl": "8a4eb6f7c3c3de9dc7211ed0db4d43ff34ebe6aad30da06da647a594f3f1726b",
+    "examples/treatment_heals_life.ttl": "1bb41a3f9562588a1a22cfb301fbce506c8cd7b713032fec4b33c11bbd4819d8",
+    "examples/treatment_invalid_duration.ttl": "a4e8397d8b1fa44a0e6542ee32383e840378a7d8c683aca133d8548a2553ee71",
+    "examples/treatment_miss_invalid.ttl": "e5c9373cc8e06f257c1ce316c8965865cca22ffb58aeaaa74b103973a3f59213",
+    "examples/treatment_missing_cooldown.ttl": "c0623e88aef263d9e7e19217fec56e50c38cf5dc0508de680e0d7fe639bfd763",
+    "examples/treatment_missing_cure_record.ttl": "561077efaaec8da8369ec26f844a175e5800046fda731f4eb8da2f7ec215becc",
+    "examples/treatment_missing_target.ttl": "daac117bc47b31f7598e313692b3a2db8a093a42dfdca2a56c5024097fcb7f0c",
+    "examples/treatment_no_stamina_cost.ttl": "63330195cb12e93533c24f78182d0bb705b26ea3d71bbcc257f642c10cc5903f",
+    "examples/treatment_out_of_reach.ttl": "361a24f36d19b43531de1479250da61c8c09f55e74a474b6f8dc6880512606cc",
+    "examples/treatment_reservation_missing.ttl": "fac7901dd36627502c4ec5820c13b6f7a347e6a021b2ad6be23c9ceddd3bd76a",
+    "examples/treatment_wrong_intent_actor.ttl": "7440a70af7bcbb03b2b108cfe9670882590653ac69910354ce4a5c61e1e0edca",
+    "examples/valid_conversion_preserves_identity.ttl": "dd8c5591f42ba60fa8b2690f2d6e97880698428a5bd1c1e2200ab5b01722c783",
+    "examples/valid_death.ttl": "8877721d7a3a428f51ceaa2aafa2be838f7cb32592cbd39000cf0fe2b8305833",
+    "examples/valid_gate.ttl": "e74dcf27dd0990e567f0597d394858e560472ecf463b8071bada4d97652a8dbb",
+    "examples/valid_state.ttl": "124571f8115c9cde48dbf5a6d5f14400b5d533da65f29c5333681d3b3ecba90a",
+    "examples/valid_treatment.ttl": "5b6940692cb8dbab599f700f4c34f5eb5e93d7499c33e948a9e6169363e9b1f0"
+  },
+  "java_executable": "F:\\MU_LIFE\\research\\zombie_game\\zombie_game_simulation\\ontology\\formal_v0.1\\.runtime\\jdk-21.0.13+9\\bin\\java.exe",
+  "hermit_jar": "F:\\MU_LIFE\\research\\zombie_game\\zombie_game_simulation\\ontology\\formal_v0.1\\.venv\\Lib\\site-packages\\owlready2\\hermit\\HermiT.jar",
+  "java_version": "openjdk version \"21.0.13\" 2026-10-20 LTS\nOpenJDK Runtime Environment Temurin-21.0.13+9 (build 21.0.13+9-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.13+9 (build 21.0.13+9-LTS, mixed mode, sharing)",
+  "hermit_jar_sha256": "97e53f519720a0a2e328556e03b806aa239347c85e57637a935e6433ed2ad3a8",
+  "all_passed": true,
+  "scope": "OWL consistency/satisfiability/inference and finite-graph SHACL conformance; not proof of full gameplay or all possible executions."
+}

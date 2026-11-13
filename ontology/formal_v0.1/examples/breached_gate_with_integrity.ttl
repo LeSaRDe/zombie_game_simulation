@@ -1,0 +1,48 @@
+@prefix ex: <urn:zombie-game:example:> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+ex:gate_state a zg:EnvironmentState,
+        zg:GateState ;
+    zg:atTime 0.0 ;
+    zg:gateMode zg:BREACHED ;
+    zg:geometry ex:rect ;
+    zg:integrity 200 ;
+    zg:max_integrity 200 ;
+    zg:ofEntity ex:gate ;
+    zg:revision 0 ;
+    zg:world ex:world .
+
+ex:init a zg:Event ;
+    zg:atTime 0.0 ;
+    zg:revision 0 .
+
+ex:model a zg:DecisionModel ;
+    zg:model_id "fixture-model" ;
+    zg:model_version "1" .
+
+ex:run a zg:SimulationRun ;
+    zg:scenario ex:scenario ;
+    zg:world ex:world .
+
+ex:rect a zg:Rectangle ;
+    zg:xmax 16.0 ;
+    zg:xmin 10.0 ;
+    zg:ymax 12.0 ;
+    zg:ymin 10.0 .
+
+ex:scenario a zg:ScenarioDefinition .
+
+ex:shelter a zg:Shelter ;
+    zg:hasGate ex:gate ;
+    zg:hasWall ex:wall .
+
+ex:wall a zg:Obstacle .
+
+ex:gate a zg:Gate ;
+    zg:hasShelter ex:shelter .
+
+ex:world a zg:World ;
+    zg:length 1000.0 ;
+    zg:width 1000.0 .
+

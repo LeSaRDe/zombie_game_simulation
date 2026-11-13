@@ -1,0 +1,2348 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+zg:ActionDefinitionShape a sh:NodeShape ;
+    sh:property zg:ActionDefinition_capabilityShape,
+        zg:ActionDefinition_cooldownShape,
+        zg:ActionDefinition_duration_maxShape,
+        zg:ActionDefinition_duration_minShape,
+        zg:ActionDefinition_mayCauseShape,
+        zg:ActionDefinition_reachShape,
+        zg:ActionDefinition_stamina_costShape,
+        zg:ActionDefinition_target_kindShape ;
+    sh:sparql zg:DurationBounds ;
+    sh:targetClass zg:ActionDefinition .
+
+zg:ActionIntentShape a sh:NodeShape ;
+    sh:property zg:ActionIntent_actionDefinitionShape,
+        zg:ActionIntent_actorShape,
+        zg:ActionIntent_observesShape,
+        zg:ActionIntent_proposedAtShape ;
+    sh:targetClass zg:ActionIntent .
+
+zg:ActionOccurrenceShape a sh:NodeShape ;
+    sh:property zg:ActionOccurrence_actionDefinitionShape,
+        zg:ActionOccurrence_actionResultShape,
+        zg:ActionOccurrence_actorAfterEndShape,
+        zg:ActionOccurrence_actorAfterStartShape,
+        zg:ActionOccurrence_actorBeforeEndShape,
+        zg:ActionOccurrence_actorStartShape,
+        zg:ActionOccurrence_footprintShape,
+        zg:ActionOccurrence_plannedEndShape,
+        zg:ActionOccurrence_realizesShape,
+        zg:ActionOccurrence_resolvedAtShape,
+        zg:ActionOccurrence_startTimeShape,
+        zg:ActionOccurrence_targetAfterEndShape,
+        zg:ActionOccurrence_targetBeforeEndShape,
+        zg:ActionOccurrence_targetEntityShape,
+        zg:ActionOccurrence_targetStartShape ;
+    sh:sparql zg:ActionAdmission,
+        zg:ActionCapability,
+        zg:ActionCooldown,
+        zg:ActionDuration,
+        zg:ActionRelease,
+        zg:ActorEndIdentity,
+        zg:ActorResolutionAlive,
+        zg:ActorStartIdentity,
+        zg:AdmissionCooldown,
+        zg:AdmissionStamina,
+        zg:AgentEndReach,
+        zg:AgentStartReach,
+        zg:IntentAgreement,
+        zg:MissOnlyAttack,
+        zg:OneActionAtATime,
+        zg:ReciprocalAttackExclusion,
+        zg:RequiredTargets,
+        zg:ResultTiming,
+        zg:TreatmentConsume,
+        zg:TreatmentCureRecord,
+        zg:TreatmentDeadline,
+        zg:TreatmentEffect,
+        zg:TreatmentFailureRelease,
+        zg:TreatmentReserve,
+        zg:TreatmentStartTarget,
+        zg:TreatmentSupplyEvidence,
+        zg:TreatmentTargetRecords ;
+    sh:targetClass zg:ActionOccurrence .
+
+zg:AgentShape a sh:NodeShape ;
+    sh:property zg:Agent_agent_idShape,
+        zg:Agent_created_atShape,
+        zg:Agent_hasStateShape,
+        zg:Agent_inRunShape ;
+    sh:sparql zg:UniqueAgentID ;
+    sh:targetClass zg:Agent .
+
+zg:AgentStateShape a sh:NodeShape ;
+    sh:property zg:AgentState_actionStatusShape,
+        zg:AgentState_activeActionShape,
+        zg:AgentState_activeEpisodeShape,
+        zg:AgentState_activeModelShape,
+        zg:AgentState_activeRoleShape,
+        zg:AgentState_atTimeShape,
+        zg:AgentState_base_damage_resistanceShape,
+        zg:AgentState_base_sense_rShape,
+        zg:AgentState_base_speedShape,
+        zg:AgentState_biologicalTypeShape,
+        zg:AgentState_cooldownRecordShape,
+        zg:AgentState_damage_resistanceShape,
+        zg:AgentState_deathCauseShape,
+        zg:AgentState_death_atShape,
+        zg:AgentState_effectShape,
+        zg:AgentState_hasTypeProfileShape,
+        zg:AgentState_lastEventShape,
+        zg:AgentState_lifeShape,
+        zg:AgentState_max_lifeShape,
+        zg:AgentState_max_staminaShape,
+        zg:AgentState_movement_costShape,
+        zg:AgentState_ofAgentShape,
+        zg:AgentState_rest_rateShape,
+        zg:AgentState_revisionShape,
+        zg:AgentState_sense_rShape,
+        zg:AgentState_speedShape,
+        zg:AgentState_staminaShape,
+        zg:AgentState_statusShape,
+        zg:AgentState_worldShape,
+        zg:AgentState_xShape,
+        zg:AgentState_yShape ;
+    sh:sparql zg:ActionState,
+        zg:AliveAssignments,
+        zg:DeadCleanup,
+        zg:EpisodeOwnership,
+        zg:LivingDeathMetadata,
+        zg:ModelOwnership,
+        zg:NoResurrection,
+        zg:PositionBounds,
+        zg:RoleCompatibility,
+        zg:RoleFieldApplicability,
+        zg:RoleOverrides,
+        zg:StateIdentityRevision,
+        zg:StateStatus,
+        zg:StateTypeFields,
+        zg:StateWorld ;
+    sh:targetClass zg:AgentState .
+
+zg:BarricadeStateShape a sh:NodeShape ;
+    sh:property zg:BarricadeState_integrityShape,
+        zg:BarricadeState_max_integrityShape ;
+    sh:sparql zg:BarricadeStateIntegrity ;
+    sh:targetClass zg:BarricadeState .
+
+zg:ConversionTransitionShape a sh:NodeShape ;
+    sh:property zg:ConversionTransition_episodeShape ;
+    sh:sparql zg:ConversionDeadline,
+        zg:ConversionPreserves,
+        zg:ConversionTypes ;
+    sh:targetClass zg:ConversionTransition .
+
+zg:CooldownShape a sh:NodeShape ;
+    sh:property zg:Cooldown_forActionShape,
+        zg:Cooldown_untilShape ;
+    sh:targetClass zg:Cooldown .
+
+zg:CureTransitionShape a sh:NodeShape ;
+    sh:property zg:CureTransition_episodeShape,
+        zg:CureTransition_triggeredByShape ;
+    sh:sparql zg:CureEpisode,
+        zg:CureStates ;
+    sh:targetClass zg:CureTransition .
+
+zg:DOCTORProfileShape a sh:NodeShape ;
+    sh:property zg:DOCTORProfile_medical_skillShape,
+        zg:DOCTORProfile_prophylaxis_durationShape,
+        zg:DOCTORProfile_prophylaxis_resistanceShape,
+        zg:DOCTORProfile_treatment_costShape,
+        zg:DOCTORProfile_treatment_durationShape ;
+    sh:targetNode zg:DOCTOR .
+
+zg:DeathTransitionShape a sh:NodeShape ;
+    sh:sparql zg:DeathTypes ;
+    sh:targetClass zg:DeathTransition .
+
+zg:DecisionModelShape a sh:NodeShape ;
+    sh:property zg:DecisionModel_model_idShape,
+        zg:DecisionModel_model_versionShape ;
+    sh:targetClass zg:DecisionModel .
+
+zg:ENGINEERProfileShape a sh:NodeShape ;
+    sh:property zg:ENGINEERProfile_build_integrityShape,
+        zg:ENGINEERProfile_build_material_costShape,
+        zg:ENGINEERProfile_carry_capacityShape,
+        zg:ENGINEERProfile_repair_amountShape,
+        zg:ENGINEERProfile_repair_material_costShape ;
+    sh:targetNode zg:ENGINEER .
+
+zg:EnvironmentStateShape a sh:NodeShape ;
+    sh:property zg:EnvironmentState_atTimeShape,
+        zg:EnvironmentState_geometryShape,
+        zg:EnvironmentState_ofEntityShape,
+        zg:EnvironmentState_revisionShape,
+        zg:EnvironmentState_worldShape ;
+    sh:targetClass zg:EnvironmentState .
+
+zg:EventShape a sh:NodeShape ;
+    sh:property zg:Event_atTimeShape,
+        zg:Event_revisionShape ;
+    sh:sparql zg:NoCausalCycle ;
+    sh:targetClass zg:Event .
+
+zg:GateShape a sh:NodeShape ;
+    sh:property zg:Gate_hasShelterShape ;
+    sh:targetClass zg:Gate .
+
+zg:GateStateShape a sh:NodeShape ;
+    sh:property zg:GateState_gateModeShape,
+        zg:GateState_integrityShape,
+        zg:GateState_max_integrityShape ;
+    sh:sparql zg:GateModeIntegrity,
+        zg:GateStateIntegrity ;
+    sh:targetClass zg:GateState .
+
+zg:HumanStateShape a sh:NodeShape ;
+    sh:property zg:HumanState_carry_capacityShape,
+        zg:HumanState_combat_skillShape,
+        zg:HumanState_hungerShape,
+        zg:HumanState_hunger_rateShape,
+        zg:HumanState_infection_progressShape,
+        zg:HumanState_infection_resistanceShape,
+        zg:HumanState_infection_resistance_effectiveShape,
+        zg:HumanState_inventoryShape,
+        zg:HumanState_medical_skillShape,
+        zg:HumanState_melee_damageShape,
+        zg:HumanState_next_starvation_damage_atShape,
+        zg:HumanState_starvation_started_atShape ;
+    sh:sparql zg:DeadInventory,
+        zg:InfectionProgress,
+        zg:InventoryCapacity,
+        zg:StarvationTimers ;
+    sh:targetClass zg:HumanState ;
+    sh:targetSubjectsOf zg:hunger .
+
+zg:InfectionEpisodeShape a sh:NodeShape ;
+    sh:property zg:InfectionEpisode_conversion_due_atShape,
+        zg:InfectionEpisode_end_revisionShape,
+        zg:InfectionEpisode_ended_atShape,
+        zg:InfectionEpisode_episodeOutcomeShape,
+        zg:InfectionEpisode_incubation_durationShape,
+        zg:InfectionEpisode_infectedAgentShape,
+        zg:InfectionEpisode_onset_atShape,
+        zg:InfectionEpisode_onset_revisionShape,
+        zg:InfectionEpisode_sourceAgentShape,
+        zg:InfectionEpisode_sourceEventShape,
+        zg:InfectionEpisode_source_kindShape ;
+    sh:sparql zg:EpisodeClosure,
+        zg:EpisodeDeadline,
+        zg:EpisodeEndOrder ;
+    sh:targetClass zg:InfectionEpisode .
+
+zg:InventoryShape a sh:NodeShape ;
+    sh:property zg:Inventory_stockShape ;
+    sh:sparql zg:UniqueInventoryResource ;
+    sh:targetClass zg:Inventory .
+
+zg:LifecycleTransitionShape a sh:NodeShape ;
+    sh:property zg:LifecycleTransition_afterStateShape,
+        zg:LifecycleTransition_beforeStateShape ;
+    sh:sparql zg:TransitionIdentity ;
+    sh:targetClass zg:LifecycleTransition .
+
+zg:ModelAssignmentShape a sh:NodeShape ;
+    sh:property zg:ModelAssignment_end_atShape,
+        zg:ModelAssignment_modelDefinitionShape,
+        zg:ModelAssignment_ofAgentShape,
+        zg:ModelAssignment_start_atShape ;
+    sh:sparql zg:ModelAssignmentInterval ;
+    sh:targetClass zg:ModelAssignment .
+
+zg:ObservationShape a sh:NodeShape ;
+    sh:property zg:Observation_atTimeShape,
+        zg:Observation_observerShape,
+        zg:Observation_revisionShape,
+        zg:Observation_selfStateShape ;
+    sh:sparql zg:ObservationSelf ;
+    sh:targetClass zg:Observation .
+
+zg:PointShape a sh:NodeShape ;
+    sh:property zg:Point_xShape,
+        zg:Point_yShape ;
+    sh:targetClass zg:Point .
+
+zg:PopulationAllocationShape a sh:NodeShape ;
+    sh:property zg:PopulationAllocation_biologicalTypeShape,
+        zg:PopulationAllocation_countShape,
+        zg:PopulationAllocation_roleDefinitionShape ;
+    sh:targetClass zg:PopulationAllocation .
+
+zg:RUNNERProfileShape a sh:NodeShape ;
+    sh:property zg:RUNNERProfile_base_speedShape,
+        zg:RUNNERProfile_claw_damageShape,
+        zg:RUNNERProfile_dash_durationShape,
+        zg:RUNNERProfile_dash_multiplierShape ;
+    sh:targetNode zg:RUNNER .
+
+zg:RectangleShape a sh:NodeShape ;
+    sh:property zg:Rectangle_xmaxShape,
+        zg:Rectangle_xminShape,
+        zg:Rectangle_ymaxShape,
+        zg:Rectangle_yminShape ;
+    sh:sparql zg:RectangleOrder ;
+    sh:targetClass zg:Rectangle .
+
+zg:RemainsShape a sh:NodeShape ;
+    sh:property zg:Remains_comesFromShape ;
+    sh:targetClass zg:Remains .
+
+zg:RemainsStateShape a sh:NodeShape ;
+    sh:property zg:RemainsState_biomassShape,
+        zg:RemainsState_reserved_biomassShape ;
+    sh:sparql zg:BiomassReservation ;
+    sh:targetClass zg:RemainsState .
+
+zg:ResourceStockShape a sh:NodeShape ;
+    sh:property zg:ResourceStock_holderShape,
+        zg:ResourceStock_quantityShape,
+        zg:ResourceStock_reservedShape,
+        zg:ResourceStock_resourceTypeShape ;
+    sh:sparql zg:ReservationBound ;
+    sh:targetClass zg:ResourceStock .
+
+zg:RoleAssignmentShape a sh:NodeShape ;
+    sh:property zg:RoleAssignment_end_atShape,
+        zg:RoleAssignment_ofAgentShape,
+        zg:RoleAssignment_roleDefinitionShape,
+        zg:RoleAssignment_start_atShape ;
+    sh:sparql zg:RoleAssignmentInterval ;
+    sh:targetClass zg:RoleAssignment .
+
+zg:RoleDefinitionShape a sh:NodeShape ;
+    sh:property zg:RoleDefinition_compatibleTypeShape,
+        zg:RoleDefinition_grantsShape ;
+    sh:targetClass zg:RoleDefinition .
+
+zg:SCOUTProfileShape a sh:NodeShape ;
+    sh:property zg:SCOUTProfile_base_sense_rShape,
+        zg:SCOUTProfile_base_speedShape,
+        zg:SCOUTProfile_mark_radiusShape,
+        zg:SCOUTProfile_recon_durationShape,
+        zg:SCOUTProfile_recon_radiusShape ;
+    sh:targetNode zg:SCOUT .
+
+zg:SCREAMERProfileShape a sh:NodeShape ;
+    sh:property zg:SCREAMERProfile_base_sense_rShape,
+        zg:SCREAMERProfile_call_radiusShape,
+        zg:SCREAMERProfile_call_ttlShape,
+        zg:SCREAMERProfile_claw_damageShape ;
+    sh:targetNode zg:SCREAMER .
+
+zg:SPITTERProfileShape a sh:NodeShape ;
+    sh:property zg:SPITTERProfile_base_speedShape,
+        zg:SPITTERProfile_max_spit_chargesShape,
+        zg:SPITTERProfile_recharge_intervalShape,
+        zg:SPITTERProfile_spit_damageShape,
+        zg:SPITTERProfile_spit_potencyShape,
+        zg:SPITTERProfile_spit_rangeShape ;
+    sh:targetNode zg:SPITTER .
+
+zg:ShelterShape a sh:NodeShape ;
+    sh:property zg:Shelter_hasGateShape,
+        zg:Shelter_hasWallShape ;
+    sh:targetClass zg:Shelter .
+
+zg:SignalShape a sh:NodeShape ;
+    sh:property zg:Signal_emitted_atShape,
+        zg:Signal_expires_atShape,
+        zg:Signal_radiusShape ;
+    sh:targetClass zg:Signal .
+
+zg:SimulationRunShape a sh:NodeShape ;
+    sh:property zg:SimulationRun_scenarioShape,
+        zg:SimulationRun_worldShape ;
+    sh:targetClass zg:SimulationRun .
+
+zg:SpitterStateShape a sh:NodeShape ;
+    sh:property zg:SpitterState_next_charge_atShape,
+        zg:SpitterState_spit_chargesShape ;
+    sh:targetClass zg:SpitterState .
+
+zg:StockpileStateShape a sh:NodeShape ;
+    sh:property zg:StockpileState_stockShape ;
+    sh:targetClass zg:StockpileState .
+
+zg:TYRANTProfileShape a sh:NodeShape ;
+    sh:property zg:TYRANTProfile_attack_skillShape,
+        zg:TYRANTProfile_base_damage_resistanceShape,
+        zg:TYRANTProfile_base_speedShape,
+        zg:TYRANTProfile_claw_damageShape,
+        zg:TYRANTProfile_demolish_damageShape,
+        zg:TYRANTProfile_rally_durationShape,
+        zg:TYRANTProfile_rally_hit_bonusShape,
+        zg:TYRANTProfile_rally_radiusShape ;
+    sh:targetNode zg:TYRANT .
+
+zg:TimedEffectShape a sh:NodeShape ;
+    sh:property zg:TimedEffect_end_atShape,
+        zg:TimedEffect_magnitudeShape,
+        zg:TimedEffect_recipientShape,
+        zg:TimedEffect_sourceEventShape,
+        zg:TimedEffect_start_atShape ;
+    sh:sparql zg:TimedEffectInterval ;
+    sh:targetClass zg:TimedEffect .
+
+zg:WARRIORProfileShape a sh:NodeShape ;
+    sh:property zg:WARRIORProfile_base_damage_resistanceShape,
+        zg:WARRIORProfile_combat_skillShape,
+        zg:WARRIORProfile_guard_durationShape,
+        zg:WARRIORProfile_guard_resistanceShape,
+        zg:WARRIORProfile_melee_damageShape,
+        zg:WARRIORProfile_strike_damageShape ;
+    sh:targetNode zg:WARRIOR .
+
+zg:WorldShape a sh:NodeShape ;
+    sh:property zg:World_lengthShape,
+        zg:World_widthShape ;
+    sh:targetClass zg:World .
+
+zg:ZombieStateShape a sh:NodeShape ;
+    sh:property zg:ZombieState_attack_skillShape,
+        zg:ZombieState_bite_damageShape,
+        zg:ZombieState_claw_damageShape,
+        zg:ZombieState_feed_energyShape,
+        zg:ZombieState_feed_healingShape,
+        zg:ZombieState_virulenceShape ;
+    sh:targetClass zg:ZombieState ;
+    sh:targetSubjectsOf zg:virulence .
+
+zg:ActionAdmission a sh:SPARQLConstraint ;
+    sh:message "ActionAdmission: Actor is alive and idle at admission, with enough flat stamina." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart ?s; zg:actionDefinition ?d. ?s zg:life ?l; zg:actionStatus ?as; zg:stamina ?st. ?d zg:stamina_cost ?cost. FILTER(?l<=0 || ?as!=zg:IDLE || ?st<?cost)
+} """ .
+
+zg:ActionCapability a sh:SPARQLConstraint ;
+    sh:message "ActionCapability: An explicit applicable type or role grants the required capability." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart ?s; zg:actionDefinition/zg:capability ?cap. FILTER(NOT EXISTS {?s zg:hasTypeProfile/zg:grants ?cap} && NOT EXISTS {?s zg:activeRole/zg:roleDefinition/zg:grants ?cap})
+} """ .
+
+zg:ActionCooldown a sh:SPARQLConstraint ;
+    sh:message "ActionCooldown: A completed attempt records its cooldown unless actor death/conversion retires it." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult ?r; zg:actionDefinition ?d; zg:resolvedAt ?t; zg:actorStart/zg:biologicalType ?old; zg:actorAfterEnd ?s. ?d zg:cooldown ?cd. ?s zg:life ?l; zg:biologicalType ?new. FILTER(?r!=zg:IN_PROGRESS && ?l>0 && ?old=?new && ?cd>0) FILTER(NOT EXISTS {?s zg:cooldownRecord [zg:forAction ?d; zg:until ?u] FILTER(?u=?t+?cd)})
+} """ .
+
+zg:ActionDefinition_capabilityShape sh:class zg:Capability ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.capability: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:capability .
+
+zg:ActionDefinition_cooldownShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.cooldown: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:cooldown .
+
+zg:ActionDefinition_duration_maxShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.duration_max: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:duration_max .
+
+zg:ActionDefinition_duration_minShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.duration_min: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:duration_min .
+
+zg:ActionDefinition_mayCauseShape sh:class zg:EffectCategory ;
+    sh:message "ActionDefinition.mayCause: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:mayCause .
+
+zg:ActionDefinition_reachShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.reach: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:reach .
+
+zg:ActionDefinition_stamina_costShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.stamina_cost: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:stamina_cost .
+
+zg:ActionDefinition_target_kindShape sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:message "ActionDefinition.target_kind: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:target_kind .
+
+zg:ActionDuration a sh:SPARQLConstraint ;
+    sh:message "ActionDuration: Planned duration is within the declared baseline bounds." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:startTime ?t; zg:plannedEnd ?e; zg:actionDefinition ?a. ?a zg:duration_min ?lo; zg:duration_max ?hi. FILTER(?e-?t<?lo || ?e-?t>?hi)
+} """ .
+
+zg:ActionIntent_actionDefinitionShape sh:class zg:ActionDefinition ;
+    sh:maxCount 1 ;
+    sh:message "ActionIntent.actionDefinition: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actionDefinition .
+
+zg:ActionIntent_actorShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "ActionIntent.actor: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actor .
+
+zg:ActionIntent_observesShape sh:class zg:Observation ;
+    sh:maxCount 1 ;
+    sh:message "ActionIntent.observes: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:observes .
+
+zg:ActionIntent_proposedAtShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionIntent.proposedAt: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:proposedAt .
+
+zg:ActionOccurrence_actionDefinitionShape sh:class zg:ActionDefinition ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actionDefinition: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actionDefinition .
+
+zg:ActionOccurrence_actionResultShape sh:in ( zg:SUCCEEDED zg:MISSED zg:FAILED_PRECONDITION zg:CANCELLED_BY_DEATH zg:CANCELLED_BY_CONVERSION zg:CANCELLED_BY_CONFLICT zg:CANCELLED_BY_INTERVENTION zg:PARTIAL_BLOCKED zg:IN_PROGRESS ) ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actionResult: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:actionResult .
+
+zg:ActionOccurrence_actorAfterEndShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actorAfterEnd: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actorAfterEnd .
+
+zg:ActionOccurrence_actorAfterStartShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actorAfterStart: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actorAfterStart .
+
+zg:ActionOccurrence_actorBeforeEndShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actorBeforeEnd: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actorBeforeEnd .
+
+zg:ActionOccurrence_actorStartShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.actorStart: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:actorStart .
+
+zg:ActionOccurrence_footprintShape sh:class zg:Rectangle ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.footprint: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:footprint .
+
+zg:ActionOccurrence_plannedEndShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.plannedEnd: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:plannedEnd .
+
+zg:ActionOccurrence_realizesShape sh:class zg:ActionIntent ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.realizes: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:realizes .
+
+zg:ActionOccurrence_resolvedAtShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.resolvedAt: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:resolvedAt .
+
+zg:ActionOccurrence_startTimeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.startTime: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:startTime .
+
+zg:ActionOccurrence_targetAfterEndShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.targetAfterEnd: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:targetAfterEnd .
+
+zg:ActionOccurrence_targetBeforeEndShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.targetBeforeEnd: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:targetBeforeEnd .
+
+zg:ActionOccurrence_targetEntityShape sh:class zg:EnvironmentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.targetEntity: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:targetEntity .
+
+zg:ActionOccurrence_targetStartShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "ActionOccurrence.targetStart: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:targetStart .
+
+zg:ActionRelease a sh:SPARQLConstraint ;
+    sh:message "ActionRelease: A resolved action is not still active in its immediate actor post-state." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult ?r; zg:actorAfterEnd ?s. FILTER(?r!=zg:IN_PROGRESS) ?s zg:activeAction ?a.
+} """ .
+
+zg:ActionState a sh:SPARQLConstraint ;
+    sh:message "ActionState: BUSY iff a living state has an active action; dead action state is ACTION_DEAD." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life ?l; zg:actionStatus ?s. FILTER((?l=0 && ?s!=zg:ACTION_DEAD) || (?l>0 && ?s=zg:ACTION_DEAD) || (?s=zg:BUSY && NOT EXISTS {$this zg:activeAction ?a}) || (?s!=zg:BUSY && EXISTS {$this zg:activeAction ?a}))
+} """ .
+
+zg:ActorEndIdentity a sh:SPARQLConstraint ;
+    sh:message "ActorEndIdentity: Resolution records refer to the same actor/time and increasing revision." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart/zg:ofAgent ?x; zg:actorBeforeEnd ?b; zg:actorAfterEnd ?a; zg:resolvedAt ?t. ?b zg:ofAgent ?y; zg:atTime ?bt; zg:revision ?br. ?a zg:ofAgent ?z; zg:atTime ?at; zg:revision ?ar. FILTER(?x!=?y || ?x!=?z || ?bt!=?t || ?at!=?t || ?ar<=?br)
+} """ .
+
+zg:ActorResolutionAlive a sh:SPARQLConstraint ;
+    sh:message "ActorResolutionAlive: Successful or missed actions require a living actor at resolution." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult ?r; zg:actorBeforeEnd/zg:life ?l. FILTER(?r IN (zg:SUCCEEDED,zg:MISSED) && ?l<=0)
+} """ .
+
+zg:ActorStartIdentity a sh:SPARQLConstraint ;
+    sh:message "ActorStartIdentity: Admission state records refer to the same actor/time, with increasing revision and the action becoming active." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart ?b; zg:actorAfterStart ?a; zg:startTime ?t. ?b zg:ofAgent ?x; zg:atTime ?bt; zg:revision ?br. ?a zg:ofAgent ?y; zg:atTime ?at; zg:revision ?ar. FILTER(?x!=?y || ?bt!=?t || ?at!=?t || ?ar<=?br || NOT EXISTS {?a zg:activeAction $this; zg:actionStatus zg:BUSY})
+} """ .
+
+zg:AdmissionCooldown a sh:SPARQLConstraint ;
+    sh:message "AdmissionCooldown: The action is not admitted during its cooldown." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:startTime ?t; zg:actionDefinition ?d; zg:actorStart/zg:cooldownRecord ?c. ?c zg:forAction ?d; zg:until ?u. FILTER(?t<?u)
+} """ .
+
+zg:AdmissionStamina a sh:SPARQLConstraint ;
+    sh:message "AdmissionStamina: Flat stamina is paid exactly once at admission." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart ?b; zg:actorAfterStart ?a; zg:actionDefinition/zg:stamina_cost ?cost. ?b zg:stamina ?s. ?a zg:stamina ?v. FILTER(?v!=?s-?cost)
+} """ .
+
+zg:AgentEndReach a sh:SPARQLConstraint ;
+    sh:message "AgentEndReach: Successful/missed agent interactions must remain within reach." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult ?result; zg:actorBeforeEnd ?a; zg:targetBeforeEnd ?b; zg:actionDefinition/zg:reach ?r. FILTER(?result IN (zg:SUCCEEDED,zg:MISSED)) ?a zg:x ?x; zg:y ?y. ?b zg:x ?u; zg:y ?v. FILTER((?x-?u)*(?x-?u)+(?y-?v)*(?y-?v)>?r*?r)
+} """ .
+
+zg:AgentStartReach a sh:SPARQLConstraint ;
+    sh:message "AgentStartReach: Agent-target interaction must be within declared reach at admission." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart ?a; zg:targetStart ?b; zg:actionDefinition/zg:reach ?r. ?a zg:x ?x; zg:y ?y. ?b zg:x ?u; zg:y ?v. FILTER((?x-?u)*(?x-?u)+(?y-?v)*(?y-?v)>?r*?r)
+} """ .
+
+zg:AgentState_actionStatusShape sh:in ( zg:IDLE zg:BUSY zg:ACTION_DEAD ) ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.actionStatus: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:actionStatus .
+
+zg:AgentState_activeActionShape sh:class zg:ActionOccurrence ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.activeAction: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:activeAction .
+
+zg:AgentState_activeEpisodeShape sh:class zg:InfectionEpisode ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.activeEpisode: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:activeEpisode .
+
+zg:AgentState_activeModelShape sh:class zg:ModelAssignment ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.activeModel: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:activeModel .
+
+zg:AgentState_activeRoleShape sh:class zg:RoleAssignment ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.activeRole: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:activeRole .
+
+zg:AgentState_atTimeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.atTime: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:atTime .
+
+zg:AgentState_base_damage_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 0.8 ;
+    sh:message "AgentState.base_damage_resistance: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_damage_resistance .
+
+zg:AgentState_base_sense_rShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.base_sense_r: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_sense_r .
+
+zg:AgentState_base_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.base_speed: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:base_speed .
+
+zg:AgentState_biologicalTypeShape sh:in ( zg:Human zg:Zombie ) ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.biologicalType: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:biologicalType .
+
+zg:AgentState_cooldownRecordShape sh:class zg:Cooldown ;
+    sh:message "AgentState.cooldownRecord: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:cooldownRecord .
+
+zg:AgentState_damage_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 0.8 ;
+    sh:message "AgentState.damage_resistance: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:damage_resistance .
+
+zg:AgentState_deathCauseShape sh:class zg:Event ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.deathCause: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:deathCause .
+
+zg:AgentState_death_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.death_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:death_at .
+
+zg:AgentState_effectShape sh:class zg:TimedEffect ;
+    sh:message "AgentState.effect: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:effect .
+
+zg:AgentState_hasTypeProfileShape sh:class zg:AgentType ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.hasTypeProfile: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:hasTypeProfile .
+
+zg:AgentState_lastEventShape sh:class zg:Event ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.lastEvent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:lastEvent .
+
+zg:AgentState_lifeShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 100 ;
+    sh:message "AgentState.life: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:life .
+
+zg:AgentState_max_lifeShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 100 ;
+    sh:message "AgentState.max_life: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 100 ;
+    sh:path zg:max_life .
+
+zg:AgentState_max_staminaShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 100 ;
+    sh:message "AgentState.max_stamina: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 100 ;
+    sh:path zg:max_stamina .
+
+zg:AgentState_movement_costShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.movement_cost: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:movement_cost .
+
+zg:AgentState_ofAgentShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.ofAgent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:ofAgent .
+
+zg:AgentState_rest_rateShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.rest_rate: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:rest_rate .
+
+zg:AgentState_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:revision .
+
+zg:AgentState_sense_rShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.sense_r: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:sense_r .
+
+zg:AgentState_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.speed: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:speed .
+
+zg:AgentState_staminaShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 100 ;
+    sh:message "AgentState.stamina: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:stamina .
+
+zg:AgentState_statusShape sh:in ( zg:HEALTHY zg:INFECTED zg:ACTIVE zg:DEAD ) ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.status: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:status .
+
+zg:AgentState_worldShape sh:class zg:World ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.world: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:world .
+
+zg:AgentState_xShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.x: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:x .
+
+zg:AgentState_yShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "AgentState.y: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:y .
+
+zg:Agent_agent_idShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "Agent.agent_id: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 1 ;
+    sh:path zg:agent_id .
+
+zg:Agent_created_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Agent.created_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:created_at .
+
+zg:Agent_hasStateShape sh:class zg:AgentState ;
+    sh:message "Agent.hasState: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:hasState .
+
+zg:Agent_inRunShape sh:class zg:SimulationRun ;
+    sh:maxCount 1 ;
+    sh:message "Agent.inRun: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:inRun .
+
+zg:AliveAssignments a sh:SPARQLConstraint ;
+    sh:message "AliveAssignments: A living state has a model and its matching type capability profile." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life ?l; zg:biologicalType ?t. FILTER(?l>0 && (NOT EXISTS {$this zg:activeModel ?m} || NOT EXISTS {$this zg:hasTypeProfile ?t}))
+} """ .
+
+zg:BarricadeStateIntegrity a sh:SPARQLConstraint ;
+    sh:message "BarricadeStateIntegrity: Integrity cannot exceed its maximum." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:integrity ?i; zg:max_integrity ?m. FILTER(?i>?m)
+} """ .
+
+zg:BarricadeState_integrityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "BarricadeState.integrity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:integrity .
+
+zg:BarricadeState_max_integrityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "BarricadeState.max_integrity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 1 ;
+    sh:path zg:max_integrity .
+
+zg:BiomassReservation a sh:SPARQLConstraint ;
+    sh:message "BiomassReservation: Biomass reservations cannot exceed biomass." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:biomass ?b; zg:reserved_biomass ?r. FILTER(?r>?b)
+} """ .
+
+zg:ConversionDeadline a sh:SPARQLConstraint ;
+    sh:message "ConversionDeadline: Conversion occurs exactly at its episode deadline and closes that episode as CONVERTED." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:episode ?e; zg:beforeState ?b; zg:afterState ?a. ?b zg:activeEpisode ?be. ?a zg:atTime ?t; zg:revision ?r. ?e zg:conversion_due_at ?due; zg:episodeOutcome ?out; zg:ended_at ?end; zg:end_revision ?er. FILTER(?be!=?e || ?t!=?due || ?out!=zg:CONVERTED || ?end!=?t || ?er!=?r)
+} """ .
+
+zg:ConversionPreserves a sh:SPARQLConstraint ;
+    sh:message "ConversionPreserves: Conversion preserves current life, stamina and position." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:beforeState ?b; zg:afterState ?a. ?b zg:life ?l; zg:stamina ?s; zg:x ?x; zg:y ?y. ?a zg:life ?m; zg:stamina ?t; zg:x ?u; zg:y ?v. FILTER(?l!=?m || ?s!=?t || ?x!=?u || ?y!=?v)
+} """ .
+
+zg:ConversionTransition_episodeShape sh:class zg:InfectionEpisode ;
+    sh:maxCount 1 ;
+    sh:message "ConversionTransition.episode: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:episode .
+
+zg:ConversionTypes a sh:SPARQLConstraint ;
+    sh:message "ConversionTypes: Conversion changes living infected Human to active, role-free Zombie." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:beforeState ?b; zg:afterState ?a. ?b zg:biologicalType ?bt; zg:status ?bs; zg:life ?bl. ?a zg:biologicalType ?at; zg:status ?as. FILTER(?bt!=zg:Human || ?bs!=zg:INFECTED || ?bl<=0 || ?at!=zg:Zombie || ?as!=zg:ACTIVE || EXISTS {?a zg:activeRole ?r} || EXISTS {?a zg:inventory ?i})
+} """ .
+
+zg:Cooldown_forActionShape sh:class zg:ActionDefinition ;
+    sh:maxCount 1 ;
+    sh:message "Cooldown.forAction: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:forAction .
+
+zg:Cooldown_untilShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Cooldown.until: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:until .
+
+zg:CureEpisode a sh:SPARQLConstraint ;
+    sh:message "CureEpisode: Cure closes the exact active episode before its deadline." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:episode ?e; zg:beforeState ?b; zg:afterState ?a; zg:triggeredBy ?act. ?b zg:activeEpisode ?old. ?a zg:atTime ?t; zg:revision ?r. ?e zg:conversion_due_at ?due; zg:episodeOutcome ?out; zg:ended_at ?end; zg:end_revision ?er. FILTER(?old!=?e || ?t>=?due || ?out!=zg:CURED || ?end!=?t || ?er!=?r || NOT EXISTS {?act zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:SUCCEEDED; zg:targetBeforeEnd ?b; zg:targetAfterEnd ?a})
+} """ .
+
+zg:CureStates a sh:SPARQLConstraint ;
+    sh:message "CureStates: Cure changes INFECTED to HEALTHY while preserving type and life." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:beforeState ?b; zg:afterState ?a. ?b zg:status ?bs; zg:biologicalType ?bt; zg:life ?l. ?a zg:status ?as; zg:biologicalType ?at; zg:life ?v. FILTER(?bs!=zg:INFECTED || ?as!=zg:HEALTHY || ?bt!=zg:Human || ?at!=zg:Human || ?l<=0 || ?v!=?l)
+} """ .
+
+zg:CureTransition_episodeShape sh:class zg:InfectionEpisode ;
+    sh:maxCount 1 ;
+    sh:message "CureTransition.episode: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:episode .
+
+zg:CureTransition_triggeredByShape sh:class zg:ActionOccurrence ;
+    sh:maxCount 1 ;
+    sh:message "CureTransition.triggeredBy: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:triggeredBy .
+
+zg:DOCTORProfile_medical_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:medical_skill .
+
+zg:DOCTORProfile_prophylaxis_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:prophylaxis_duration .
+
+zg:DOCTORProfile_prophylaxis_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:prophylaxis_resistance .
+
+zg:DOCTORProfile_treatment_costShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:treatment_cost .
+
+zg:DOCTORProfile_treatment_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:treatment_duration .
+
+zg:DeadCleanup a sh:SPARQLConstraint ;
+    sh:message "DeadCleanup: Death clears active references, movement and sensing; death metadata is present." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life 0. FILTER(EXISTS {$this zg:activeRole ?r} || EXISTS {$this zg:activeModel ?m} || EXISTS {$this zg:activeAction ?a} || EXISTS {$this zg:activeEpisode ?e} || EXISTS {$this zg:hasTypeProfile ?t} || EXISTS {$this zg:effect ?f} || EXISTS {$this zg:cooldownRecord ?c} || EXISTS {$this zg:speed ?s FILTER(?s!=0)} || EXISTS {$this zg:sense_r ?r FILTER(?r!=0)} || NOT EXISTS {$this zg:death_at ?d; zg:deathCause ?c})
+} """ .
+
+zg:DeadInventory a sh:SPARQLConstraint ;
+    sh:message "DeadInventory: A dead human has an empty inventory." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life 0; zg:inventory/zg:stock/zg:quantity ?q. FILTER(?q!=0)
+} """ .
+
+zg:DeathTypes a sh:SPARQLConstraint ;
+    sh:message "DeathTypes: Death changes positive life to zero and preserves type and location." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:beforeState ?b; zg:afterState ?a. ?b zg:life ?l; zg:biologicalType ?ty; zg:x ?x; zg:y ?y. ?a zg:life ?v; zg:status ?s; zg:biologicalType ?at; zg:x ?u; zg:y ?w. FILTER(?l<=0 || ?v!=0 || ?s!=zg:DEAD || ?ty!=?at || ?x!=?u || ?y!=?w)
+} """ .
+
+zg:DecisionModel_model_idShape sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:message "DecisionModel.model_id: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:model_id .
+
+zg:DecisionModel_model_versionShape sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:message "DecisionModel.model_version: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:model_version .
+
+zg:DurationBounds a sh:SPARQLConstraint ;
+    sh:message "DurationBounds: Maximum duration is not less than minimum duration." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:duration_min ?a; zg:duration_max ?b. FILTER(?a>?b)
+} """ .
+
+zg:ENGINEERProfile_build_integrityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:build_integrity .
+
+zg:ENGINEERProfile_build_material_costShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:build_material_cost .
+
+zg:ENGINEERProfile_carry_capacityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:carry_capacity .
+
+zg:ENGINEERProfile_repair_amountShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:repair_amount .
+
+zg:ENGINEERProfile_repair_material_costShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:repair_material_cost .
+
+zg:EnvironmentState_atTimeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "EnvironmentState.atTime: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:atTime .
+
+zg:EnvironmentState_geometryShape sh:maxCount 1 ;
+    sh:message "EnvironmentState.geometry: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:geometry .
+
+zg:EnvironmentState_ofEntityShape sh:class zg:EnvironmentEntity ;
+    sh:maxCount 1 ;
+    sh:message "EnvironmentState.ofEntity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:ofEntity .
+
+zg:EnvironmentState_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "EnvironmentState.revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:revision .
+
+zg:EnvironmentState_worldShape sh:class zg:World ;
+    sh:maxCount 1 ;
+    sh:message "EnvironmentState.world: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:world .
+
+zg:EpisodeClosure a sh:SPARQLConstraint ;
+    sh:message "EpisodeClosure: Closed outcomes have end time/revision; ongoing episodes have neither." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:episodeOutcome ?o. FILTER((?o=zg:ONGOING && (EXISTS {$this zg:ended_at ?e} || EXISTS {$this zg:end_revision ?r})) || (?o!=zg:ONGOING && NOT EXISTS {$this zg:ended_at ?e; zg:end_revision ?r}))
+} """ .
+
+zg:EpisodeDeadline a sh:SPARQLConstraint ;
+    sh:message "EpisodeDeadline: Deadline equals onset plus positive incubation duration." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:onset_at ?o; zg:incubation_duration ?d; zg:conversion_due_at ?t. FILTER(?t != ?o+?d)
+} """ .
+
+zg:EpisodeEndOrder a sh:SPARQLConstraint ;
+    sh:message "EpisodeEndOrder: An episode cannot end before onset." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:onset_at ?o; zg:onset_revision ?r; zg:ended_at ?e; zg:end_revision ?v. FILTER(?e<?o || (?e=?o && ?v<?r))
+} """ .
+
+zg:EpisodeOwnership a sh:SPARQLConstraint ;
+    sh:message "EpisodeOwnership: Active episode belongs to this agent and is active at this causal revision." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:ofAgent ?a; zg:atTime ?t; zg:revision ?r; zg:activeEpisode ?e. ?e zg:infectedAgent ?b; zg:onset_at ?on; zg:onset_revision ?orr; zg:conversion_due_at ?due. OPTIONAL {?e zg:ended_at ?end; zg:end_revision ?er} FILTER(?a!=?b || ?t<?on || (?t=?on && ?r<?orr) || ?t>?due || (BOUND(?end) && (?t>?end || (?t=?end && ?r>=?er))))
+} """ .
+
+zg:Event_atTimeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Event.atTime: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:atTime .
+
+zg:Event_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "Event.revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:revision .
+
+zg:GateModeIntegrity a sh:SPARQLConstraint ;
+    sh:message "GateModeIntegrity: BREACHED iff gate integrity is zero." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:gateMode ?g; zg:integrity ?i. FILTER((?g=zg:BREACHED && ?i!=0) || (?g!=zg:BREACHED && ?i=0))
+} """ .
+
+zg:GateStateIntegrity a sh:SPARQLConstraint ;
+    sh:message "GateStateIntegrity: Integrity cannot exceed its maximum." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:integrity ?i; zg:max_integrity ?m. FILTER(?i>?m)
+} """ .
+
+zg:GateState_gateModeShape sh:in ( zg:OPEN zg:CLOSED zg:BREACHED ) ;
+    sh:maxCount 1 ;
+    sh:message "GateState.gateMode: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:gateMode .
+
+zg:GateState_integrityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "GateState.integrity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:integrity .
+
+zg:GateState_max_integrityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "GateState.max_integrity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 1 ;
+    sh:path zg:max_integrity .
+
+zg:Gate_hasShelterShape sh:class zg:Shelter ;
+    sh:maxCount 1 ;
+    sh:message "Gate.hasShelter: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:hasShelter .
+
+zg:HumanState_carry_capacityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.carry_capacity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:carry_capacity .
+
+zg:HumanState_combat_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "HumanState.combat_skill: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:combat_skill .
+
+zg:HumanState_hungerShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 100 ;
+    sh:message "HumanState.hunger: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:hunger .
+
+zg:HumanState_hunger_rateShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.hunger_rate: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:hunger_rate .
+
+zg:HumanState_infection_progressShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "HumanState.infection_progress: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:infection_progress .
+
+zg:HumanState_infection_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "HumanState.infection_resistance: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:infection_resistance .
+
+zg:HumanState_infection_resistance_effectiveShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "HumanState.infection_resistance_effective: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:infection_resistance_effective .
+
+zg:HumanState_inventoryShape sh:class zg:Inventory ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.inventory: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:inventory .
+
+zg:HumanState_medical_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "HumanState.medical_skill: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:medical_skill .
+
+zg:HumanState_melee_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.melee_damage: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:melee_damage .
+
+zg:HumanState_next_starvation_damage_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.next_starvation_damage_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:next_starvation_damage_at .
+
+zg:HumanState_starvation_started_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "HumanState.starvation_started_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:starvation_started_at .
+
+zg:InfectionEpisode_conversion_due_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.conversion_due_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:conversion_due_at .
+
+zg:InfectionEpisode_end_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.end_revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:end_revision .
+
+zg:InfectionEpisode_ended_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.ended_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:ended_at .
+
+zg:InfectionEpisode_episodeOutcomeShape sh:in ( zg:ONGOING zg:CURED zg:CONVERTED zg:HOST_DIED ) ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.episodeOutcome: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:episodeOutcome .
+
+zg:InfectionEpisode_incubation_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.incubation_duration: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:incubation_duration .
+
+zg:InfectionEpisode_infectedAgentShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.infectedAgent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:infectedAgent .
+
+zg:InfectionEpisode_onset_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.onset_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:onset_at .
+
+zg:InfectionEpisode_onset_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.onset_revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:onset_revision .
+
+zg:InfectionEpisode_sourceAgentShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.sourceAgent: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:sourceAgent .
+
+zg:InfectionEpisode_sourceEventShape sh:class zg:Event ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.sourceEvent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:sourceEvent .
+
+zg:InfectionEpisode_source_kindShape sh:datatype xsd:string ;
+    sh:maxCount 1 ;
+    sh:message "InfectionEpisode.source_kind: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:source_kind .
+
+zg:InfectionProgress a sh:SPARQLConstraint ;
+    sh:message "InfectionProgress: Progress agrees with the referenced clock; it is zero without an episode." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:infection_progress ?p; zg:atTime ?t. OPTIONAL {$this zg:activeEpisode ?e. ?e zg:onset_at ?o; zg:incubation_duration ?d} FILTER((!BOUND(?e) && ?p!=0) || (BOUND(?e) && ABS(?p - ((?t-?o)/?d))>0.000000001))
+} """ .
+
+zg:IntentAgreement a sh:SPARQLConstraint ;
+    sh:message "IntentAgreement: The action realizes the same actor/action definition as its intent and cannot start before proposal." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:realizes ?i; zg:actorStart/zg:ofAgent ?a; zg:actionDefinition ?d; zg:startTime ?s. ?i zg:actor ?b; zg:actionDefinition ?e; zg:proposedAt ?p; zg:observes/zg:observer ?o. FILTER(?a!=?b || ?d!=?e || ?s<?p || ?a!=?o)
+} """ .
+
+zg:InventoryCapacity a sh:SPARQLConstraint ;
+    sh:message "InventoryCapacity: Total portable stock, including reservations, fits capacity." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:inventory/zg:stock/zg:quantity ?q; zg:carry_capacity ?c.
+} GROUP BY $this HAVING(SUM(?q)>MAX(?c))""" .
+
+zg:Inventory_stockShape sh:class zg:ResourceStock ;
+    sh:message "Inventory.stock: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:stock .
+
+zg:LifecycleTransition_afterStateShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "LifecycleTransition.afterState: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:afterState .
+
+zg:LifecycleTransition_beforeStateShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "LifecycleTransition.beforeState: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:beforeState .
+
+zg:LivingDeathMetadata a sh:SPARQLConstraint ;
+    sh:message "LivingDeathMetadata: Living agents have no death metadata." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life ?l. FILTER(?l>0 && (EXISTS {$this zg:death_at ?d} || EXISTS {$this zg:deathCause ?c}))
+} """ .
+
+zg:MissOnlyAttack a sh:SPARQLConstraint ;
+    sh:message "MissOnlyAttack: Only stochastic agent attacks can MISS." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult zg:MISSED; zg:actionDefinition ?d. FILTER(?d NOT IN (zg:action_melee,zg:action_claw,zg:action_bite,zg:action_power_strike,zg:action_spit))
+} """ .
+
+zg:ModelAssignmentInterval a sh:SPARQLConstraint ;
+    sh:message "ModelAssignmentInterval: End cannot precede start." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:start_at ?s; zg:end_at ?e. FILTER(?e<?s)
+} """ .
+
+zg:ModelAssignment_end_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ModelAssignment.end_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:end_at .
+
+zg:ModelAssignment_modelDefinitionShape sh:class zg:DecisionModel ;
+    sh:maxCount 1 ;
+    sh:message "ModelAssignment.modelDefinition: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:modelDefinition .
+
+zg:ModelAssignment_ofAgentShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "ModelAssignment.ofAgent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:ofAgent .
+
+zg:ModelAssignment_start_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ModelAssignment.start_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:start_at .
+
+zg:ModelOwnership a sh:SPARQLConstraint ;
+    sh:message "ModelOwnership: Active model assignment belongs to this agent." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:ofAgent ?a; zg:activeModel/zg:ofAgent ?b. FILTER(?a!=?b)
+} """ .
+
+zg:NoCausalCycle a sh:SPARQLConstraint ;
+    sh:message "NoCausalCycle: Event causal graph must be acyclic." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:cause+ $this.
+} """ .
+
+zg:NoResurrection a sh:SPARQLConstraint ;
+    sh:message "NoResurrection: No recorded later state of a dead identity is alive or changes its type/location." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:life 0; zg:ofAgent ?a; zg:atTime ?t; zg:revision ?r; zg:biologicalType ?ty; zg:x ?x; zg:y ?y. ?later a zg:AgentState; zg:ofAgent ?a; zg:atTime ?u; zg:revision ?v; zg:life ?l; zg:biologicalType ?lt; zg:x ?lx; zg:y ?ly. FILTER((?u>?t || (?u=?t && ?v>?r)) && (?l!=0 || ?ty!=?lt || ?x!=?lx || ?y!=?ly))
+} """ .
+
+zg:ObservationSelf a sh:SPARQLConstraint ;
+    sh:message "ObservationSelf: Observation observer, time, and revision match its self-state." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:observer ?a; zg:selfState ?s; zg:atTime ?t; zg:revision ?r. ?s zg:ofAgent ?b; zg:atTime ?u; zg:revision ?v. FILTER(?a!=?b || ?t!=?u || ?r!=?v)
+} """ .
+
+zg:Observation_atTimeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Observation.atTime: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:atTime .
+
+zg:Observation_observerShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "Observation.observer: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:observer .
+
+zg:Observation_revisionShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "Observation.revision: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:revision .
+
+zg:Observation_selfStateShape sh:class zg:AgentState ;
+    sh:maxCount 1 ;
+    sh:message "Observation.selfState: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:selfState .
+
+zg:OneActionAtATime a sh:SPARQLConstraint ;
+    sh:message "OneActionAtATime: Recorded action intervals for the same actor do not overlap." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actorStart/zg:ofAgent ?actor; zg:startTime ?s; zg:plannedEnd ?p. OPTIONAL {$this zg:resolvedAt ?r} BIND(COALESCE(?r,?p) AS ?end) ?other a zg:ActionOccurrence; zg:actorStart/zg:ofAgent ?actor; zg:startTime ?os; zg:plannedEnd ?op. OPTIONAL {?other zg:resolvedAt ?orr} BIND(COALESCE(?orr,?op) AS ?oe) FILTER(?other!=$this && ?s<?oe && ?os<?end)
+} """ .
+
+zg:Point_xShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Point.x: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:x .
+
+zg:Point_yShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Point.y: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:y .
+
+zg:PopulationAllocation_biologicalTypeShape sh:class zg:AgentType ;
+    sh:maxCount 1 ;
+    sh:message "PopulationAllocation.biologicalType: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:biologicalType .
+
+zg:PopulationAllocation_countShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "PopulationAllocation.count: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:count .
+
+zg:PopulationAllocation_roleDefinitionShape sh:class zg:RoleDefinition ;
+    sh:maxCount 1 ;
+    sh:message "PopulationAllocation.roleDefinition: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:roleDefinition .
+
+zg:PositionBounds a sh:SPARQLConstraint ;
+    sh:message "PositionBounds: Coordinates lie within the world." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:x ?x; zg:y ?y; zg:world ?w. ?w zg:length ?l; zg:width ?h. FILTER(?x<0 || ?y<0 || ?x>?l || ?y>?h)
+} """ .
+
+zg:RUNNERProfile_base_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_speed .
+
+zg:RUNNERProfile_claw_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:claw_damage .
+
+zg:RUNNERProfile_dash_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:dash_duration .
+
+zg:RUNNERProfile_dash_multiplierShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 1 ;
+    sh:path zg:dash_multiplier .
+
+zg:ReciprocalAttackExclusion a sh:SPARQLConstraint ;
+    sh:message "ReciprocalAttackExclusion: Overlapping reciprocal attacks cannot both be valid resolved attempts, including misses." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition/zg:mayCause zg:PhysicalDamageEffect; zg:actionResult ?r; zg:actorStart/zg:ofAgent ?actor; zg:targetStart/zg:ofAgent ?target; zg:startTime ?s; zg:resolvedAt ?end. ?other a zg:ActionOccurrence; zg:actionDefinition/zg:mayCause zg:PhysicalDamageEffect; zg:actionResult ?orr; zg:actorStart/zg:ofAgent ?target; zg:targetStart/zg:ofAgent ?actor; zg:startTime ?os; zg:resolvedAt ?oe. FILTER(?other!=$this && ?r IN (zg:SUCCEEDED,zg:MISSED) && ?orr IN (zg:SUCCEEDED,zg:MISSED) && ?s<?oe && ?os<?end)
+} """ .
+
+zg:RectangleOrder a sh:SPARQLConstraint ;
+    sh:message "RectangleOrder: Rectangle has strictly positive width and height." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:xmin ?a; zg:xmax ?b; zg:ymin ?c; zg:ymax ?d. FILTER(?a>=?b || ?c>=?d)
+} """ .
+
+zg:Rectangle_xmaxShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Rectangle.xmax: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:xmax .
+
+zg:Rectangle_xminShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Rectangle.xmin: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:xmin .
+
+zg:Rectangle_ymaxShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Rectangle.ymax: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:ymax .
+
+zg:Rectangle_yminShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Rectangle.ymin: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:ymin .
+
+zg:RemainsState_biomassShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "RemainsState.biomass: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:biomass .
+
+zg:RemainsState_reserved_biomassShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "RemainsState.reserved_biomass: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:reserved_biomass .
+
+zg:Remains_comesFromShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "Remains.comesFrom: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:comesFrom .
+
+zg:RequiredTargets a sh:SPARQLConstraint ;
+    sh:message "RequiredTargets: Agent/environment/footprint actions carry the relevant target record." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition/zg:target_kind ?k. FILTER((?k="Agent" && NOT EXISTS {$this zg:targetStart ?s}) || (?k="Environment" && NOT EXISTS {$this zg:targetEntity ?e}) || (?k="Footprint" && NOT EXISTS {$this zg:footprint ?r}))
+} """ .
+
+zg:ReservationBound a sh:SPARQLConstraint ;
+    sh:message "ReservationBound: Reserved quantity cannot exceed total quantity." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:quantity ?q; zg:reserved ?r. FILTER(?r>?q)
+} """ .
+
+zg:ResourceStock_holderShape sh:maxCount 1 ;
+    sh:message "A resource stock has exactly one inventory or stockpile-state holder." ;
+    sh:minCount 1 ;
+    sh:or ( [ sh:class zg:Inventory ] [ sh:class zg:StockpileState ] ) ;
+    sh:path [ sh:inversePath zg:stock ] .
+
+zg:ResourceStock_quantityShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "ResourceStock.quantity: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:quantity .
+
+zg:ResourceStock_reservedShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "ResourceStock.reserved: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:reserved .
+
+zg:ResourceStock_resourceTypeShape sh:in ( zg:FOOD zg:MEDICAL_SUPPLY zg:MATERIAL ) ;
+    sh:maxCount 1 ;
+    sh:message "ResourceStock.resourceType: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:path zg:resourceType .
+
+zg:ResultTiming a sh:SPARQLConstraint ;
+    sh:message "ResultTiming: Ongoing occurrences lack final state/time; resolved attempts include them and do not end before admission." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionResult ?r; zg:startTime ?s; zg:plannedEnd ?p. OPTIONAL {$this zg:resolvedAt ?e} FILTER((?r=zg:IN_PROGRESS && (BOUND(?e) || EXISTS {$this zg:actorAfterEnd ?a})) || (?r!=zg:IN_PROGRESS && (!BOUND(?e) || NOT EXISTS {$this zg:actorBeforeEnd ?b; zg:actorAfterEnd ?a})) || (BOUND(?e) && ?e<?s) || (?r IN (zg:SUCCEEDED,zg:MISSED) && ?e!=?p))
+} """ .
+
+zg:RoleAssignmentInterval a sh:SPARQLConstraint ;
+    sh:message "RoleAssignmentInterval: End cannot precede start." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:start_at ?s; zg:end_at ?e. FILTER(?e<?s)
+} """ .
+
+zg:RoleAssignment_end_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "RoleAssignment.end_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:end_at .
+
+zg:RoleAssignment_ofAgentShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "RoleAssignment.ofAgent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:ofAgent .
+
+zg:RoleAssignment_roleDefinitionShape sh:class zg:RoleDefinition ;
+    sh:maxCount 1 ;
+    sh:message "RoleAssignment.roleDefinition: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:roleDefinition .
+
+zg:RoleAssignment_start_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "RoleAssignment.start_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:start_at .
+
+zg:RoleCompatibility a sh:SPARQLConstraint ;
+    sh:message "RoleCompatibility: Active role belongs to this agent and supports this biological type." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:ofAgent ?a; zg:biologicalType ?t; zg:activeRole ?r. ?r zg:ofAgent ?b; zg:roleDefinition/zg:compatibleType ?rt. FILTER(?a!=?b || ?t!=?rt)
+} """ .
+
+zg:RoleDefinition_compatibleTypeShape sh:class zg:AgentType ;
+    sh:maxCount 1 ;
+    sh:message "RoleDefinition.compatibleType: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:compatibleType .
+
+zg:RoleDefinition_grantsShape sh:class zg:Capability ;
+    sh:message "RoleDefinition.grants: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:grants .
+
+zg:RoleFieldApplicability a sh:SPARQLConstraint ;
+    sh:message "RoleFieldApplicability: Spitter charges exist only for current Spitters and stay within their declared maximum." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+OPTIONAL {$this zg:activeRole/zg:roleDefinition ?role} OPTIONAL {$this zg:spit_charges ?q} FILTER((?role=zg:SPITTER && !BOUND(?q)) || (BOUND(?q) && (!BOUND(?role) || ?role!=zg:SPITTER)) || (BOUND(?q) && EXISTS {zg:SPITTER zg:max_spit_charges ?max FILTER(?q>?max)}))
+} """ .
+
+zg:RoleOverrides a sh:SPARQLConstraint ;
+    sh:message "RoleOverrides: Current common/type profile fields agree with the active role overrides." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:activeRole/zg:roleDefinition ?role. ?role ?p ?value. FILTER(?p IN (zg:base_speed,zg:base_sense_r,zg:base_damage_resistance,zg:medical_skill,zg:combat_skill,zg:melee_damage,zg:carry_capacity,zg:claw_damage,zg:attack_skill)) FILTER(NOT EXISTS {$this ?p ?value})
+} """ .
+
+zg:SCOUTProfile_base_sense_rShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_sense_r .
+
+zg:SCOUTProfile_base_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_speed .
+
+zg:SCOUTProfile_mark_radiusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:mark_radius .
+
+zg:SCOUTProfile_recon_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:recon_duration .
+
+zg:SCOUTProfile_recon_radiusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:recon_radius .
+
+zg:SCREAMERProfile_base_sense_rShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_sense_r .
+
+zg:SCREAMERProfile_call_radiusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:call_radius .
+
+zg:SCREAMERProfile_call_ttlShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:call_ttl .
+
+zg:SCREAMERProfile_claw_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:claw_damage .
+
+zg:SPITTERProfile_base_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_speed .
+
+zg:SPITTERProfile_max_spit_chargesShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:max_spit_charges .
+
+zg:SPITTERProfile_recharge_intervalShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:recharge_interval .
+
+zg:SPITTERProfile_spit_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:spit_damage .
+
+zg:SPITTERProfile_spit_potencyShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:spit_potency .
+
+zg:SPITTERProfile_spit_rangeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:spit_range .
+
+zg:Shelter_hasGateShape sh:class zg:Gate ;
+    sh:message "Shelter.hasGate: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:hasGate .
+
+zg:Shelter_hasWallShape sh:class zg:Obstacle ;
+    sh:message "Shelter.hasWall: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:hasWall .
+
+zg:Signal_emitted_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Signal.emitted_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:emitted_at .
+
+zg:Signal_expires_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Signal.expires_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:expires_at .
+
+zg:Signal_radiusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "Signal.radius: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:radius .
+
+zg:SimulationRun_scenarioShape sh:class zg:ScenarioDefinition ;
+    sh:maxCount 1 ;
+    sh:message "SimulationRun.scenario: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:scenario .
+
+zg:SimulationRun_worldShape sh:class zg:World ;
+    sh:maxCount 1 ;
+    sh:message "SimulationRun.world: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:world .
+
+zg:SpitterState_next_charge_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "SpitterState.next_charge_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minInclusive 0 ;
+    sh:path zg:next_charge_at .
+
+zg:SpitterState_spit_chargesShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "SpitterState.spit_charges: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:spit_charges .
+
+zg:StarvationTimers a sh:SPARQLConstraint ;
+    sh:message "StarvationTimers: Living hunger-100 states require starvation timers; other states clear them." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:hunger ?h; zg:life ?l. FILTER((?h=100 && ?l>0 && NOT EXISTS {$this zg:starvation_started_at ?s; zg:next_starvation_damage_at ?n}) || ((?h<100 || ?l=0) && (EXISTS {$this zg:starvation_started_at ?s} || EXISTS {$this zg:next_starvation_damage_at ?n})))
+} """ .
+
+zg:StateIdentityRevision a sh:SPARQLConstraint ;
+    sh:message "StateIdentityRevision: One state per agent, time, and causal revision." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:ofAgent ?a; zg:atTime ?t; zg:revision ?r. ?other a zg:AgentState; zg:ofAgent ?a; zg:atTime ?t; zg:revision ?r. FILTER(?other!=$this)
+} """ .
+
+zg:StateStatus a sh:SPARQLConstraint ;
+    sh:message "StateStatus: Type/status/life and active episode must agree." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:biologicalType ?t; zg:status ?s; zg:life ?l. FILTER((?l=0 && ?s!=zg:DEAD) || (?l>0 && ?s=zg:DEAD) || (?t=zg:Human && ?s=zg:ACTIVE) || (?t=zg:Zombie && ?s NOT IN (zg:ACTIVE,zg:DEAD)) || (?s=zg:INFECTED && NOT EXISTS {$this zg:activeEpisode ?e}) || (?s!=zg:INFECTED && EXISTS {$this zg:activeEpisode ?e}))
+} """ .
+
+zg:StateTypeFields a sh:SPARQLConstraint ;
+    sh:message "StateTypeFields: Applicable type-specific fields and explicit state classification are required." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:biologicalType ?t. FILTER((?t=zg:Human && NOT EXISTS {$this a zg:HumanState; zg:hunger ?h; zg:inventory ?i}) || (?t=zg:Zombie && NOT EXISTS {$this a zg:ZombieState; zg:virulence ?v}) || (?t=zg:Zombie && EXISTS {$this zg:inventory ?i}) || (?t=zg:Zombie && EXISTS {$this zg:hunger ?h}))
+} """ .
+
+zg:StateWorld a sh:SPARQLConstraint ;
+    sh:message "StateWorld: State world matches its agent run." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:ofAgent/zg:inRun/zg:world ?w; zg:world ?v. FILTER(?w!=?v)
+} """ .
+
+zg:StockpileState_stockShape sh:class zg:ResourceStock ;
+    sh:message "StockpileState.stock: required datatype, cardinality, range, or reference violated." ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:stock .
+
+zg:TYRANTProfile_attack_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:attack_skill .
+
+zg:TYRANTProfile_base_damage_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 0.8 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_damage_resistance .
+
+zg:TYRANTProfile_base_speedShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_speed .
+
+zg:TYRANTProfile_claw_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:claw_damage .
+
+zg:TYRANTProfile_demolish_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:demolish_damage .
+
+zg:TYRANTProfile_rally_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:rally_duration .
+
+zg:TYRANTProfile_rally_hit_bonusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:rally_hit_bonus .
+
+zg:TYRANTProfile_rally_radiusShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:rally_radius .
+
+zg:TimedEffectInterval a sh:SPARQLConstraint ;
+    sh:message "TimedEffectInterval: End cannot precede start." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:start_at ?s; zg:end_at ?e. FILTER(?e<?s)
+} """ .
+
+zg:TimedEffect_end_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "TimedEffect.end_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:end_at .
+
+zg:TimedEffect_magnitudeShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "TimedEffect.magnitude: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:magnitude .
+
+zg:TimedEffect_recipientShape sh:class zg:Agent ;
+    sh:maxCount 1 ;
+    sh:message "TimedEffect.recipient: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:recipient .
+
+zg:TimedEffect_sourceEventShape sh:class zg:Event ;
+    sh:maxCount 1 ;
+    sh:message "TimedEffect.sourceEvent: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:path zg:sourceEvent .
+
+zg:TimedEffect_start_atShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "TimedEffect.start_at: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:start_at .
+
+zg:TransitionIdentity a sh:SPARQLConstraint ;
+    sh:message "TransitionIdentity: Atomic lifecycle transitions preserve identity and time, and increase causal revision." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:beforeState ?b; zg:afterState ?a. ?b zg:ofAgent ?i; zg:atTime ?t; zg:revision ?r. ?a zg:ofAgent ?j; zg:atTime ?u; zg:revision ?s. FILTER(?i!=?j || ?t!=?u || ?s<=?r)
+} """ .
+
+zg:TreatmentConsume a sh:SPARQLConstraint ;
+    sh:message "TreatmentConsume: Successful treatment consumes one reserved medical item." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:SUCCEEDED; zg:actorBeforeEnd/zg:inventory/zg:stock ?b; zg:actorAfterEnd/zg:inventory/zg:stock ?a. ?b zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?r. ?a zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?v; zg:reserved ?s. FILTER(?r<1 || ?v!=?q-1 || ?s!=?r-1)
+} """ .
+
+zg:TreatmentCureRecord a sh:SPARQLConstraint ;
+    sh:message "TreatmentCureRecord: Successful treatment includes its linked cure transition and closed episode." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:SUCCEEDED. FILTER(NOT EXISTS {?c a zg:CureTransition; zg:triggeredBy $this})
+} """ .
+
+zg:TreatmentDeadline a sh:SPARQLConstraint ;
+    sh:message "TreatmentDeadline: Successful treatment completes strictly before the episode deadline." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:SUCCEEDED; zg:resolvedAt ?t; zg:targetBeforeEnd/zg:activeEpisode/zg:conversion_due_at ?due. FILTER(?t>=?due)
+} """ .
+
+zg:TreatmentEffect a sh:SPARQLConstraint ;
+    sh:message "TreatmentEffect: Successful treatment ends infection without changing target life or position." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:SUCCEEDED; zg:targetBeforeEnd ?b; zg:targetAfterEnd ?a. ?b zg:ofAgent ?i; zg:life ?l; zg:x ?x; zg:y ?y; zg:status ?old. ?a zg:ofAgent ?j; zg:life ?v; zg:x ?u; zg:y ?w; zg:status ?new; zg:biologicalType ?ty. FILTER(?i!=?j || ?old!=zg:INFECTED || ?new!=zg:HEALTHY || ?ty!=zg:Human || ?l!=?v || ?x!=?u || ?y!=?w || EXISTS {?a zg:activeEpisode ?e})
+} """ .
+
+zg:TreatmentFailureRelease a sh:SPARQLConstraint ;
+    sh:message "TreatmentFailureRelease: A target-precondition failure releases the medical reservation without consuming the item." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult zg:FAILED_PRECONDITION; zg:actorBeforeEnd/zg:inventory/zg:stock ?b; zg:actorAfterEnd/zg:inventory/zg:stock ?a. ?b zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?r. ?a zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?v; zg:reserved ?s. FILTER(?r<1 || ?v!=?q || ?s!=?r-1)
+} """ .
+
+zg:TreatmentReserve a sh:SPARQLConstraint ;
+    sh:message "TreatmentReserve: Admission reserves one available medical item without consuming it." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actorStart/zg:inventory/zg:stock ?b; zg:actorAfterStart/zg:inventory/zg:stock ?a. ?b zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?r. ?a zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?v; zg:reserved ?s. FILTER(?q-?r<1 || ?v!=?q || ?s!=?r+1)
+} """ .
+
+zg:TreatmentStartTarget a sh:SPARQLConstraint ;
+    sh:message "TreatmentStartTarget: Treatment starts on a living infected human." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:targetStart ?s. ?s zg:status ?st; zg:biologicalType ?ty; zg:life ?l. FILTER(?st!=zg:INFECTED || ?ty!=zg:Human || ?l<=0)
+} """ .
+
+zg:TreatmentSupplyEvidence a sh:SPARQLConstraint ;
+    sh:message "TreatmentSupplyEvidence: Treatment resource states must record medical stock at admission and resolution." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult ?r; zg:actorStart ?s; zg:actorAfterStart ?a. FILTER(NOT EXISTS {?s zg:inventory/zg:stock [zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?v]} || NOT EXISTS {?a zg:inventory/zg:stock [zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?v]} || (?r!=zg:IN_PROGRESS && (NOT EXISTS {$this zg:actorBeforeEnd/zg:inventory/zg:stock [zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?v]} || NOT EXISTS {$this zg:actorAfterEnd/zg:inventory/zg:stock [zg:resourceType zg:MEDICAL_SUPPLY; zg:quantity ?q; zg:reserved ?v]})))
+} """ .
+
+zg:TreatmentTargetRecords a sh:SPARQLConstraint ;
+    sh:message "TreatmentTargetRecords: Treatment requires start target; successful treatment also requires resolution target records." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:actionDefinition zg:action_treat_infection; zg:actionResult ?r. FILTER(NOT EXISTS {$this zg:targetStart ?s} || (?r=zg:SUCCEEDED && NOT EXISTS {$this zg:targetBeforeEnd ?b; zg:targetAfterEnd ?a}))
+} """ .
+
+zg:UniqueAgentID a sh:SPARQLConstraint ;
+    sh:message "UniqueAgentID: Agent ID is unique within a run." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:inRun ?r; zg:agent_id ?id. ?other a zg:Agent; zg:inRun ?r; zg:agent_id ?id. FILTER(?other != $this)
+} """ .
+
+zg:UniqueInventoryResource a sh:SPARQLConstraint ;
+    sh:message "UniqueInventoryResource: One stock per portable resource type in each inventory." ;
+    sh:select """PREFIX zg: <urn:zombie-game:v0.1:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT $this WHERE {
+$this zg:stock ?a,?b. ?a zg:resourceType ?t. ?b zg:resourceType ?t. FILTER(?a!=?b)
+} """ .
+
+zg:WARRIORProfile_base_damage_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 0.8 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:base_damage_resistance .
+
+zg:WARRIORProfile_combat_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:combat_skill .
+
+zg:WARRIORProfile_guard_durationShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:minInclusive 0 ;
+    sh:path zg:guard_duration .
+
+zg:WARRIORProfile_guard_resistanceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 0.8 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:guard_resistance .
+
+zg:WARRIORProfile_melee_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:melee_damage .
+
+zg:WARRIORProfile_strike_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:strike_damage .
+
+zg:World_lengthShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "World.length: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:length .
+
+zg:World_widthShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "World.width: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minExclusive 0 ;
+    sh:path zg:width .
+
+zg:ZombieState_attack_skillShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "ZombieState.attack_skill: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:attack_skill .
+
+zg:ZombieState_bite_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "ZombieState.bite_damage: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:bite_damage .
+
+zg:ZombieState_claw_damageShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "ZombieState.claw_damage: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:claw_damage .
+
+zg:ZombieState_feed_energyShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:message "ZombieState.feed_energy: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:feed_energy .
+
+zg:ZombieState_feed_healingShape sh:datatype xsd:integer ;
+    sh:maxCount 1 ;
+    sh:message "ZombieState.feed_healing: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:feed_healing .
+
+zg:ZombieState_virulenceShape sh:datatype xsd:decimal ;
+    sh:maxCount 1 ;
+    sh:maxInclusive 1 ;
+    sh:message "ZombieState.virulence: required datatype, cardinality, range, or reference violated." ;
+    sh:minCount 1 ;
+    sh:minInclusive 0 ;
+    sh:path zg:virulence .
+
