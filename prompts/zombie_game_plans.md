@@ -19,54 +19,26 @@ We will generate an ontology for the simulation first. The ontology describes th
 ### TASK 1: Build Zombie Game Simulation Ontology
 A comprehensive and detailed ontology for the Zombie Game simulation is desired. 
 
-**Playground**
-For early stages of this project, we can use a bounded Euclidean space, i.e., a plain, to set up the playground. 
+1. **Generate the formal specifications from the Markdown ontology.**  
+   Produce the OWL ontology and SHACL shapes, accompanied by a traceability table linking each Markdown requirement to its formal representation. Each requirement should be marked as fully represented, partially represented, or still requiring a behavioral specification. Any ambiguity should be resolved with you before encoding it.
 
-The size of the playground needs to be specified:
-- `length`: (Real) The length of the playground.
-- `width`: (Real) The width of the playground.
+2. **Validate the specifications using appropriate software and example data.**  
+   Check syntax, OWL language conformance, logical consistency, and whether intended classes can have instances. Then validate both **valid examples that should pass** and **deliberately invalid examples that should fail** against the SHACL shapes. Record the software versions, commands, results, and remaining issues so the checks can be repeated.
 
-> [!todo]
-> - You must specify appropriate `length` and `width` to make the simulation significant enough.
+For our game, useful initial examples include:
 
+- A valid human-to-zombie conversion that preserves agent identity.
+- An incompatible role assigned to a zombie state.
+- A state with a missing or out-of-range life value.
+- Successful Doctor treatment before the deadline.
+- An incorrectly recorded successful treatment at the conversion deadline.
 
-**Agents**
-Basic agent *attributes* need to be defined. The following attributes may be needed:
-- `ID`: (Integer) Unique ID for each agent.
-- `type`: (Categorical) `Human` or `Zombie`.
-- `role`: (Categorical) The role of the agent, if any, e.g., `DOCTOR` and `WARRIOR` for humans.
-- `status`: (Categorical) Such as `HEALTHY`, `INFECTED`, `DEAD`, and some other potential statuses for both humans and zombies.
-- `life`: (Integer) The life value of the agent. It takes values in a range, e.g., from 0 to 100. 
-- `x`: (Real) The x-coordinate of the agent.
-- `y`: (Real) The y-coordinate of the agent.
-- `speed`: (Real) The speed of movement.
-- `sense_r`: (Real) The sensing radius.
+We will carry out these two steps incrementally, beginning with agent states, lifecycle rules, and Doctor treatment, then extending the same process to the remaining concepts and actions.
 
-Type-specific attributes are needed for humans and zombies. 
+**The acceptance criterion should be more than “the tools report no errors.”** Valid examples must pass, invalid examples must fail for the expected reasons, and every Markdown requirement must have an accounted-for status.
 
-Role-specific attribute are needed for each role. (The role system is explained below.)
+The resulting deliverable would be a formal specification package and a reproducible validation report. 
 
-> [!todo]
-> - You must rigorously identify all necessary agent attributes and define them. 
-> - You must be creative and define some type-specific attributes for both humans and zombies.
-
-In addition to attributes, each agent has some *actions* to takes at every moment the agent is considered during the evolution of the simulation. 
-
-The decision-making of actions for each agent is driven by backend models (e.g., reinforcement models or AI-driven models). When such a model makes decisions for an agent, it is assumed that the model can retrieve information of the environment and the states of its neighboring agents that are in the sensing range of the considered agent.
-
-For all agents, the action `move` is mandatory. The validity of the movement is constrained by the `speed` of the considered agent and the range of the playground. The direction to move is the result of a decision-making by the agent. 
-
-> [!todo]
-> - You must be creative and add some actions for both humans and zombies. 
-
-
-**Role System**
-For agents, we need to design a *role system*, so that we are enabled to easily introduce any appropriate roles as needed. 
-
-Each role has its specific *attributes* and *actions*. 
-
-> [!todo]
-> - You must be creative and define some roles for both humans and zombies for the initial version of this simulation, with their attributes and actions well defined.
 
 
 ### TASK 2: Implement Zombie Game Simulation Framework
