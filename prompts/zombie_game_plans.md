@@ -16,6 +16,11 @@ We will generate an ontology for the simulation first. The ontology describes th
 
 ## Tasks
 
+### TASK 1: Build Zombie Game Simulation Ontology
+This task has been done. The ontology specifications are stored in the folder "ontology". More specifically, the file "zombie_game_ontology_v0.1.md" provides the ontology written in Markdown. And, formalized ontology specifications are in the folder "ontology/formal_v0.1".
+
+
+
 ### TASK 2: Implement Zombie Game Simulation Framework
 
 Based on the ontology specifications created in TASK 1, the simulation framework is concretely implemented in this task.
