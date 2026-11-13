@@ -16,31 +16,6 @@ We will generate an ontology for the simulation first. The ontology describes th
 
 ## Tasks
 
-### TASK 1: Build Zombie Game Simulation Ontology
-A comprehensive and detailed ontology for the Zombie Game simulation is desired. 
-
-1. **Generate the formal specifications from the Markdown ontology.**  
-   Produce the OWL ontology and SHACL shapes, accompanied by a traceability table linking each Markdown requirement to its formal representation. Each requirement should be marked as fully represented, partially represented, or still requiring a behavioral specification. Any ambiguity should be resolved with you before encoding it.
-
-2. **Validate the specifications using appropriate software and example data.**  
-   Check syntax, OWL language conformance, logical consistency, and whether intended classes can have instances. Then validate both **valid examples that should pass** and **deliberately invalid examples that should fail** against the SHACL shapes. Record the software versions, commands, results, and remaining issues so the checks can be repeated.
-
-For our game, useful initial examples include:
-
-- A valid human-to-zombie conversion that preserves agent identity.
-- An incompatible role assigned to a zombie state.
-- A state with a missing or out-of-range life value.
-- Successful Doctor treatment before the deadline.
-- An incorrectly recorded successful treatment at the conversion deadline.
-
-We will carry out these two steps incrementally, beginning with agent states, lifecycle rules, and Doctor treatment, then extending the same process to the remaining concepts and actions.
-
-**The acceptance criterion should be more than “the tools report no errors.”** Valid examples must pass, invalid examples must fail for the expected reasons, and every Markdown requirement must have an accounted-for status.
-
-The resulting deliverable would be a formal specification package and a reproducible validation report. 
-
-
-
 ### TASK 2: Implement Zombie Game Simulation Framework
 
 Based on the ontology specifications created in TASK 1, the simulation framework is concretely implemented in this task.
