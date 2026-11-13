@@ -43,6 +43,8 @@ The resulting deliverable would be a formal specification package and a reproduc
 
 ### TASK 2: Implement Zombie Game Simulation Framework
 
+Based on the ontology specifications created in TASK 1, the simulation framework is concretely implemented in this task.
+
 **Simulation Logic**
 > [!todo]
 > - You must follow the ontology built in TASK 1 and implement the Zombie Game logic. 
@@ -88,9 +90,6 @@ A simulation instance is required to be configurable, such as its initial states
 > - You must design and implement this hyperparameter & instance management system.
 
 
-## General Requirements
-1. You must address TASK 1 first, and output the ontology explicitly for me to download. I will review the ontology, and send you commands to proceed.
-2. Your ontology output must be human-readable. If any ontology standards are used, you must explain which standards are used and why you choose them. 
 
 
 
