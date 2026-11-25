@@ -1,0 +1,66 @@
+Validation Report
+Conforms: False
+Results (9):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:1:0:0>
+	Value Node: <urn:zombie-sim:run:treatment:state:1:0:0>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:1:0:1>
+	Value Node: <urn:zombie-sim:run:treatment:state:1:0:1>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:1:4:1>
+	Value Node: <urn:zombie-sim:run:treatment:state:1:4:1>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:1:4:2>
+	Value Node: <urn:zombie-sim:run:treatment:state:1:4:2>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:1:4:3>
+	Value Node: <urn:zombie-sim:run:treatment:state:1:4:3>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:2:0:0>
+	Value Node: <urn:zombie-sim:run:treatment:state:2:0:0>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:2:4:1>
+	Value Node: <urn:zombie-sim:run:treatment:state:2:4:1>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:2:4:2>
+	Value Node: <urn:zombie-sim:run:treatment:state:2:4:2>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:HumanStateShape
+	Focus Node: <urn:zombie-sim:run:treatment:state:2:4:3>
+	Value Node: <urn:zombie-sim:run:treatment:state:2:4:3>
+	Source Constraint: zg:StarvationTimers
+	Message: StarvationTimers: Living hunger-100 states require starvation timers; other states clear them.

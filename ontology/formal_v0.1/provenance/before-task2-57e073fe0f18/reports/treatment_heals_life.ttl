@@ -1,0 +1,23 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:cure> ;
+            sh:resultMessage "CureStates: Cure changes INFECTED to HEALTHY while preserving type and life." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:CureStates ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:CureTransitionShape ;
+            sh:value <urn:zombie-game:example:cure> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "TreatmentEffect: Successful treatment ends infection without changing target life or position." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:TreatmentEffect ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ] .
+

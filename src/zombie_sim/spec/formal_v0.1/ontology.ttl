@@ -1,0 +1,975 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+zg:ActionIntent a owl:Class ;
+    rdfs:label "ActionIntent" .
+
+zg:ActionOccurrence a owl:Class ;
+    rdfs:label "ActionOccurrence" .
+
+zg:ActiveZombieState a owl:Class ;
+    rdfs:label "ActiveZombieState" ;
+    rdfs:subClassOf zg:LivingState,
+        zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:ACTIVE ;
+                        owl:onProperty zg:status ] ) ] .
+
+zg:Barricade a owl:Class ;
+    rdfs:label "Barricade" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:BarricadeState a owl:Class ;
+    rdfs:label "BarricadeState" ;
+    rdfs:subClassOf zg:EnvironmentState .
+
+zg:BarrierDamageEffect a zg:EffectCategory .
+
+zg:BarrierRepairEffect a zg:EffectCategory .
+
+zg:BaselineScenarioDefinition a owl:Class ;
+    rdfs:label "BaselineScenarioDefinition" ;
+    rdfs:subClassOf zg:ScenarioDefinition .
+
+zg:CombatActionDefinition a owl:Class ;
+    rdfs:label "CombatActionDefinition" ;
+    rdfs:subClassOf zg:ActionDefinition ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:ActionDefinition [ a owl:Restriction ;
+                        owl:hasValue zg:PhysicalDamageEffect ;
+                        owl:onProperty zg:mayCause ] ) ] .
+
+zg:CommunicationEffect a zg:EffectCategory .
+
+zg:ConstructionEffect a zg:EffectCategory .
+
+zg:ConversionTransition a owl:Class ;
+    rdfs:label "ConversionTransition" ;
+    rdfs:subClassOf zg:LifecycleTransition .
+
+zg:Cooldown a owl:Class ;
+    rdfs:label "Cooldown" .
+
+zg:CureTransition a owl:Class ;
+    rdfs:label "CureTransition" ;
+    rdfs:subClassOf zg:LifecycleTransition .
+
+zg:DashEffect a zg:EffectCategory .
+
+zg:DeathTransition a owl:Class ;
+    rdfs:label "DeathTransition" ;
+    rdfs:subClassOf zg:LifecycleTransition .
+
+zg:DecisionModel a owl:Class ;
+    rdfs:label "DecisionModel" .
+
+zg:DoctorState a owl:Class ;
+    rdfs:label "DoctorState" ;
+    rdfs:subClassOf zg:HumanState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:DOCTOR ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:EngineerState a owl:Class ;
+    rdfs:label "EngineerState" ;
+    rdfs:subClassOf zg:HumanState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:ENGINEER ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:Event a owl:Class ;
+    rdfs:label "Event" .
+
+zg:Gate a owl:Class ;
+    rdfs:label "Gate" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:GateClosingEffect a zg:EffectCategory .
+
+zg:GateOpeningEffect a zg:EffectCategory .
+
+zg:GateState a owl:Class ;
+    rdfs:label "GateState" ;
+    rdfs:subClassOf zg:EnvironmentState .
+
+zg:GuardEffect a zg:EffectCategory .
+
+zg:HealingActionDefinition a owl:Class ;
+    rdfs:label "HealingActionDefinition" ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:ActionDefinition [ a owl:Restriction ;
+                        owl:hasValue zg:LifeRestorationEffect ;
+                        owl:onProperty zg:mayCause ] ) ] .
+
+zg:HealthyHumanState a owl:Class ;
+    rdfs:label "HealthyHumanState" ;
+    rdfs:subClassOf zg:HumanState,
+        zg:LivingState ;
+    owl:disjointWith zg:InfectedHumanState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:HEALTHY ;
+                        owl:onProperty zg:status ] ) ] .
+
+zg:HumanRoleDefinition a owl:Class ;
+    rdfs:label "HumanRoleDefinition" ;
+    rdfs:subClassOf zg:RoleDefinition ;
+    owl:disjointWith zg:ZombieRoleDefinition .
+
+zg:HungerReductionEffect a zg:EffectCategory .
+
+zg:InfectionCapableActionDefinition a owl:Class ;
+    rdfs:label "InfectionCapableActionDefinition" ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:ActionDefinition [ a owl:Restriction ;
+                        owl:hasValue zg:InfectionOnsetEffect ;
+                        owl:onProperty zg:mayCause ] ) ] .
+
+zg:InfectionCureEffect a zg:EffectCategory .
+
+zg:Intervention a owl:Class ;
+    rdfs:label "Intervention" .
+
+zg:Inventory a owl:Class ;
+    rdfs:label "Inventory" .
+
+zg:Measurement a owl:Class ;
+    rdfs:label "Measurement" .
+
+zg:MovementEffect a zg:EffectCategory .
+
+zg:Observation a owl:Class ;
+    rdfs:label "Observation" .
+
+zg:Obstacle a owl:Class ;
+    rdfs:label "Obstacle" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:ObstacleState a owl:Class ;
+    rdfs:label "ObstacleState" ;
+    rdfs:subClassOf zg:EnvironmentState .
+
+zg:Ontology a owl:Ontology ;
+    owl:versionIRI zg:ontology-0.1.0 ;
+    owl:versionInfo "0.1.0" ;
+    zg:sourceText "Formalization of unchanged zombie_game_ontology_v0.1.md; data validation is a separate SHACL layer." .
+
+zg:Point a owl:Class ;
+    rdfs:label "Point" .
+
+zg:PopulationAllocation a owl:Class ;
+    rdfs:label "PopulationAllocation" .
+
+zg:ProphylaxisEffect a zg:EffectCategory .
+
+zg:RalliedEffect a zg:EffectCategory .
+
+zg:ReconEffect a zg:EffectCategory .
+
+zg:Rectangle a owl:Class ;
+    rdfs:label "Rectangle" .
+
+zg:RemainsState a owl:Class ;
+    rdfs:label "RemainsState" ;
+    rdfs:subClassOf zg:EnvironmentState .
+
+zg:ResourceStock a owl:Class ;
+    rdfs:label "ResourceStock" .
+
+zg:ResourceTransferEffect a zg:EffectCategory .
+
+zg:RunnerState a owl:Class ;
+    rdfs:label "RunnerState" ;
+    rdfs:subClassOf zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:RUNNER ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:ScoutState a owl:Class ;
+    rdfs:label "ScoutState" ;
+    rdfs:subClassOf zg:HumanState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:SCOUT ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:ScreamerState a owl:Class ;
+    rdfs:label "ScreamerState" ;
+    rdfs:subClassOf zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:SCREAMER ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:Shelter a owl:Class ;
+    rdfs:label "Shelter" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:Signal a owl:Class ;
+    rdfs:label "Signal" .
+
+zg:Snapshot a owl:Class ;
+    rdfs:label "Snapshot" .
+
+zg:SpitterState a owl:Class ;
+    rdfs:label "SpitterState" ;
+    rdfs:subClassOf zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:SPITTER ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:StaminaRestorationEffect a zg:EffectCategory .
+
+zg:Stockpile a owl:Class ;
+    rdfs:label "Stockpile" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:StockpileState a owl:Class ;
+    rdfs:label "StockpileState" ;
+    rdfs:subClassOf zg:EnvironmentState .
+
+zg:TimedEffect a owl:Class ;
+    rdfs:label "TimedEffect" ;
+    rdfs:subClassOf zg:Effect .
+
+zg:TyrantState a owl:Class ;
+    rdfs:label "TyrantState" ;
+    rdfs:subClassOf zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:TYRANT ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:WaitingEffect a zg:EffectCategory .
+
+zg:WarriorState a owl:Class ;
+    rdfs:label "WarriorState" ;
+    rdfs:subClassOf zg:HumanState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:LivingState [ a owl:Restriction ;
+                        owl:hasValue zg:WARRIOR ;
+                        owl:onProperty zg:hasRoleDefinition ] ) ] .
+
+zg:actionDefinition a owl:ObjectProperty .
+
+zg:actionResult a owl:ObjectProperty .
+
+zg:actionStatus a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:activeAction a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:activeModel a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:range zg:ModelAssignment .
+
+zg:actor a owl:ObjectProperty .
+
+zg:actorAfterEnd a owl:ObjectProperty .
+
+zg:actorAfterStart a owl:ObjectProperty .
+
+zg:actorBeforeEnd a owl:ObjectProperty .
+
+zg:actorMedicalAfter a owl:DatatypeProperty .
+
+zg:actorMedicalBefore a owl:DatatypeProperty .
+
+zg:actorMedicalReservedAfter a owl:DatatypeProperty .
+
+zg:actorMedicalReservedBefore a owl:DatatypeProperty .
+
+zg:actorStart a owl:ObjectProperty .
+
+zg:afterState a owl:ObjectProperty .
+
+zg:agent_id a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:allocation a owl:ObjectProperty .
+
+zg:allow_intraspecies_combat a owl:DatatypeProperty .
+
+zg:atTime a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:attack_skill a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:base_damage_resistance a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:base_sense_r a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:base_speed a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:beforeState a owl:ObjectProperty .
+
+zg:biomass a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:bite_damage a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:boundary_policy a owl:DatatypeProperty .
+
+zg:build_integrity a owl:DatatypeProperty .
+
+zg:build_material_cost a owl:DatatypeProperty .
+
+zg:call_radius a owl:DatatypeProperty .
+
+zg:call_ttl a owl:DatatypeProperty .
+
+zg:capability a owl:ObjectProperty .
+
+zg:carry_capacity a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:cause a owl:ObjectProperty .
+
+zg:causesEffect a owl:ObjectProperty .
+
+zg:claw_damage a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:combat_skill a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:comesFrom a owl:ObjectProperty .
+
+zg:compatibleType a owl:ObjectProperty .
+
+zg:conversion_due_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:cooldown a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:cooldownRecord a owl:ObjectProperty .
+
+zg:coordinate_system a owl:DatatypeProperty .
+
+zg:count a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:coverage a owl:AnnotationProperty .
+
+zg:created_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:damage_resistance a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:dash_duration a owl:DatatypeProperty .
+
+zg:dash_multiplier a owl:DatatypeProperty .
+
+zg:deathCause a owl:ObjectProperty .
+
+zg:death_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:demolish_damage a owl:DatatypeProperty .
+
+zg:duration_max a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:duration_min a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:effect a owl:ObjectProperty .
+
+zg:effectCategory a owl:ObjectProperty .
+
+zg:emitted_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:end_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:end_revision a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:ended_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:episode a owl:ObjectProperty .
+
+zg:episodeOutcome a owl:ObjectProperty .
+
+zg:expires_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:feed_energy a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:feed_healing a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:footprint a owl:ObjectProperty .
+
+zg:forAction a owl:ObjectProperty .
+
+zg:gateMode a owl:ObjectProperty .
+
+zg:geometry a owl:ObjectProperty .
+
+zg:guard_duration a owl:DatatypeProperty .
+
+zg:guard_resistance a owl:DatatypeProperty .
+
+zg:hasAgentState a owl:ObjectProperty .
+
+zg:hasEnvironmentState a owl:ObjectProperty .
+
+zg:hasGate a owl:ObjectProperty .
+
+zg:hasShelter a owl:ObjectProperty .
+
+zg:hasState a owl:ObjectProperty .
+
+zg:hasWall a owl:ObjectProperty .
+
+zg:horizon a owl:DatatypeProperty .
+
+zg:hunger a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:hunger_rate a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:incubation_duration a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:infection_progress a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:infection_resistance a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:infection_resistance_effective a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:initial_humans a owl:DatatypeProperty .
+
+zg:initial_infected a owl:DatatypeProperty .
+
+zg:initial_zombies a owl:DatatypeProperty .
+
+zg:integrity a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:inventory a owl:ObjectProperty .
+
+zg:label a owl:DatatypeProperty .
+
+zg:lastEvent a owl:ObjectProperty .
+
+zg:length a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:magnitude a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:mark_radius a owl:DatatypeProperty .
+
+zg:max_integrity a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:max_life a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:max_spit_charges a owl:DatatypeProperty .
+
+zg:max_stamina a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:medical_skill a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:melee_damage a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:modelDefinition a owl:ObjectProperty .
+
+zg:model_id a owl:DatatypeProperty .
+
+zg:model_version a owl:DatatypeProperty .
+
+zg:movement_cost a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:next_charge_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:next_starvation_damage_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:observer a owl:ObjectProperty .
+
+zg:observes a owl:ObjectProperty .
+
+zg:ofEntity a owl:ObjectProperty .
+
+zg:onset_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:onset_revision a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:plannedEnd a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:prophylaxis_duration a owl:DatatypeProperty .
+
+zg:prophylaxis_resistance a owl:DatatypeProperty .
+
+zg:proposedAt a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:quantity a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:radius a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:rally_duration a owl:DatatypeProperty .
+
+zg:rally_hit_bonus a owl:DatatypeProperty .
+
+zg:rally_radius a owl:DatatypeProperty .
+
+zg:reach a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:realizes a owl:ObjectProperty .
+
+zg:recharge_interval a owl:DatatypeProperty .
+
+zg:recipient a owl:ObjectProperty .
+
+zg:recon_duration a owl:DatatypeProperty .
+
+zg:recon_radius a owl:DatatypeProperty .
+
+zg:registry_version a owl:DatatypeProperty .
+
+zg:repair_amount a owl:DatatypeProperty .
+
+zg:repair_material_cost a owl:DatatypeProperty .
+
+zg:requirementId a owl:AnnotationProperty .
+
+zg:reserved a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:reserved_biomass a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:resolvedAt a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:resourceType a owl:ObjectProperty .
+
+zg:rest_rate a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:revision a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:scenario a owl:ObjectProperty .
+
+zg:seed a owl:DatatypeProperty .
+
+zg:selfState a owl:ObjectProperty .
+
+zg:sense_r a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:sourceAgent a owl:ObjectProperty .
+
+zg:sourceEvent a owl:ObjectProperty .
+
+zg:sourceSection a owl:AnnotationProperty .
+
+zg:sourceText a owl:AnnotationProperty .
+
+zg:source_kind a owl:DatatypeProperty .
+
+zg:speed a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:spit_charges a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:spit_damage a owl:DatatypeProperty .
+
+zg:spit_potency a owl:DatatypeProperty .
+
+zg:spit_range a owl:DatatypeProperty .
+
+zg:stamina a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:stamina_cost a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:startTime a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:start_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:starvation_started_at a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:stock a owl:ObjectProperty .
+
+zg:strike_damage a owl:DatatypeProperty .
+
+zg:target a owl:ObjectProperty .
+
+zg:targetAfterEnd a owl:ObjectProperty .
+
+zg:targetBeforeEnd a owl:ObjectProperty .
+
+zg:targetEntity a owl:ObjectProperty .
+
+zg:targetStart a owl:ObjectProperty .
+
+zg:target_kind a owl:DatatypeProperty .
+
+zg:treatment_cost a owl:DatatypeProperty .
+
+zg:treatment_duration a owl:DatatypeProperty .
+
+zg:triggeredBy a owl:ObjectProperty .
+
+zg:until a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:virulence a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:width a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:x a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:xmax a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:xmin a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:y a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:ymax a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:ymin a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+zg:ACTION_DEAD a zg:ActionStatus .
+
+zg:BIOMASS a zg:ResourceType .
+
+zg:BREACHED a zg:GateMode .
+
+zg:BUSY a zg:ActionStatus .
+
+zg:CANCELLED_BY_CONFLICT a zg:ActionResult .
+
+zg:CANCELLED_BY_CONVERSION a zg:ActionResult .
+
+zg:CANCELLED_BY_DEATH a zg:ActionResult .
+
+zg:CANCELLED_BY_INTERVENTION a zg:ActionResult .
+
+zg:CLOSED a zg:GateMode .
+
+zg:CONVERTED a zg:EpisodeOutcome .
+
+zg:CURED a zg:EpisodeOutcome .
+
+zg:DeadState a owl:Class ;
+    rdfs:label "DeadState" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue 0 ;
+            owl:onProperty zg:life ],
+        [ a owl:Restriction ;
+            owl:allValuesFrom owl:Nothing ;
+            owl:onProperty zg:hasCapability ],
+        [ a owl:Restriction ;
+            owl:maxCardinality "0"^^xsd:nonNegativeInteger ;
+            owl:onProperty zg:activeRole ],
+        zg:AgentState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:DEAD ;
+                        owl:onProperty zg:status ] ) ] .
+
+zg:Effect a owl:Class ;
+    rdfs:label "Effect" .
+
+zg:FAILED_PRECONDITION a zg:ActionResult .
+
+zg:FOOD a zg:ResourceType .
+
+zg:HOST_DIED a zg:EpisodeOutcome .
+
+zg:IDLE a zg:ActionStatus .
+
+zg:IN_PROGRESS a zg:ActionResult .
+
+zg:InfectedHumanState a owl:Class ;
+    rdfs:label "InfectedHumanState" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty zg:activeEpisode ;
+            owl:someValuesFrom zg:InfectionEpisode ],
+        zg:HumanState,
+        zg:LivingState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:INFECTED ;
+                        owl:onProperty zg:status ] ) ] .
+
+zg:InfectionOnsetEffect a zg:EffectCategory .
+
+zg:LifeRestorationEffect a zg:EffectCategory .
+
+zg:MATERIAL a zg:ResourceType .
+
+zg:MEDICAL_SUPPLY a zg:ResourceType .
+
+zg:MISSED a zg:ActionResult .
+
+zg:ModelAssignment a owl:Class ;
+    rdfs:label "ModelAssignment" .
+
+zg:ONGOING a zg:EpisodeOutcome .
+
+zg:OPEN a zg:GateMode .
+
+zg:PARTIAL_BLOCKED a zg:ActionResult .
+
+zg:PhysicalDamageEffect a zg:EffectCategory .
+
+zg:REJECTED a zg:ActionResult .
+
+zg:Remains a owl:Class ;
+    rdfs:label "Remains" ;
+    rdfs:subClassOf zg:EnvironmentEntity .
+
+zg:RoleAssignment a owl:Class ;
+    rdfs:label "RoleAssignment" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty zg:roleDefinition ;
+            owl:someValuesFrom zg:RoleDefinition ] .
+
+zg:SUCCEEDED a zg:ActionResult .
+
+zg:ScenarioDefinition a owl:Class ;
+    rdfs:label "ScenarioDefinition" .
+
+zg:SimulationRun a owl:Class ;
+    rdfs:label "SimulationRun" .
+
+zg:World a owl:Class ;
+    rdfs:label "World" .
+
+zg:ZombieRoleDefinition a owl:Class ;
+    rdfs:label "ZombieRoleDefinition" ;
+    rdfs:subClassOf zg:RoleDefinition .
+
+zg:activeEpisode a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:range zg:InfectionEpisode .
+
+zg:hasCapability a owl:ObjectProperty ;
+    rdfs:range zg:Capability ;
+    owl:propertyChainAxiom ( zg:hasTypeProfile zg:grants ),
+        ( zg:hasRoleDefinition zg:grants ) .
+
+zg:hasTypeProfile a owl:ObjectProperty ;
+    rdfs:domain zg:LivingState ;
+    rdfs:range zg:AgentType .
+
+zg:inRun a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:infectedAgent a owl:ObjectProperty .
+
+zg:life a owl:DatatypeProperty ;
+    rdfs:range xsd:integer .
+
+zg:ofAgent a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:range zg:Agent .
+
+zg:world a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:ACTIVE a zg:Status .
+
+zg:Capability a owl:Class ;
+    rdfs:label "Capability" .
+
+zg:DEAD a zg:Status .
+
+zg:HEALTHY a zg:Status .
+
+zg:Human a zg:AgentType .
+
+zg:INFECTED a zg:Status .
+
+zg:InfectionEpisode a owl:Class ;
+    rdfs:label "InfectionEpisode" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty zg:infectedAgent ;
+            owl:someValuesFrom zg:Agent ] .
+
+zg:Zombie a zg:AgentType .
+
+zg:activeRole a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:domain zg:LivingState ;
+    rdfs:range zg:RoleAssignment .
+
+zg:biologicalType a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:grants a owl:ObjectProperty ;
+    rdfs:range zg:Capability .
+
+zg:roleDefinition a owl:FunctionalProperty,
+        owl:ObjectProperty ;
+    rdfs:range zg:RoleDefinition .
+
+zg:ActionStatus a owl:Class ;
+    rdfs:label "ActionStatus" .
+
+zg:Agent a owl:Class ;
+    rdfs:label "Agent" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty zg:inRun ;
+            owl:someValuesFrom zg:SimulationRun ] ;
+    owl:disjointWith zg:AgentState,
+        zg:Remains .
+
+zg:AgentType a owl:Class ;
+    rdfs:label "AgentType" .
+
+zg:GateMode a owl:Class ;
+    rdfs:label "GateMode" .
+
+zg:LifecycleTransition a owl:Class ;
+    rdfs:label "LifecycleTransition" .
+
+zg:mayCause a owl:ObjectProperty .
+
+zg:ActionDefinition a owl:Class ;
+    rdfs:label "ActionDefinition" .
+
+zg:EpisodeOutcome a owl:Class ;
+    rdfs:label "EpisodeOutcome" .
+
+zg:ResourceType a owl:Class ;
+    rdfs:label "ResourceType" .
+
+zg:RoleDefinition a owl:Class ;
+    rdfs:label "RoleDefinition" .
+
+zg:Status a owl:Class ;
+    rdfs:label "Status" .
+
+zg:status a owl:FunctionalProperty,
+        owl:ObjectProperty .
+
+zg:EnvironmentState a owl:Class ;
+    rdfs:label "EnvironmentState" .
+
+zg:EnvironmentEntity a owl:Class ;
+    rdfs:label "EnvironmentEntity" .
+
+zg:HumanState a owl:Class ;
+    rdfs:label "HumanState" ;
+    rdfs:subClassOf zg:AgentState ;
+    owl:disjointWith zg:ZombieState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:Human ;
+                        owl:onProperty zg:biologicalType ] ) ] .
+
+zg:ZombieState a owl:Class ;
+    rdfs:label "ZombieState" ;
+    rdfs:subClassOf zg:AgentState ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( zg:AgentState [ a owl:Restriction ;
+                        owl:hasValue zg:Zombie ;
+                        owl:onProperty zg:biologicalType ] ) ] .
+
+zg:hasRoleDefinition a owl:ObjectProperty ;
+    owl:propertyChainAxiom ( zg:activeRole zg:roleDefinition ) .
+
+zg:ActionResult a owl:Class ;
+    rdfs:label "ActionResult" .
+
+zg:AgentState a owl:Class ;
+    rdfs:label "AgentState" ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty zg:world ;
+            owl:someValuesFrom zg:World ],
+        [ a owl:Restriction ;
+            owl:onProperty zg:ofAgent ;
+            owl:someValuesFrom zg:Agent ] .
+
+zg:LivingState a owl:Class ;
+    rdfs:label "LivingState" ;
+    rdfs:subClassOf zg:AgentState ;
+    owl:disjointWith zg:DeadState .
+
+zg:EffectCategory a owl:Class ;
+    rdfs:label "EffectCategory" .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:cap_move zg:cap_wait zg:cap_rest zg:cap_signal zg:cap_melee zg:cap_pickup zg:cap_drop zg:cap_transfer zg:cap_eat zg:cap_first_aid zg:cap_open_gate zg:cap_close_gate zg:cap_claw zg:cap_bite zg:cap_feed zg:cap_smash zg:cap_treat_infection zg:cap_prophylaxis zg:cap_power_strike zg:cap_guard zg:cap_recon zg:cap_mark_target zg:cap_build_barricade zg:cap_repair_barrier zg:cap_rally zg:cap_demolish zg:cap_dash zg:cap_spit zg:cap_scream ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:HEALTHY zg:INFECTED zg:ACTIVE zg:DEAD ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:FOOD zg:MEDICAL_SUPPLY zg:MATERIAL zg:BIOMASS ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:OPEN zg:CLOSED zg:BREACHED ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:IDLE zg:BUSY zg:ACTION_DEAD ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:Human zg:Zombie ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:ONGOING zg:CURED zg:CONVERTED zg:HOST_DIED ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:SUCCEEDED zg:MISSED zg:FAILED_PRECONDITION zg:CANCELLED_BY_DEATH zg:CANCELLED_BY_CONVERSION zg:CANCELLED_BY_CONFLICT zg:CANCELLED_BY_INTERVENTION zg:PARTIAL_BLOCKED zg:IN_PROGRESS zg:REJECTED ) .
+
+[] a owl:AllDifferent ;
+    owl:distinctMembers ( zg:DOCTOR zg:WARRIOR zg:SCOUT zg:ENGINEER zg:TYRANT zg:RUNNER zg:SPITTER zg:SCREAMER ) .
+

@@ -6,17 +6,17 @@
     sh:conforms false ;
     sh:result [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:state> ;
-            sh:resultMessage "RoleOverrides: Current common/type profile fields agree with the active role overrides." ;
+            sh:resultMessage "RoleCompatibility: Active role belongs to this agent and supports this biological type." ;
             sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:RoleOverrides ;
+            sh:sourceConstraint zg:RoleCompatibility ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:AgentStateShape ;
             sh:value <urn:zombie-game:example:state> ],
         [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:state> ;
-            sh:resultMessage "RoleCompatibility: Active role belongs to this agent and supports this biological type." ;
+            sh:resultMessage "RoleOverrides: Current common/type profile fields agree with the active role overrides." ;
             sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:RoleCompatibility ;
+            sh:sourceConstraint zg:RoleOverrides ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:AgentStateShape ;
             sh:value <urn:zombie-game:example:state> ] .

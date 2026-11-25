@@ -1,0 +1,17 @@
+# D5 constrained relocation approximation approved by the user on 2026-11-25.
+preset = "baseline"
+scenario = "baseline_v0.1"
+seed = 20261106
+horizon = 1800.0
+
+[placement]
+sampler = "relocation"
+allow_approximate = true
+max_point_attempts = 10000
+burn_in = 20
+
+[placement.approval]
+decision = "D5"
+approved = true
+date = "2026-11-25"
+scope = "Baseline constrained relocation approximation explicitly approved by user"

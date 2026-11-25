@@ -1,0 +1,17 @@
+Validation Report
+Conforms: False
+Results (2):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:ActionDuration
+	Message: ActionDuration: Planned duration is within the declared baseline bounds.
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:ResultTiming
+	Message: ResultTiming: Ongoing occurrences lack final state/time; resolved attempts include them and do not end before admission.

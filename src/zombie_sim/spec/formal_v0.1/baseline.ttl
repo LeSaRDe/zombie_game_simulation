@@ -1,0 +1,962 @@
+@prefix base: <urn:zombie-game:baseline:> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+base:scenario a zg:BaselineScenarioDefinition,
+        zg:ScenarioDefinition ;
+    zg:allocation base:Human_DOCTOR,
+        base:Human_ENGINEER,
+        base:Human_None,
+        base:Human_SCOUT,
+        base:Human_WARRIOR,
+        base:Zombie_None,
+        base:Zombie_RUNNER,
+        base:Zombie_SCREAMER,
+        base:Zombie_SPITTER,
+        base:Zombie_TYRANT ;
+    zg:allow_intraspecies_combat false ;
+    zg:hasEnvironmentState base:exterior_stock1_initial,
+        base:exterior_stock2_initial,
+        base:exterior_stock3_initial,
+        base:exterior_stock4_initial,
+        base:exterior_stock5_initial,
+        base:exterior_stock6_initial,
+        base:obstacle1_initial,
+        base:obstacle2_initial,
+        base:obstacle3_initial,
+        base:obstacle4_initial,
+        base:shelter1_east_initial,
+        base:shelter1_gate_initial,
+        base:shelter1_north_initial,
+        base:shelter1_southeast_initial,
+        base:shelter1_southwest_initial,
+        base:shelter1_stock_initial,
+        base:shelter1_west_initial,
+        base:shelter2_east_initial,
+        base:shelter2_gate_initial,
+        base:shelter2_north_initial,
+        base:shelter2_southeast_initial,
+        base:shelter2_southwest_initial,
+        base:shelter2_stock_initial,
+        base:shelter2_west_initial,
+        base:shelter3_east_initial,
+        base:shelter3_gate_initial,
+        base:shelter3_north_initial,
+        base:shelter3_southeast_initial,
+        base:shelter3_southwest_initial,
+        base:shelter3_stock_initial,
+        base:shelter3_west_initial,
+        base:shelter4_east_initial,
+        base:shelter4_gate_initial,
+        base:shelter4_north_initial,
+        base:shelter4_southeast_initial,
+        base:shelter4_southwest_initial,
+        base:shelter4_stock_initial,
+        base:shelter4_west_initial ;
+    zg:horizon 1800.0 ;
+    zg:incubation_duration 300.0 ;
+    zg:initial_humans 800 ;
+    zg:initial_infected 20 ;
+    zg:initial_zombies 200 ;
+    zg:label "baseline_v0.1" ;
+    zg:seed 20261106 ;
+    zg:world base:world .
+
+base:Human_DOCTOR a zg:PopulationAllocation ;
+    zg:biologicalType zg:Human ;
+    zg:count 80 ;
+    zg:roleDefinition zg:DOCTOR .
+
+base:Human_ENGINEER a zg:PopulationAllocation ;
+    zg:biologicalType zg:Human ;
+    zg:count 120 ;
+    zg:roleDefinition zg:ENGINEER .
+
+base:Human_None a zg:PopulationAllocation ;
+    zg:biologicalType zg:Human ;
+    zg:count 400 .
+
+base:Human_SCOUT a zg:PopulationAllocation ;
+    zg:biologicalType zg:Human ;
+    zg:count 80 ;
+    zg:roleDefinition zg:SCOUT .
+
+base:Human_WARRIOR a zg:PopulationAllocation ;
+    zg:biologicalType zg:Human ;
+    zg:count 120 ;
+    zg:roleDefinition zg:WARRIOR .
+
+base:Zombie_None a zg:PopulationAllocation ;
+    zg:biologicalType zg:Zombie ;
+    zg:count 120 .
+
+base:Zombie_RUNNER a zg:PopulationAllocation ;
+    zg:biologicalType zg:Zombie ;
+    zg:count 30 ;
+    zg:roleDefinition zg:RUNNER .
+
+base:Zombie_SCREAMER a zg:PopulationAllocation ;
+    zg:biologicalType zg:Zombie ;
+    zg:count 10 ;
+    zg:roleDefinition zg:SCREAMER .
+
+base:Zombie_SPITTER a zg:PopulationAllocation ;
+    zg:biologicalType zg:Zombie ;
+    zg:count 20 ;
+    zg:roleDefinition zg:SPITTER .
+
+base:Zombie_TYRANT a zg:PopulationAllocation ;
+    zg:biologicalType zg:Zombie ;
+    zg:count 20 ;
+    zg:roleDefinition zg:TYRANT .
+
+base:exterior_stock1 a zg:Stockpile .
+
+base:exterior_stock1_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock1_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock1_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock1_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock1_point ;
+    zg:ofEntity base:exterior_stock1 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock1_FOOD,
+        base:exterior_stock1_MATERIAL,
+        base:exterior_stock1_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock1_point a zg:Point ;
+    zg:x 100.0 ;
+    zg:y 500.0 .
+
+base:exterior_stock2 a zg:Stockpile .
+
+base:exterior_stock2_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock2_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock2_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock2_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock2_point ;
+    zg:ofEntity base:exterior_stock2 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock2_FOOD,
+        base:exterior_stock2_MATERIAL,
+        base:exterior_stock2_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock2_point a zg:Point ;
+    zg:x 300.0 ;
+    zg:y 500.0 .
+
+base:exterior_stock3 a zg:Stockpile .
+
+base:exterior_stock3_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock3_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock3_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock3_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock3_point ;
+    zg:ofEntity base:exterior_stock3 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock3_FOOD,
+        base:exterior_stock3_MATERIAL,
+        base:exterior_stock3_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock3_point a zg:Point ;
+    zg:x 500.0 ;
+    zg:y 100.0 .
+
+base:exterior_stock4 a zg:Stockpile .
+
+base:exterior_stock4_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock4_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock4_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock4_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock4_point ;
+    zg:ofEntity base:exterior_stock4 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock4_FOOD,
+        base:exterior_stock4_MATERIAL,
+        base:exterior_stock4_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock4_point a zg:Point ;
+    zg:x 500.0 ;
+    zg:y 300.0 .
+
+base:exterior_stock5 a zg:Stockpile .
+
+base:exterior_stock5_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock5_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock5_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock5_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock5_point ;
+    zg:ofEntity base:exterior_stock5 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock5_FOOD,
+        base:exterior_stock5_MATERIAL,
+        base:exterior_stock5_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock5_point a zg:Point ;
+    zg:x 700.0 ;
+    zg:y 500.0 .
+
+base:exterior_stock6 a zg:Stockpile .
+
+base:exterior_stock6_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:exterior_stock6_MATERIAL a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:exterior_stock6_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:exterior_stock6_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:exterior_stock6_point ;
+    zg:ofEntity base:exterior_stock6 ;
+    zg:revision 0 ;
+    zg:stock base:exterior_stock6_FOOD,
+        base:exterior_stock6_MATERIAL,
+        base:exterior_stock6_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:exterior_stock6_point a zg:Point ;
+    zg:x 900.0 ;
+    zg:y 500.0 .
+
+base:obstacle1 a zg:Obstacle .
+
+base:obstacle1_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:obstacle1_rect ;
+    zg:ofEntity base:obstacle1 ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:obstacle1_rect a zg:Rectangle ;
+    zg:xmax 460.0 ;
+    zg:xmin 420.0 ;
+    zg:ymax 340.0 ;
+    zg:ymin 180.0 .
+
+base:obstacle2 a zg:Obstacle .
+
+base:obstacle2_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:obstacle2_rect ;
+    zg:ofEntity base:obstacle2 ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:obstacle2_rect a zg:Rectangle ;
+    zg:xmax 580.0 ;
+    zg:xmin 540.0 ;
+    zg:ymax 820.0 ;
+    zg:ymin 660.0 .
+
+base:obstacle3 a zg:Obstacle .
+
+base:obstacle3_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:obstacle3_rect ;
+    zg:ofEntity base:obstacle3 ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:obstacle3_rect a zg:Rectangle ;
+    zg:xmax 340.0 ;
+    zg:xmin 180.0 ;
+    zg:ymax 580.0 ;
+    zg:ymin 540.0 .
+
+base:obstacle4 a zg:Obstacle .
+
+base:obstacle4_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:obstacle4_rect ;
+    zg:ofEntity base:obstacle4 ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:obstacle4_rect a zg:Rectangle ;
+    zg:xmax 820.0 ;
+    zg:xmin 660.0 ;
+    zg:ymax 460.0 ;
+    zg:ymin 420.0 .
+
+base:shelter1 a zg:Shelter ;
+    zg:geometry base:shelter1_interior ;
+    zg:hasGate base:shelter1_gate ;
+    zg:hasWall base:shelter1_east,
+        base:shelter1_north,
+        base:shelter1_southeast,
+        base:shelter1_southwest,
+        base:shelter1_west .
+
+base:shelter1_east_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_east_rect ;
+    zg:ofEntity base:shelter1_east ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_east_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 248.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter1_gate_initial a zg:EnvironmentState,
+        zg:GateState ;
+    zg:atTime 0.0 ;
+    zg:gateMode zg:CLOSED ;
+    zg:geometry base:shelter1_gate_rect ;
+    zg:integrity 200 ;
+    zg:max_integrity 200 ;
+    zg:ofEntity base:shelter1_gate ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_gate_rect a zg:Rectangle ;
+    zg:xmax 203.0 ;
+    zg:xmin 197.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter1_interior a zg:Rectangle ;
+    zg:xmax 248.0 ;
+    zg:xmin 152.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter1_north_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_north_rect ;
+    zg:ofEntity base:shelter1_north ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_north_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 250.0 ;
+    zg:ymin 248.0 .
+
+base:shelter1_southeast_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_southeast_rect ;
+    zg:ofEntity base:shelter1_southeast ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_southeast_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 203.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter1_southwest_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_southwest_rect ;
+    zg:ofEntity base:shelter1_southwest ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_southwest_rect a zg:Rectangle ;
+    zg:xmax 197.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter1_stock a zg:Stockpile .
+
+base:shelter1_stock_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:shelter1_stock_MATERIAL a zg:ResourceStock ;
+    zg:quantity 40 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:shelter1_stock_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:shelter1_stock_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_stock_point ;
+    zg:ofEntity base:shelter1_stock ;
+    zg:revision 0 ;
+    zg:stock base:shelter1_stock_FOOD,
+        base:shelter1_stock_MATERIAL,
+        base:shelter1_stock_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:shelter1_stock_point a zg:Point ;
+    zg:x 200.0 ;
+    zg:y 200.0 .
+
+base:shelter1_west_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter1_west_rect ;
+    zg:ofEntity base:shelter1_west ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter1_west_rect a zg:Rectangle ;
+    zg:xmax 152.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter2 a zg:Shelter ;
+    zg:geometry base:shelter2_interior ;
+    zg:hasGate base:shelter2_gate ;
+    zg:hasWall base:shelter2_east,
+        base:shelter2_north,
+        base:shelter2_southeast,
+        base:shelter2_southwest,
+        base:shelter2_west .
+
+base:shelter2_east_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_east_rect ;
+    zg:ofEntity base:shelter2_east ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_east_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 848.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter2_gate_initial a zg:EnvironmentState,
+        zg:GateState ;
+    zg:atTime 0.0 ;
+    zg:gateMode zg:CLOSED ;
+    zg:geometry base:shelter2_gate_rect ;
+    zg:integrity 200 ;
+    zg:max_integrity 200 ;
+    zg:ofEntity base:shelter2_gate ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_gate_rect a zg:Rectangle ;
+    zg:xmax 803.0 ;
+    zg:xmin 797.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter2_interior a zg:Rectangle ;
+    zg:xmax 848.0 ;
+    zg:xmin 752.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter2_north_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_north_rect ;
+    zg:ofEntity base:shelter2_north ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_north_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 250.0 ;
+    zg:ymin 248.0 .
+
+base:shelter2_southeast_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_southeast_rect ;
+    zg:ofEntity base:shelter2_southeast ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_southeast_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 803.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter2_southwest_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_southwest_rect ;
+    zg:ofEntity base:shelter2_southwest ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_southwest_rect a zg:Rectangle ;
+    zg:xmax 797.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 152.0 ;
+    zg:ymin 150.0 .
+
+base:shelter2_stock a zg:Stockpile .
+
+base:shelter2_stock_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:shelter2_stock_MATERIAL a zg:ResourceStock ;
+    zg:quantity 40 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:shelter2_stock_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:shelter2_stock_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_stock_point ;
+    zg:ofEntity base:shelter2_stock ;
+    zg:revision 0 ;
+    zg:stock base:shelter2_stock_FOOD,
+        base:shelter2_stock_MATERIAL,
+        base:shelter2_stock_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:shelter2_stock_point a zg:Point ;
+    zg:x 800.0 ;
+    zg:y 200.0 .
+
+base:shelter2_west_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter2_west_rect ;
+    zg:ofEntity base:shelter2_west ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter2_west_rect a zg:Rectangle ;
+    zg:xmax 752.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 248.0 ;
+    zg:ymin 152.0 .
+
+base:shelter3 a zg:Shelter ;
+    zg:geometry base:shelter3_interior ;
+    zg:hasGate base:shelter3_gate ;
+    zg:hasWall base:shelter3_east,
+        base:shelter3_north,
+        base:shelter3_southeast,
+        base:shelter3_southwest,
+        base:shelter3_west .
+
+base:shelter3_east_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_east_rect ;
+    zg:ofEntity base:shelter3_east ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_east_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 248.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter3_gate_initial a zg:EnvironmentState,
+        zg:GateState ;
+    zg:atTime 0.0 ;
+    zg:gateMode zg:CLOSED ;
+    zg:geometry base:shelter3_gate_rect ;
+    zg:integrity 200 ;
+    zg:max_integrity 200 ;
+    zg:ofEntity base:shelter3_gate ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_gate_rect a zg:Rectangle ;
+    zg:xmax 203.0 ;
+    zg:xmin 197.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter3_interior a zg:Rectangle ;
+    zg:xmax 248.0 ;
+    zg:xmin 152.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter3_north_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_north_rect ;
+    zg:ofEntity base:shelter3_north ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_north_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 850.0 ;
+    zg:ymin 848.0 .
+
+base:shelter3_southeast_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_southeast_rect ;
+    zg:ofEntity base:shelter3_southeast ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_southeast_rect a zg:Rectangle ;
+    zg:xmax 250.0 ;
+    zg:xmin 203.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter3_southwest_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_southwest_rect ;
+    zg:ofEntity base:shelter3_southwest ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_southwest_rect a zg:Rectangle ;
+    zg:xmax 197.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter3_stock a zg:Stockpile .
+
+base:shelter3_stock_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:shelter3_stock_MATERIAL a zg:ResourceStock ;
+    zg:quantity 40 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:shelter3_stock_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:shelter3_stock_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_stock_point ;
+    zg:ofEntity base:shelter3_stock ;
+    zg:revision 0 ;
+    zg:stock base:shelter3_stock_FOOD,
+        base:shelter3_stock_MATERIAL,
+        base:shelter3_stock_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:shelter3_stock_point a zg:Point ;
+    zg:x 200.0 ;
+    zg:y 800.0 .
+
+base:shelter3_west_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter3_west_rect ;
+    zg:ofEntity base:shelter3_west ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter3_west_rect a zg:Rectangle ;
+    zg:xmax 152.0 ;
+    zg:xmin 150.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter4 a zg:Shelter ;
+    zg:geometry base:shelter4_interior ;
+    zg:hasGate base:shelter4_gate ;
+    zg:hasWall base:shelter4_east,
+        base:shelter4_north,
+        base:shelter4_southeast,
+        base:shelter4_southwest,
+        base:shelter4_west .
+
+base:shelter4_east_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_east_rect ;
+    zg:ofEntity base:shelter4_east ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_east_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 848.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter4_gate_initial a zg:EnvironmentState,
+        zg:GateState ;
+    zg:atTime 0.0 ;
+    zg:gateMode zg:CLOSED ;
+    zg:geometry base:shelter4_gate_rect ;
+    zg:integrity 200 ;
+    zg:max_integrity 200 ;
+    zg:ofEntity base:shelter4_gate ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_gate_rect a zg:Rectangle ;
+    zg:xmax 803.0 ;
+    zg:xmin 797.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter4_interior a zg:Rectangle ;
+    zg:xmax 848.0 ;
+    zg:xmin 752.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter4_north_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_north_rect ;
+    zg:ofEntity base:shelter4_north ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_north_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 850.0 ;
+    zg:ymin 848.0 .
+
+base:shelter4_southeast_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_southeast_rect ;
+    zg:ofEntity base:shelter4_southeast ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_southeast_rect a zg:Rectangle ;
+    zg:xmax 850.0 ;
+    zg:xmin 803.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter4_southwest_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_southwest_rect ;
+    zg:ofEntity base:shelter4_southwest ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_southwest_rect a zg:Rectangle ;
+    zg:xmax 797.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 752.0 ;
+    zg:ymin 750.0 .
+
+base:shelter4_stock a zg:Stockpile .
+
+base:shelter4_stock_FOOD a zg:ResourceStock ;
+    zg:quantity 60 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:FOOD .
+
+base:shelter4_stock_MATERIAL a zg:ResourceStock ;
+    zg:quantity 40 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MATERIAL .
+
+base:shelter4_stock_MEDICAL_SUPPLY a zg:ResourceStock ;
+    zg:quantity 20 ;
+    zg:reserved 0 ;
+    zg:resourceType zg:MEDICAL_SUPPLY .
+
+base:shelter4_stock_initial a zg:EnvironmentState,
+        zg:StockpileState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_stock_point ;
+    zg:ofEntity base:shelter4_stock ;
+    zg:revision 0 ;
+    zg:stock base:shelter4_stock_FOOD,
+        base:shelter4_stock_MATERIAL,
+        base:shelter4_stock_MEDICAL_SUPPLY ;
+    zg:world base:world .
+
+base:shelter4_stock_point a zg:Point ;
+    zg:x 800.0 ;
+    zg:y 800.0 .
+
+base:shelter4_west_initial a zg:EnvironmentState,
+        zg:ObstacleState ;
+    zg:atTime 0.0 ;
+    zg:geometry base:shelter4_west_rect ;
+    zg:ofEntity base:shelter4_west ;
+    zg:revision 0 ;
+    zg:world base:world .
+
+base:shelter4_west_rect a zg:Rectangle ;
+    zg:xmax 752.0 ;
+    zg:xmin 750.0 ;
+    zg:ymax 848.0 ;
+    zg:ymin 752.0 .
+
+base:shelter1_east a zg:Obstacle .
+
+base:shelter1_gate a zg:Gate ;
+    zg:hasShelter base:shelter1 .
+
+base:shelter1_north a zg:Obstacle .
+
+base:shelter1_southeast a zg:Obstacle .
+
+base:shelter1_southwest a zg:Obstacle .
+
+base:shelter1_west a zg:Obstacle .
+
+base:shelter2_east a zg:Obstacle .
+
+base:shelter2_gate a zg:Gate ;
+    zg:hasShelter base:shelter2 .
+
+base:shelter2_north a zg:Obstacle .
+
+base:shelter2_southeast a zg:Obstacle .
+
+base:shelter2_southwest a zg:Obstacle .
+
+base:shelter2_west a zg:Obstacle .
+
+base:shelter3_east a zg:Obstacle .
+
+base:shelter3_gate a zg:Gate ;
+    zg:hasShelter base:shelter3 .
+
+base:shelter3_north a zg:Obstacle .
+
+base:shelter3_southeast a zg:Obstacle .
+
+base:shelter3_southwest a zg:Obstacle .
+
+base:shelter3_west a zg:Obstacle .
+
+base:shelter4_east a zg:Obstacle .
+
+base:shelter4_gate a zg:Gate ;
+    zg:hasShelter base:shelter4 .
+
+base:shelter4_north a zg:Obstacle .
+
+base:shelter4_southeast a zg:Obstacle .
+
+base:shelter4_southwest a zg:Obstacle .
+
+base:shelter4_west a zg:Obstacle .
+
+base:world a zg:World ;
+    zg:boundary_policy "CLOSED" ;
+    zg:coordinate_system "CartesianXYMeters" ;
+    zg:length 1000.0 ;
+    zg:width 1000.0 .
+

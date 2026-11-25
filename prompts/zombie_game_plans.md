@@ -23,55 +23,24 @@ This task has been done. The ontology specifications are stored in the folder "o
 
 ### TASK 2: Implement Zombie Game Simulation Framework
 
-Based on the ontology specifications created in TASK 1, the simulation framework is concretely implemented in this task.
+- The implementation plan has done, in files: "prompts/task_2_implementation_plan.md" and "prompts/task_2_action_and_validation_matrix.md".
+- The test suite has been created, in the folder: "tests".
+- The first implementation is finished. The following folders together with files therein are created: "artifacts", "build", "configs", "diagnostics", "docs", "src", "gui", "implementation_checks", "scripts", and "training".
 
-**Simulation Logic**
-> [!todo]
-> - You must follow the ontology built in TASK 1 and implement the Zombie Game logic. 
+Your current step is to test the current implementation against the test suite. I have given a few dry runs of the current implementation, and I found a few issues stated below. During the testing, you also must address the issues:
+  - The following error message pops up, whenever I create and start a new experiment: "'Unknown run b9a2d901195b41aaa6d895cf8326cb35'".
+  - The following error message pops up during the runtime: "Unexpected token 'I', "Internal S"... is not valid JSON".
+  - The following error message pops up during the runtime: "Stale control generation: refresh generation 2".
+  - I tried to use multiple workers, e.g., 10 and 20 (because my computer supports 24 logical CPU cores), but constantly there are only 4 logical CPU cores staying at high utilization during the runtime, regardless of the number of workers set in the configuration. I want the implementation to fully utilize the CPU resources, and the implementation must be able to choose an appropriate number of workers for different hardware environments. 
+  - I found that the simulation might not fully stop after pressing the "Pause run" button on the GUI interface.
+  - I need a button for terminating the current run without save. 
 
-**Agent Intelligence**
-One of the goals of this simulation framework is to introduce intelligence to agents through machine learning or other methods. In other words, the behaviors of the agents, i.e., their actions, will not be kept hardcoded. It is required to enable extensions for agents to do intelligent decision-making. This is why it is called a *framework*.
+If addressing any of the above issues or any issues identified during the testing requires to change the problem formulation or the ontology, you must pause and explicitly and clearly explain the issue and your proposal of changes, and you must wait for my approval before continuing. 
 
-> [!todo]
-> - You must implement a default version of all actions for the agents. And, the default version must be nontrivial enough.
-> - You must rigorously design and implement the extension interfaces for introducing more sophisticated agent actions, such as reinforcement learning models. In addition, you must also provide concrete design and guide for training and testing those models. 
-
-
-**Data Storage**
-The live data of the simulation (such as agent attributes and environment states) can be large. And, the simulation program needs to access the live data frequently.
-
-A storage framework for storing live data is required to support various storage solutions, such as in-memory data structures and databases.
-
-On the other hand, to support subsequent studies, the evolution of the simulation needs to be recorded. Taking periodic snapshots of the entire simulation may be a solution for recording the evolution. The efficiency of both storage and access is important. 
-
-> [!todo]
-> You must rigorously design and implement the solution to handle the live data and the solution to storing the evolution of the simulation concretely.
-
-
-**Evolution**
-The simulation needs to keep producing dynamics. This is a core building block of the simulation. 
-
-The simulation can be synchronous or asynchronous. The asynchronous paradigm might be more "real". 
-
-> [!todo]
-> - You must consider all involved factors and decide whether the simulation is asynchronous.
-
-In the evolution, agents raise events, such as movement, agent-agent interactions, and agent-environment interactions. If we want the simulation to run efficiently, the events need to be processed in parallel, as much as possible. At the same time, the effects of the events need to be guaranteed to be consistent. For example, if a human meets a zombie, at almost the same moment, the human tries to kill the zombie, and the zombie tries to kill the human too. However, only one of the two events can take effect, but not both. 
-
-> [!todo]
-> - You must concretely implement the event management and processing with appropriate parallelism techniques. 
-> - You also must explain in detail the algorithms used to implement the parallelism. 
-
-
-**Hyperparameter & Instance Management**
-A simulation instance is required to be configurable, such as its initial states. Having a reasonable and convenient hyperparameter and instance management system is crucial. For example, if we configure a simulation instance with a few hyperparameters, the live data, the recorded simulation data, experimental results from subsequent studies, and so on should be well organized in a place specific to this instance. 
-
-> [!todo]
-> - You must design and implement this hyperparameter & instance management system.
-
-
-**Visualization & GUI** 
-A friendly, insightful, and comprehensive GUI system is required. The visualization module is responsible to display the evolution of a simulation instance. The display may be implemented with multiple different views, such as an agent view displaying activities of agents, a statistics view displaying dynamics of populations and cohorts, and so on. A GUI control panel is also needed for downstreams users to easily tune hyperparameters and control the simulation instances. 
-> [!todo]
-> - You must design and implement the visualization module and the GUI module.
-
+If the problem formulation and/or the ontology must be modified, you must:
+  - 1. Comprehensively and rigorously evaluate whether the ontology, fully or partially, needs to be refactored, redefined, or reformalized.
+  - 2. If the ontology must be refactored, redefined, or reformalized, you must propose a modification plan, explicitly explaning what changes will be made, and wait for my review and approval before continuing.
+  - 3. If the ontology is confirmed to be modified, you must proceed with it rigorously. After the modifications, you must rigorously validate the modified ontology.
+  - 4. After the new ontology is successfully created and validated, if any, a new test suite must be provided in accordance with the new ontology.
+  - 5. After the new test suite is successfully created, you must refine the implementation of the Zombie Game Simulation Framework. 
+  - 6. After the implementation refinement, you must test the new implementation against the new test suite rigorously.

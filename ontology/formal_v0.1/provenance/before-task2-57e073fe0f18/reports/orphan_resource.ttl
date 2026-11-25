@@ -1,0 +1,14 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:orphan> ;
+            sh:resultMessage "A resource stock has exactly one inventory or stockpile-state holder." ;
+            sh:resultPath [ sh:inversePath zg:stock ] ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraintComponent sh:MinCountConstraintComponent ;
+            sh:sourceShape zg:ResourceStock_holderShape ] .
+

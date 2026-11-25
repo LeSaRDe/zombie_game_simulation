@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:ActionOccurrenceShape
+	Focus Node: ex:treatment
+	Value Node: ex:treatment
+	Source Constraint: zg:TreatmentReserve
+	Message: TreatmentReserve: Admission reserves one available medical item without consuming it.

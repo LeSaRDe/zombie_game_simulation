@@ -6,9 +6,25 @@
     sh:conforms false ;
     sh:result [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:doctor_start> ;
-            sh:resultMessage "NoResurrection: No recorded later state of a dead identity is alive or changes its type/location." ;
+            sh:resultMessage "DeadInventory: A dead human has an empty inventory." ;
             sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:NoResurrection ;
+            sh:sourceConstraint zg:DeadInventory ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:HumanStateShape ;
+            sh:value <urn:zombie-game:example:doctor_start> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:doctor_start> ;
+            sh:resultMessage "ActionState: BUSY iff a living state has an active action; dead action state is ACTION_DEAD." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:ActionState ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:AgentStateShape ;
+            sh:value <urn:zombie-game:example:doctor_start> ],
+        [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:doctor_start> ;
+            sh:resultMessage "DeadCleanup: Death clears active references, movement and sensing; death metadata is present." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:DeadCleanup ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:AgentStateShape ;
             sh:value <urn:zombie-game:example:doctor_start> ],
@@ -22,14 +38,6 @@
             sh:value <urn:zombie-game:example:treatment> ],
         [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:doctor_start> ;
-            sh:resultMessage "DeadInventory: A dead human has an empty inventory." ;
-            sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:DeadInventory ;
-            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
-            sh:sourceShape zg:HumanStateShape ;
-            sh:value <urn:zombie-game:example:doctor_start> ],
-        [ a sh:ValidationResult ;
-            sh:focusNode <urn:zombie-game:example:doctor_start> ;
             sh:resultMessage "StateStatus: Type/status/life and active episode must agree." ;
             sh:resultSeverity sh:Violation ;
             sh:sourceConstraint zg:StateStatus ;
@@ -38,17 +46,9 @@
             sh:value <urn:zombie-game:example:doctor_start> ],
         [ a sh:ValidationResult ;
             sh:focusNode <urn:zombie-game:example:doctor_start> ;
-            sh:resultMessage "DeadCleanup: Death clears active references, movement and sensing; death metadata is present." ;
+            sh:resultMessage "NoResurrection: No recorded later state of a dead identity is alive or changes its type/location." ;
             sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:DeadCleanup ;
-            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
-            sh:sourceShape zg:AgentStateShape ;
-            sh:value <urn:zombie-game:example:doctor_start> ],
-        [ a sh:ValidationResult ;
-            sh:focusNode <urn:zombie-game:example:doctor_start> ;
-            sh:resultMessage "ActionState: BUSY iff a living state has an active action; dead action state is ACTION_DEAD." ;
-            sh:resultSeverity sh:Violation ;
-            sh:sourceConstraint zg:ActionState ;
+            sh:sourceConstraint zg:NoResurrection ;
             sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
             sh:sourceShape zg:AgentStateShape ;
             sh:value <urn:zombie-game:example:doctor_start> ] .

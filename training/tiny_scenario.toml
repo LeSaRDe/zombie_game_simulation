@@ -1,0 +1,31 @@
+scenario = "training_tiny_v1"
+seed = 100
+horizon = 60.0
+
+[world]
+length = 60.0
+width = 60.0
+
+[population]
+humans = 4
+zombies = 2
+infected = 0
+
+[population.human_roles]
+DOCTOR = 1
+WARRIOR = 1
+
+[population.zombie_roles]
+RUNNER = 1
+
+[placement]
+cross_type_separation = 10.0
+
+[[stockpiles]]
+id = "training_supplies"
+x = 30.0
+y = 30.0
+[stockpiles.inventory]
+FOOD = 12
+MEDICAL_SUPPLY = 8
+MATERIAL = 4

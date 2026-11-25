@@ -1,0 +1,418 @@
+{
+  "scope": "actual public-engine action/lifecycle traces; original baseline v0.1 SHACL",
+  "results": {
+    "wait": {
+      "conforms": true,
+      "sha256": "9f19d1e31ee7c9876b2ac9a4cbb76b9c93e1bce494d712694ad30a50f47725ac",
+      "actions": [
+        "wait"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "2"
+    },
+    "rest": {
+      "conforms": true,
+      "sha256": "e20edd0920b7a8dd9986ad515927df1426aa32154d8a88f475fbeae8bb5d67ac",
+      "actions": [
+        "rest"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "2"
+    },
+    "move": {
+      "conforms": true,
+      "sha256": "e3f58241ae00e13bceb3df26ec198870b82c839ce674d57c99ea8f802c1816ad",
+      "actions": [
+        "move"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "dash": {
+      "conforms": true,
+      "sha256": "5ba9f5dcbf8319778c2646d3d6a40918ce5e6435cc32d14aa412680045563788",
+      "actions": [
+        "dash"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "melee": {
+      "conforms": true,
+      "sha256": "2d0e0ca013eba952ceb64a0e260980a5e426a935533017e956887f416198fdba",
+      "actions": [
+        "melee"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1"
+    },
+    "power_strike": {
+      "conforms": true,
+      "sha256": "1c928624fb3176512e565e92ede0765f3267060b952df2702299c3c9b02b9e7a",
+      "actions": [
+        "power_strike"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "3/2"
+    },
+    "claw": {
+      "conforms": true,
+      "sha256": "08bd3da9b86d34df4de1aad56348a38251475c012d54ebd2fdc935111e9371c8",
+      "actions": [
+        "claw"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1"
+    },
+    "bite": {
+      "conforms": true,
+      "sha256": "c135b34b8ec9f663ce8908340efd8753230675e329015da9105d7a1960511701",
+      "actions": [
+        "bite"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "3/2"
+    },
+    "spit": {
+      "conforms": true,
+      "sha256": "6bb32dea0468eea53b2811ff7b846c1178909e0d560781f435ee24956c5dd8b0",
+      "actions": [
+        "spit"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1"
+    },
+    "signal": {
+      "conforms": true,
+      "sha256": "636e88d1a21fe5642168ab940e794cb7994be9f09907459f11b9963721ef5e60",
+      "actions": [
+        "signal"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1/2"
+    },
+    "scream": {
+      "conforms": true,
+      "sha256": "8b3419240fe4e772ad7db340c8759b9ea29e98a629cdab7fa09d94bce276b24a",
+      "actions": [
+        "scream"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "2"
+    },
+    "mark_target": {
+      "conforms": true,
+      "sha256": "2105f41f9475ceca2a71b2085c7e58b4e57303e32e0f5ca2be2d633b8c36aa5f",
+      "actions": [
+        "mark_target"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1/2"
+    },
+    "pickup": {
+      "conforms": true,
+      "sha256": "bc56e95ba36f98b0d624d56470cd08e187846d9931f45877edae2945796e702e",
+      "actions": [
+        "pickup"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "drop": {
+      "conforms": true,
+      "sha256": "f8ced60cd3306d058215a0b700e236b6cf48fb6dd11015d1b32689bdebb8b643",
+      "actions": [
+        "drop"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1/2"
+    },
+    "transfer": {
+      "conforms": true,
+      "sha256": "7016ae42039c537cd60f5d79c8c2876b3fd3d5aaa4b43203b6ae5ca36f45bb9f",
+      "actions": [
+        "transfer"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "eat": {
+      "conforms": true,
+      "sha256": "20a7669618d999743b434c3228a6507ef84e212d475319c33986f28ab6eaab39",
+      "actions": [
+        "eat"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "2"
+    },
+    "first_aid": {
+      "conforms": true,
+      "sha256": "430a71c7b710321acf38b6a79ab10c499db5eb7ba08e8cb42cc6c13c32267ab6",
+      "actions": [
+        "first_aid"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "3"
+    },
+    "treat_infection": {
+      "conforms": true,
+      "sha256": "2c80d1c49e780feba48b392381cb4d7354551b46d175e56e5058266d39cb2a4d",
+      "actions": [
+        "treat_infection"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "4"
+    },
+    "prophylaxis": {
+      "conforms": true,
+      "sha256": "9b8487a8cd13a6e1d5a82486b1744ba409c8f91b120f7369b3910edb4a0499b4",
+      "actions": [
+        "prophylaxis"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "4"
+    },
+    "guard": {
+      "conforms": true,
+      "sha256": "328860e899fdb479540b14e6140fc650b67286f575a5006b9a7990cc9af95cba",
+      "actions": [
+        "guard"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "1"
+    },
+    "recon": {
+      "conforms": true,
+      "sha256": "73c53d7832440e3592ebff9bea88456c88746e116a8e69f6cd7edaca3d50cec6",
+      "actions": [
+        "recon"
+      ],
+      "events": 5,
+      "revision": 3,
+      "time": "2"
+    },
+    "rally": {
+      "conforms": true,
+      "sha256": "fc46cac647f175c754cabb4f5456ee17df5acd14aade28a37ef00c7b07bebfcd",
+      "actions": [
+        "rally"
+      ],
+      "events": 6,
+      "revision": 3,
+      "time": "2"
+    },
+    "build_barricade": {
+      "conforms": true,
+      "sha256": "924b10011eae2efc5f32cd13a665a2b7fbfc5b16d45e37b293491393c5133f89",
+      "actions": [
+        "build_barricade"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "8"
+    },
+    "repair_barrier": {
+      "conforms": true,
+      "sha256": "8be33d1cba834352b1b26cd760b6c30c21c20005804689cb14e1625238c33c81",
+      "actions": [
+        "repair_barrier"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "5"
+    },
+    "open_gate": {
+      "conforms": true,
+      "sha256": "952601fece3eb3183a89efd88c020d49ab0b7cb127f3cba70314bb21644a3645",
+      "actions": [
+        "open_gate"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "close_gate": {
+      "conforms": true,
+      "sha256": "6288175151d8012b3efb18fc7c0e2bb66c6c02a63476c86fb24ce814b8d21753",
+      "actions": [
+        "close_gate"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "1"
+    },
+    "smash": {
+      "conforms": true,
+      "sha256": "ad274b5d294f91b7ccf17fd5ed291be1aa49d8645062f2107ad6277ef72bf47b",
+      "actions": [
+        "smash"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "2"
+    },
+    "demolish": {
+      "conforms": true,
+      "sha256": "795a7764b03c3922ee47a2344da98d5210f171a90b1cbdeebc6f9bf3a803c25a",
+      "actions": [
+        "demolish"
+      ],
+      "events": 4,
+      "revision": 3,
+      "time": "3"
+    },
+    "death": {
+      "conforms": true,
+      "sha256": "787d91b31019d6ab904256adf2b85676efa5cb10954cde4aab4d84294cd4bbb6",
+      "actions": [
+        "claw"
+      ],
+      "events": 25,
+      "revision": 15,
+      "time": "7"
+    },
+    "feed": {
+      "conforms": true,
+      "sha256": "ad5688fb22f4f93fec87a2d4c9b5fb69800cf2988571791e0171d7d1cce120b0",
+      "actions": [
+        "claw",
+        "feed"
+      ],
+      "events": 29,
+      "revision": 18,
+      "time": "10"
+    },
+    "conversion": {
+      "conforms": true,
+      "sha256": "58ad8b69846247f842add03dddb4838a101a6eee44923c915df4659000b5a146",
+      "actions": [],
+      "events": 4,
+      "revision": 2,
+      "time": "300"
+    },
+    "cancelled_conversion": {
+      "conforms": true,
+      "sha256": "ac16daf8eeb1c055e0bbe397f5d40de10ff931bc57f0cd11e308cdab12a12444",
+      "actions": [
+        "pickup"
+      ],
+      "events": 6,
+      "revision": 3,
+      "time": "1/2"
+    },
+    "treatment_deadline": {
+      "conforms": true,
+      "sha256": "1cb90d7524024e5ddb5526966a52b7152b01d8678b5d9524e1b9473b2c8aec3f",
+      "actions": [
+        "treat_infection"
+      ],
+      "events": 6,
+      "revision": 4,
+      "time": "4"
+    },
+    "model_batch": {
+      "conforms": true,
+      "sha256": "f071b8e2405624514d9cc79a9c00e71f0a3ebe57bda5f17a14b10082c807d688",
+      "actions": [
+        "bite",
+        "claw",
+        "melee",
+        "power_strike",
+        "wait"
+      ],
+      "events": 40,
+      "revision": 13,
+      "time": "4"
+    },
+    "busy_death": {
+      "conforms": true,
+      "sha256": "02b08a02820a00c713edae4fd04eeaf96812abccd4fa1fbd5bdb0ba082d1e633",
+      "actions": [
+        "claw",
+        "wait"
+      ],
+      "events": 9,
+      "revision": 4,
+      "time": "1"
+    }
+  },
+  "source_provenance": {
+    "ontology_version": "0.1.0",
+    "source_hashes": {
+      "ontology.ttl": "f8fd0875d3c7373a6778edf19b85d5dc9ffe784e9321ef33af3d5d9684571315",
+      "ontology.owl": "9c0f8e4a078b2641bd83120d8ecc9f3555b3d2c4eff3371f235022eed75d7618",
+      "catalog.ttl": "b2cece0c7c728be4da57624d85ae6e2e304485d1af5014284c9a57b8a6374c2b",
+      "baseline.ttl": "70f9edb908b92dbc04f8e6ecee15a17ba7790dca91cb50a0e522865224b014e4",
+      "shapes.ttl": "4f8aa75e1440542188f98964421e710b85da9fb91c174d26feb3b05f7054f778",
+      "manifest.json": "29d6329e2a207ca3b8928648b7991b1a45b1859ed0aa2024bafff60aa32b7389",
+      "ontology_markdown": "20620b8f7f01a3b758fcbea0f0ca83ea3e65a5354071e6d7ef4dfa21a7ec9641",
+      "requirements": "05915f055fa33cc00b1dfb3920b835659d3885edcc5c328bfcbb6287972d5311",
+      "implementation_plan": "58e67205b76e43841bbf725f0dc59b7dc5603e66d472465ce635b4a1ba4e56c6",
+      "action_matrix": "ea470df641afb82d0d104e665736ddb9c826cc6915eea2591bc986391f788a29"
+    },
+    "registry_actions": [
+      "bite",
+      "build_barricade",
+      "claw",
+      "close_gate",
+      "dash",
+      "demolish",
+      "drop",
+      "eat",
+      "feed",
+      "first_aid",
+      "guard",
+      "mark_target",
+      "melee",
+      "move",
+      "open_gate",
+      "pickup",
+      "power_strike",
+      "prophylaxis",
+      "rally",
+      "recon",
+      "repair_barrier",
+      "rest",
+      "scream",
+      "signal",
+      "smash",
+      "spit",
+      "transfer",
+      "treat_infection",
+      "wait"
+    ],
+    "registry_roles": [
+      "DOCTOR",
+      "ENGINEER",
+      "RUNNER",
+      "SCOUT",
+      "SCREAMER",
+      "SPITTER",
+      "TYRANT",
+      "WARRIOR"
+    ],
+    "ontology_source_matches_manifest": true,
+    "plan_source_matches_manifest": true,
+    "plan_provenance_note": "Formal package is preserved. Current requirements hash is recorded independently; the historical formal validation is not claimed as current."
+  }
+}

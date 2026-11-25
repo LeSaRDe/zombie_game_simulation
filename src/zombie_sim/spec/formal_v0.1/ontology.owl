@@ -1,0 +1,2468 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+   xmlns:owl="http://www.w3.org/2002/07/owl#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+   xmlns:zg="urn:zombie-game:v0.1:"
+>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b39">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b40"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:AgentType">
+    <rdfs:label>AgentType</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:resolvedAt">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b57">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:status"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:DEAD"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_dash">
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:cooldown>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_dash"/>
+    <rdfs:label>dash</rdfs:label>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:MovementEffect"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:DashEffect"/>
+    <zg:sourceText>| `dash` | A planned continuous path. Duration exactly `dash_duration` (1 s); flat 12 stamina plus distance × movement_cost; cooldown 8 s. During this action, speed limit is base speed × `dash_multiplier` (4.8 m/s at baseline). All movement boundary/obstacle rules apply. The multiplier ends with the action. No extra attack or damage occurs at its destination. |</zg:sourceText>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:stamina_cost>
+    <zg:target_kind>Path</zg:target_kind>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Shelter">
+    <rdfs:label>Shelter</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:activeRole">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:domain rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:RoleAssignment"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_rest">
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_rest"/>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:StaminaRestorationEffect"/>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <rdfs:label>rest</rdfs:label>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <zg:sourceText>| `rest` | Duration in [1,5] s | 0; none | Stay in place; regain stamina at `rest_rate` per second up to 100 throughout the interval. No automatic life healing. Biological clocks continue. |</zg:sourceText>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:InfectionCapableActionDefinition">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b25"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>InfectionCapableActionDefinition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SCREAMER">
+    <zg:call_ttl rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:call_ttl>
+    <zg:claw_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</zg:claw_damage>
+    <rdfs:label>SCREAMER</rdfs:label>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+    <zg:base_sense_r rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">50.0</zg:base_sense_r>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ZombieRoleDefinition"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_scream"/>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <zg:call_radius rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">120.0</zg:call_radius>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:WARRIOR">
+    <zg:strike_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">34</zg:strike_damage>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <zg:guard_resistance rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.6</zg:guard_resistance>
+    <rdfs:label>WARRIOR</rdfs:label>
+    <zg:combat_skill rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.85</zg:combat_skill>
+    <zg:melee_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">22</zg:melee_damage>
+    <zg:guard_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:guard_duration>
+    <zg:base_damage_resistance rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.2</zg:base_damage_resistance>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_guard"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_power_strike"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:HumanRoleDefinition"/>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Human"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b56">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b58"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasRoleDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <owl:propertyChainAxiom rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b80"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b9">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b11"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:feed_healing">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b124">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b125"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RUNNER">
+    <zg:claw_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</zg:claw_damage>
+    <zg:base_speed rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.2</zg:base_speed>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ZombieRoleDefinition"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_dash"/>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <zg:dash_multiplier rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:dash_multiplier>
+    <zg:dash_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:dash_duration>
+    <rdfs:label>RUNNER</rdfs:label>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActionStatus">
+    <rdfs:label>ActionStatus</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b112">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_spit"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b113"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:stamina_cost">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b73">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:biologicalType"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:Human"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RunnerState">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b29"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+    <rdfs:label>RunnerState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:recon_radius">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_recon">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b92">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b93"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_transfer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:feed_energy">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:EngineerState">
+    <rdfs:label>EngineerState</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b13"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Ontology">
+    <owl:versionInfo>0.1.0</owl:versionInfo>
+    <zg:sourceText>Formalization of unchanged zombie_game_ontology_v0.1.md; data validation is a separate SHACL layer.</zg:sourceText>
+    <owl:versionIRI rdf:resource="urn:zombie-game:v0.1:ontology-0.1.0"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Barricade">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdfs:label>Barricade</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ofAgent">
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:Agent"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BIOMASS">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ResourceType"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:LifecycleTransition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>LifecycleTransition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b115">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b116"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:HEALTHY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:GateState">
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentState"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>GateState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b27">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b28"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b34">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:SCOUT"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b152">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b153"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:DOCTOR"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b149">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:IN_PROGRESS"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b150"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b119">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b120"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b130">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b131"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:BUSY"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DeathTransition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>DeathTransition</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LifecycleTransition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_spit">
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:stamina_cost>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:cooldown>
+    <rdfs:label>spit</rdfs:label>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_spit"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:reach>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:InfectionOnsetEffect"/>
+    <zg:sourceText>| `spit` | Living opponent directly visible within `spit_range` (12 m). Duration 1 s; 8 stamina; reserve 1 spit charge; cooldown 8 s. At a valid resolution, spend the charge and draw the zombie hit probability. On hit, deal `spit_damage` (4) physical damage; if the target remains a HEALTHY Human, attempt infection with potency `spit_potency` (0.30). Misses also spend the charge. Target-invalid attempts release it. Recharge follows Section 7.3. No persistent puddle or separate projectile entity is created. |</zg:sourceText>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:REJECTED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_open_gate">
+    <zg:sourceText>| `open_gate` | CLOSED gate within 2 m | 1 s | 1 / none | Set mode OPEN, retain integrity. No automatic closing. An intact overlapping barricade still blocks passage. |</zg:sourceText>
+    <zg:target_kind>Environment</zg:target_kind>
+    <rdfs:label>open_gate</rdfs:label>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:GateOpeningEffect"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_open_gate"/>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_move">
+    <zg:target_kind>Path</zg:target_kind>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</zg:duration_max>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <rdfs:label>move</rdfs:label>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_move"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:MovementEffect"/>
+    <zg:sourceText>| `move` | Planned continuous path beginning at current position; duration `dt` in [0.25,5] s | Actual path length × movement_cost; no cooldown | Path remains traversable, and speed at every point is &lt;= current `speed`. A zero-length path is legal but `wait` is the clearer choice. Follow the path without teleportation. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.25</zg:duration_min>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:WarriorState">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b49"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>WarriorState</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:activeAction">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:activeEpisode">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:InfectionEpisode"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_rally">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:CommunicationEffect"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:RalliedEffect"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">20.0</zg:cooldown>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <rdfs:label>rally</rdfs:label>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_rally"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:sourceText>| `rally` | Broadcast from self. Duration 2 s; 15 stamina; cooldown 20 s. At completion, all other living zombies within `rally_radius` (30 m), including across barriers, gain `rally_hit_bonus` (0.10) for `rally_duration` (10 s). It is a signal-like effect; recipients choose their own actions. The Tyrant receives no hidden recipient identities in its result. A simultaneous radius-30, TTL-10 noise/signal cue follows Section 3.4. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_max>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">15.0</zg:stamina_cost>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Signal">
+    <rdfs:label>Signal</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SCOUT">
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Human"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:HumanRoleDefinition"/>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <rdfs:label>SCOUT</rdfs:label>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_recon"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_mark_target"/>
+    <zg:mark_radius rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">90.0</zg:mark_radius>
+    <zg:base_sense_r rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">55.0</zg:base_sense_r>
+    <zg:recon_radius rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">85.0</zg:recon_radius>
+    <zg:base_speed rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.6</zg:base_speed>
+    <zg:recon_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:recon_duration>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b22">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:status"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:HEALTHY"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:movement_cost">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actionStatus">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:reserved">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_pickup">
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+    <zg:sourceText>| `pickup` | Visible stockpile within 1.5 m; resource type and quantity | 1 s | 1 / none | Reserve requested stock at admission. Succeed only if it remains reserved and the actor has capacity for the entire quantity. Move it to inventory. |</zg:sourceText>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ResourceTransferEffect"/>
+    <rdfs:label>pickup</rdfs:label>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:target_kind>Environment</zg:target_kind>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_pickup"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b81">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:roleDefinition"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b133">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:Human"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b134"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:speed">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b158">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b159"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:SPITTER"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HumanRoleDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>HumanRoleDefinition</rdfs:label>
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:ZombieRoleDefinition"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:RoleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_transfer">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ResourceTransferEffect"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_transfer"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:sourceText>| `transfer` | Other living human within 1.5 m; type and quantity | 1 s | 1 / none | Move the reserved items into the recipient's inventory if its free capacity is sufficient. Receiving portable items is passive and does not force consumption or action. |</zg:sourceText>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <rdfs:label>transfer</rdfs:label>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DeadState">
+    <rdfs:label>DeadState</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b55"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b53"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b54"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b56"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DOCTOR">
+    <zg:prophylaxis_resistance rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.8</zg:prophylaxis_resistance>
+    <zg:treatment_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:treatment_duration>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_prophylaxis"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_treat_infection"/>
+    <zg:treatment_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</zg:treatment_cost>
+    <zg:prophylaxis_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">120.0</zg:prophylaxis_duration>
+    <zg:medical_skill rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.9</zg:medical_skill>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:HumanRoleDefinition"/>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Human"/>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <rdfs:label>DOCTOR</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActionIntent">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ActionIntent</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_rally">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:xmax">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b55">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">0</owl:maxCardinality>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:activeRole"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:reach">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:InfectionEpisode">
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b70"/>
+    <rdfs:label>InfectionEpisode</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:sourceEvent">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:MEDICAL_SUPPLY">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ResourceType"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b99">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_feed"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b100"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:comesFrom">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:targetEntity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:EpisodeOutcome">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>EpisodeOutcome</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b126">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CLOSED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b127"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_power_strike">
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:sourceText>| `power_strike` | Living opponent within 1.5 m. Duration 1.5 s; 15 stamina; cooldown 6 s. Human melee hit formula; raw damage `strike_damage` (34). Apply ordinary physical resistance and death rules. |</zg:sourceText>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">15.0</zg:stamina_cost>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_power_strike"/>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:duration_max>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+    <rdfs:label>power_strike</rdfs:label>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:cooldown>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:duration_min>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_melee">
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:stamina_cost>
+    <zg:sourceText>| `melee` | Living opponent within 1.5 m | 1 s | 6 / 1 s | Draw hit probability `clip(0.50 + 0.45 × combat_skill,0,1)`. On hit, apply `human.melee_damage` through physical damage resistance. |</zg:sourceText>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:cooldown>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_melee"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <rdfs:label>melee</rdfs:label>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b125">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b126"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:OPEN"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_bite">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:InfectionOnsetEffect"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_bite"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10.0</zg:stamina_cost>
+    <zg:target_kind>Agent</zg:target_kind>
+    <rdfs:label>bite</rdfs:label>
+    <zg:sourceText>| `bite` | Living opponent within 1.5 m | 1.5 s | 10 / 2 s | Draw a hit. On hit, apply `zombie.bite_damage`; if the target survives and is HEALTHY Human, attempt infection with exposure potency `zombie.virulence`. A same-type target, when allowed, receives damage but cannot be infected. |</zg:sourceText>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:initial_zombies">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b106">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b107"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_mark_target"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_guard">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:GuardEffect"/>
+    <rdfs:label>guard</rdfs:label>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:cooldown>
+    <zg:sourceText>| `guard` | Self. Duration 1 s; 8 stamina; cooldown 8 s. At completion apply physical resistance at least `guard_resistance` (0.60) for `guard_duration` (4 s). The Warrior can act again while this effect persists. Does not shield a different agent, prevent infection, or make a physical obstacle. |</zg:sourceText>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_guard"/>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Agent">
+    <rdfs:label>Agent</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:Remains"/>
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b71"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_recon">
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">20.0</zg:cooldown>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ReconEffect"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:stamina_cost>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_recon"/>
+    <zg:sourceText>| `recon` | Self. Duration 2 s; 6 stamina; cooldown 20 s. On completion raise sensing radius to at least `recon_radius` (85 m) for `recon_duration` (12 s). Line of sight still applies. The effect changes subsequent observations, not past ones. |</zg:sourceText>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_max>
+    <rdfs:label>recon</rdfs:label>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_min>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Human">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:AgentType"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_open_gate"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_close_gate"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_wait"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_first_aid"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_signal"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_melee"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_eat"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_rest"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_drop"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_pickup"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_transfer"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_move"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_prophylaxis">
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:duration_min>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:stamina_cost>
+    <zg:sourceText>| `prophylaxis` | Target self or HEALTHY living human within 1.5 m. Duration 4 s; 6 stamina; 1 medical supply; cooldown 2 s. Apply effective resistance at least `prophylaxis_resistance` (0.80) for `prophylaxis_duration` (120 s). Does not cure existing infection. Reapplication refreshes duration under the nonstacking rule. |</zg:sourceText>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ProphylaxisEffect"/>
+    <rdfs:label>prophylaxis</rdfs:label>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:duration_max>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_prophylaxis"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CLOSED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:GateMode"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:infection_resistance">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b65">
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:RoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:roleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_mark_target">
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_max>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_mark_target"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_min>
+    <zg:sourceText>| `mark_target` | A directly visible living agent. Duration 0.5 s; 1 stamina; cooldown 3 s. At completion, the target must still be visible. Emit a radius `mark_radius` (90 m), TTL 10 s signal containing target ID, type, position, and observation time. Allied receivers get a report; opponents get a noise cue. A mark does not track the target after emission or grant direct attack eligibility. |</zg:sourceText>
+    <rdfs:label>mark_target</rdfs:label>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:CommunicationEffect"/>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:cooldown>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b76">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b78"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:modelDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:xmin">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b24">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b22"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ENGINEER">
+    <zg:repair_amount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">60</zg:repair_amount>
+    <zg:repair_material_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</zg:repair_material_cost>
+    <zg:build_integrity rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">100</zg:build_integrity>
+    <zg:carry_capacity rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</zg:carry_capacity>
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_repair_barrier"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_build_barricade"/>
+    <rdfs:label>ENGINEER</rdfs:label>
+    <zg:build_material_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</zg:build_material_cost>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:HumanRoleDefinition"/>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Human"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b154">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:SCOUT"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b155"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:life">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b54">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:allValuesFrom rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasCapability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_close_gate">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:GateClosingEffect"/>
+    <rdfs:label>close_gate</rdfs:label>
+    <zg:sourceText>| `close_gate` | OPEN gate within 2 m | 1 s | 1 / none | Set mode CLOSED only if its footprint has no living agent and no intact overlapping barricade. Retain integrity. Cannot close a BREACHED gate. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_close_gate"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:target_kind>Environment</zg:target_kind>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_signal">
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:stamina_cost>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:CommunicationEffect"/>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_signal"/>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_max>
+    <rdfs:label>signal</rdfs:label>
+    <zg:sourceText>| `signal` | Kind `WARNING`, `REQUEST_HELP`, `RESOURCE_REPORT`, or `DIRECTION`; payload consisting of an optional known entity ID, known/observed coordinate, and optional resource type/quantity; duration 0.5 s | 1 stamina; 2 s cooldown | At completion emit a signal at the actor's then-current location, radius 40 m, TTL 8 s. Payload must refer to information present in the actor's observation or memory, with its original observation time attached. No effect forces recipients to follow it. |</zg:sourceText>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:FAILED_PRECONDITION">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b141">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:SUCCEEDED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b142"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:EffectCategory">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>EffectCategory</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:geometry">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b84">
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b85"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ResourceType">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ResourceType</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b66">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:hasTypeProfile"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b67"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Zombie">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:AgentType"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_bite"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_smash"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_rest"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_feed"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_wait"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_signal"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_claw"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_move"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:dash_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b80">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b81"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:activeRole"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b52">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b50"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b19">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b20"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:allow_intraspecies_combat">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_mark_target">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_rest">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ResourceTransferEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b88">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_signal"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b89"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b16">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b14"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:recharge_interval">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:effectCategory">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:effect">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:inRun">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:created_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:quantity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b129">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:IDLE"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b130"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b21">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b23"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b155">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ENGINEER"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b156"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:width">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SPITTER">
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ZombieRoleDefinition"/>
+    <zg:spit_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</zg:spit_damage>
+    <zg:spit_potency rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.3</zg:spit_potency>
+    <rdfs:label>SPITTER</rdfs:label>
+    <zg:base_speed rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.4</zg:base_speed>
+    <zg:recharge_interval rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">30.0</zg:recharge_interval>
+    <zg:max_spit_charges rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</zg:max_spit_charges>
+    <zg:spit_range rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:spit_range>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_spit"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActionOccurrence">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ActionOccurrence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:TYRANT">
+    <zg:registry_version>baseline_v0.1</zg:registry_version>
+    <zg:rally_hit_bonus rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.1</zg:rally_hit_bonus>
+    <zg:claw_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">24</zg:claw_damage>
+    <zg:compatibleType rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+    <rdfs:label>TYRANT</rdfs:label>
+    <zg:base_speed rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.3</zg:base_speed>
+    <zg:demolish_damage rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">60</zg:demolish_damage>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_rally"/>
+    <zg:grants rdf:resource="urn:zombie-game:v0.1:cap_demolish"/>
+    <zg:rally_radius rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">30.0</zg:rally_radius>
+    <zg:attack_skill rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.65</zg:attack_skill>
+    <zg:rally_duration rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10.0</zg:rally_duration>
+    <zg:base_damage_resistance rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.3</zg:base_damage_resistance>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ZombieRoleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_claw">
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_claw"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+    <rdfs:label>claw</rdfs:label>
+    <zg:sourceText>| `claw` | Living opponent within 1.5 m | 1 s | 6 / 1 s | Draw a hit. On hit, apply `zombie.claw_damage` through target physical resistance. Claw does not transmit infection. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:stamina_cost>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:next_charge_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b6">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:PhysicalDamageEffect"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:mayCause"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:requirementId">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_demolish">
+    <zg:sourceText>| `demolish` | CLOSED gate or intact barricade within 2 m. Duration 3 s; 18 stamina; cooldown 6 s. Deal `demolish_damage` (60) integrity damage; apply the same breach/destruction rules as smash. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_min>
+    <rdfs:label>demolish</rdfs:label>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_demolish"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:cooldown>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:BarrierDamageEffect"/>
+    <zg:target_kind>Environment</zg:target_kind>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">18.0</zg:stamina_cost>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b44">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b42"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_repair_barrier">
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</zg:duration_max>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:stamina_cost>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_repair_barrier"/>
+    <zg:target_kind>Environment</zg:target_kind>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:BarrierRepairEffect"/>
+    <zg:sourceText>| `repair_barrier` | Damaged gate or intact damaged barricade within 2 m. Duration 5 s; 8 stamina; `repair_material_cost` (1 material); cooldown 1 s. Restore `repair_amount` (60) integrity up to its maximum. A breached gate becomes OPEN. Gate restoration must satisfy occupancy/barricade checks. A destroyed barricade cannot be repaired. Permanent walls cannot be repaired or strengthened. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</zg:duration_min>
+    <rdfs:label>repair_barrier</rdfs:label>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DashEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BarricadeState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentState"/>
+    <rdfs:label>BarricadeState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_wait">
+    <rdfs:label>wait</rdfs:label>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.25</zg:duration_min>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <zg:sourceText>| `wait` | Duration in [0.25,5] s | 0; none | Stay at the current position. Hunger, infection, recharge, and incoming effects continue. Waiting does not recover stamina. |</zg:sourceText>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:WaitingEffect"/>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">5.0</zg:duration_max>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_wait"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_build_barricade">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:WaitingEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b10">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:DOCTOR"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ResourceStock">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ResourceStock</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CONVERTED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EpisodeOutcome"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b45">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b47"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:sense_r">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:roleDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:RoleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HungerReductionEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b86">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b87"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_wait"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:gateMode">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b79">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b77"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_guard">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b91">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b92"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_drop"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b26">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:InfectionOnsetEffect"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:mayCause"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b47">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b48"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HEALTHY">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Status"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b142">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:MISSED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b143"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CANCELLED_BY_CONVERSION">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_eat">
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:HungerReductionEffect"/>
+    <zg:sourceText>| `eat` | Self; 1 FOOD | 2 s | 0 / none | Requires hunger &gt; 0; consume the item and reduce hunger by 40, floor 0. If hunger falls below 100, clear starvation timers. |</zg:sourceText>
+    <rdfs:label>eat</rdfs:label>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_min>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_eat"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_max>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b18">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:mayCause"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:LifeRestorationEffect"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HumanState">
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+    <rdfs:label>HumanState</rdfs:label>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b72"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b109">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_rally"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b110"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b50">
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:WARRIOR"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:start_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:strike_damage">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Snapshot">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Snapshot</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActionDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ActionDefinition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ACTIVE">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Status"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RoleDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>RoleDefinition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:emitted_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:EnvironmentState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>EnvironmentState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_bite">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_smash">
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:BarrierDamageEffect"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_smash"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10.0</zg:stamina_cost>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <zg:sourceText>| `smash` | CLOSED gate or intact barricade within 2 m | 2 s | 10 / 1 s | Deal 20 integrity damage. At gate integrity 0, set BREACHED; at barricade integrity 0, remove its blocking effect. Permanent obstacles/walls are ineligible. |</zg:sourceText>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:cooldown>
+    <zg:target_kind>Environment</zg:target_kind>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_min>
+    <rdfs:label>smash</rdfs:label>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_max>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b33">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b35"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b17">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b19"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:virulence">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:label">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b11">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b12"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b59">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b57"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ScreamerState">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b37"/>
+    <rdfs:label>ScreamerState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b95">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b96"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_open_gate"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:INFECTED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Status"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HealthyHumanState">
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:InfectedHumanState"/>
+    <rdfs:label>HealthyHumanState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b21"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_feed">
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_min>
+    <rdfs:label>feed</rdfs:label>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_max>
+    <zg:sourceText>| `feed` | Remains within 1.5 m, biomass &gt;= 1 | 3 s | 0 / 1 s | Reserve and consume exactly 1 biomass. Restore `feed_healing` life and `feed_energy` stamina, each capped at its maximum. Requires life &lt; 100 or stamina &lt; 100 at admission and resolution. Feeding never affects the dead source agent. |</zg:sourceText>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_feed"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:StaminaRestorationEffect"/>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:LifeRestorationEffect"/>
+    <zg:target_kind>Environment</zg:target_kind>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:activeModel">
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:ModelAssignment"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:medical_skill">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:afterState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActiveZombieState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b1"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+    <rdfs:label>ActiveZombieState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b139">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:HOST_DIED"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hunger">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:rally_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasAgentState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b75">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b73"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_build_barricade">
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:duration_max>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_build_barricade"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</zg:stamina_cost>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:target_kind>Footprint</zg:target_kind>
+    <zg:sourceText>| `build_barricade` | Specify center, orientation parallel to x or y, and length in [2,8] m; thickness is 1 m. Duration 8 s; 12 stamina; `build_material_cost` (2 materials); cooldown 2 s. Center must be within 2 m of the actor and the entire footprint visible and inside the world. At admission and completion its interior must not overlap any intact barrier other than an OPEN/BREACHED gate; shared edges with walls are allowed. Its closed footprint must contain no living agent, nonempty stockpile point, or nonexhausted remains point. Create a new barricade with integrity/max_integrity `build_integrity` (100). Footprints crossing a gate must satisfy Section 3.2. |</zg:sourceText>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ConstructionEffect"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:reach>
+    <rdfs:label>build_barricade</rdfs:label>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</zg:duration_min>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Observation">
+    <rdfs:label>Observation</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:reserved_biomass">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b146">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CANCELLED_BY_CONFLICT"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b147"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:biologicalType">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_scream">
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_max>
+    <zg:sourceText>| `scream` | Optional known target/location from observation or memory, with its observation time; otherwise the actor's own location. Duration 2 s; 15 stamina; cooldown 30 s. Emit a `HUNT_CUE` signal with `call_radius` (120 m) and `call_ttl` (12 s). Zombies receive the dated payload; humans receive the source noise cue. No forced movement, global target reveal, automatic damage, or attack bonus occurs. |</zg:sourceText>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:duration_min>
+    <rdfs:label>scream</rdfs:label>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">15.0</zg:stamina_cost>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">30.0</zg:cooldown>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_scream"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:CommunicationEffect"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:EnvironmentEntity">
+    <rdfs:label>EnvironmentEntity</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasTypeProfile">
+    <rdfs:domain rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:AgentType"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b13">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b15"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b77">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:biologicalType"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:deathCause">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:base_damage_resistance">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:melee_damage">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Rectangle">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Rectangle</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b103">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b104"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_power_strike"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:prophylaxis_resistance">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b114">
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b115"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b82">
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:World"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:world"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorAfterEnd">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:beforeState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_first_aid">
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <rdfs:label>first_aid</rdfs:label>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:LifeRestorationEffect"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</zg:duration_min>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_first_aid"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:stamina_cost>
+    <zg:sourceText>| `first_aid` | Self or living human within 1.5 m with life &lt; 100; 1 MEDICAL_SUPPLY | 3 s | 4 / 2 s | Restore `10 + round_int(20 × actor.medical_skill)` life, capped at 100. No effect on infection or hunger. |</zg:sourceText>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:startTime">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:recipient">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:TyrantState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b45"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+    <rdfs:label>TyrantState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b104">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_guard"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b105"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b1">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b3"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_drop">
+    <rdfs:label>drop</rdfs:label>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:ResourceTransferEffect"/>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_drop"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:stamina_cost>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</zg:duration_max>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</zg:cooldown>
+    <zg:target_kind>SelfOrBroadcast</zg:target_kind>
+    <zg:sourceText>| `drop` | Resource type and quantity from own inventory | 0.5 s | 0 / none | Place the quantity in a stockpile at the actor's position. |</zg:sourceText>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:LivingState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>LivingState</rdfs:label>
+    <owl:disjointWith rdf:resource="urn:zombie-game:v0.1:DeadState"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ofEntity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:end_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b110">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b111"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_demolish"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SpitterState">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b41"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ZombieState"/>
+    <rdfs:label>SpitterState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:InfectionCureEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:StockpileState">
+    <rdfs:label>StockpileState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:sourceText">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b107">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_build_barricade"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b108"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b38">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:SCREAMER"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CombatActionDefinition">
+    <rdfs:label>CombatActionDefinition</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b5"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b131">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ACTION_DEAD"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b69">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:grants"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:combat_skill">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b108">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_repair_barrier"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b109"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b138">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b139"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CONVERTED"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b83">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:Agent"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:ofAgent"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ended_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_signal">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b53">
+    <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:hasValue>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:life"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:guard_resistance">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b71">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:inRun"/>
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:SimulationRun"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b85">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b86"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_move"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b148">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:PARTIAL_BLOCKED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b149"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b98">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_bite"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b99"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CANCELLED_BY_DEATH">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Gate">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdfs:label>Gate</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b25">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b27"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b143">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:FAILED_PRECONDITION"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b144"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:IDLE">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionStatus"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SUCCEEDED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b150">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:REJECTED"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b46">
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:TYRANT"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b42">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:SPITTER"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b121">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:MEDICAL_SUPPLY"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b122"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b62">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:status"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:INFECTED"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b144">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b145"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CANCELLED_BY_DEATH"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorMedicalAfter">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_feed">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Inventory">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Inventory</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b102">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b103"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_prophylaxis"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:y">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:next_starvation_damage_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:allocation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:bite_damage">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b5">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b7"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:grants">
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:Capability"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b127">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:BREACHED"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b23">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b24"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b40">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b38"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RemainsState">
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentState"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>RemainsState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Event">
+    <rdfs:label>Event</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ScoutState">
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b33"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ScoutState</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasGate">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:mayCause">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:max_stamina">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b31">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b32"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:dash_multiplier">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b87">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_rest"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b88"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Effect">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Effect</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Obstacle">
+    <rdfs:label>Obstacle</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:stock">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:end_revision">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:base_sense_r">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Capability">
+    <rdfs:label>Capability</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b128">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b129"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b43">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b44"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:MATERIAL">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ResourceType"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:model_version">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b14">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:ENGINEER"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:SimulationRun">
+    <rdfs:label>SimulationRun</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:boundary_policy">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:agent_id">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CURED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EpisodeOutcome"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:GateClosingEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CANCELLED_BY_INTERVENTION">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:action_treat_infection">
+    <zg:cooldown rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</zg:cooldown>
+    <zg:mayCause rdf:resource="urn:zombie-game:v0.1:InfectionCureEffect"/>
+    <zg:reach rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.5</zg:reach>
+    <rdfs:label>treat_infection</rdfs:label>
+    <zg:target_kind>Agent</zg:target_kind>
+    <zg:duration_min rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:duration_min>
+    <zg:duration_max rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</zg:duration_max>
+    <zg:coverage>PARTIAL: typed baseline parameters and shared checks; full behavioral coverage is listed in coverage.json.</zg:coverage>
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <zg:stamina_cost rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.0</zg:stamina_cost>
+    <zg:sourceText>| `treat_infection` | Target self or INFECTED living human within 1.5 m. Duration `treatment_duration` (4 s); 6 stamina; reserve/consume `treatment_cost` (1 medical supply); cooldown 2 s. Completion must be strictly before the target's conversion deadline. Close the active episode as CURED and set HEALTHY. Do not change life, hunger, stamina, or role. If the target converts, dies, or is cured first, release the item and fail/cancel as applicable. |</zg:sourceText>
+    <zg:capability rdf:resource="urn:zombie-game:v0.1:cap_treat_infection"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasEnvironmentState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b74">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b75"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b96">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_close_gate"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b97"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b63">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b64"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HealingActionDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>HealingActionDefinition</rdfs:label>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b17"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:onset_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b94">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_first_aid"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b95"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ConversionTransition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LifecycleTransition"/>
+    <rdfs:label>ConversionTransition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:status">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:LifeRestorationEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b153">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:WARRIOR"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b154"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorAfterStart">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b156">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:TYRANT"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b157"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:spit_range">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b3">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b4"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RoleAssignment">
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b65"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>RoleAssignment</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cooldownRecord">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b122">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b123"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:MATERIAL"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:PARTIAL_BLOCKED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:InfectedHumanState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b60"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+    <rdfs:label>InfectedHumanState</rdfs:label>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b61"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:max_integrity">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b30">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:RUNNER"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:stamina">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:duration_max">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_demolish">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ZombieRoleDefinition">
+    <rdfs:label>ZombieRoleDefinition</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:RoleDefinition"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hunger_rate">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b35">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b36"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:incubation_duration">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:repair_amount">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:recon_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BaselineScenarioDefinition">
+    <rdfs:label>BaselineScenarioDefinition</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:ScenarioDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:seed">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:World">
+    <rdfs:label>World</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b29">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b31"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ZombieState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b76"/>
+    <rdfs:label>ZombieState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b100">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_smash"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b101"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Cooldown">
+    <rdfs:label>Cooldown</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Status">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Status</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b101">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b102"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_treat_infection"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b72">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b74"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b28">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b26"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b78">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b79"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:death_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_spit">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasCapability">
+    <owl:propertyChainAxiom rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b66"/>
+    <owl:propertyChainAxiom rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b68"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:range rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_move">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:target_kind">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b137">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CURED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b138"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorBeforeEnd">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Measurement">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Measurement</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b68">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b69"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:hasRoleDefinition"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Point">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>Point</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BUSY">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionStatus"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DEAD">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Status"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:compatibleType">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b113">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_scream"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:OPEN">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:GateMode"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CommunicationEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:PopulationAllocation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>PopulationAllocation</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b111">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b112"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_dash"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:spit_charges">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:atTime">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:sourceAgent">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:infection_progress">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_transfer">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:rally_radius">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ModelAssignment">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ModelAssignment</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:guard_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b37">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b39"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:carry_capacity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:StaminaRestorationEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b8">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b6"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:biomass">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b48">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b46"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:sourceSection">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BarrierDamageEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_open_gate">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b147">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CANCELLED_BY_INTERVENTION"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b148"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b60">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:InfectionEpisode"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:activeEpisode"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b12">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b10"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:AgentState">
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b83"/>
+    <rdfs:subClassOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b82"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>AgentState</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b51">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b52"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b15">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:LivingState"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b16"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:radius">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b67">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:grants"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Stockpile">
+    <rdfs:label>Stockpile</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_drop">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b97">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b98"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_claw"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:duration_min">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b140">
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b141"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:episode">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b58">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:AgentState"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b59"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:GuardEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b159">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:SCREAMER"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b4">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:selfState">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:integrity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:onset_revision">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:observer">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b89">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_melee"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b90"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ConstructionEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b41">
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b43"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:PhysicalDamageEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:FOOD">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ResourceType"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b116">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:INFECTED"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b117"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:triggeredBy">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:registry_version">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:length">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ymax">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:proposedAt">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b36">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b34"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b118">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:DEAD"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b151">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b152"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ACTION_DEAD">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionStatus"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:TimedEffect">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:Effect"/>
+    <rdfs:label>TimedEffect</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_power_strike">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorMedicalReservedAfter">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:causesEffect">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b132">
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b133"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b2">
+    <owl:hasValue rdf:resource="urn:zombie-game:v0.1:ACTIVE"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:status"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:max_spit_charges">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:magnitude">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:starvation_started_at">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:RalliedEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CureTransition">
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:LifecycleTransition"/>
+    <rdfs:label>CureTransition</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b105">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_recon"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b106"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b64">
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b62"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:damage_resistance">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b145">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:CANCELLED_BY_CONVERSION"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b146"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b20">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b18"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:base_speed">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:InfectionOnsetEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DoctorState">
+    <rdfs:label>DoctorState</rdfs:label>
+    <owl:equivalentClass rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b9"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:HumanState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:target">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:targetAfterEnd">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:forAction">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:initial_infected">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:observes">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:GateOpeningEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b49">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b51"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:treatment_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Intervention">
+    <rdfs:label>Intervention</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:capability">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:attack_skill">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:MISSED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:lastEvent">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_claw">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cause">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:coordinate_system">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:coverage">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AnnotationProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b135">
+    <owl:distinctMembers rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b136"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDifferent"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ObstacleState">
+    <rdfs:label>ObstacleState</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentState"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:revision">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b93">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b94"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_eat"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:MovementEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ONGOING">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EpisodeOutcome"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b61">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <owl:intersectionOf rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b63"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b136">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b137"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ONGOING"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b157">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:RUNNER"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b158"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:scenario">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_pickup">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b70">
+    <owl:onProperty rdf:resource="urn:zombie-game:v0.1:infectedAgent"/>
+    <owl:someValuesFrom rdf:resource="urn:zombie-game:v0.1:Agent"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Restriction"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:until">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b120">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b121"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:FOOD"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actionDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:world">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_wait">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b32">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b30"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b123">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:BIOMASS"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:demolish_damage">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:DecisionModel">
+    <rdfs:label>DecisionModel</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cooldown">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ymin">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_dash">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_treat_infection">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:claw_damage">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b134">
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:Zombie"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:max_life">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:prophylaxis_duration">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:Remains">
+    <rdfs:label>Remains</rdfs:label>
+    <rdfs:subClassOf rdf:resource="urn:zombie-game:v0.1:EnvironmentEntity"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_melee">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:horizon">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:HOST_DIED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EpisodeOutcome"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:model_id">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b90">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b91"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:cap_pickup"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:IN_PROGRESS">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:inventory">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:resourceType">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b117">
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b118"/>
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ACTIVE"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:targetBeforeEnd">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:rally_hit_bonus">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorStart">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ProphylaxisEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BarrierRepairEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:rest_rate">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b7">
+    <rdf:first rdf:resource="urn:zombie-game:v0.1:ActionDefinition"/>
+    <rdf:rest rdf:nodeID="nc4382c36279b4f628c7ca9aee3940539b8"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:mark_radius">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:count">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorMedicalBefore">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actor">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:plannedEnd">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:infection_resistance_effective">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:GateMode">
+    <rdfs:label>GateMode</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:conversion_due_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:expires_at">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:call_ttl">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:repair_material_cost">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:BREACHED">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:GateMode"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:build_integrity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ScenarioDefinition">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label>ScenarioDefinition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actorMedicalReservedBefore">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:x">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:CANCELLED_BY_CONFLICT">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:ActionResult"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:source_kind">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ActionResult">
+    <rdfs:label>ActionResult</rdfs:label>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:ReconEffect">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:EffectCategory"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_smash">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_repair_barrier">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_first_aid">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:build_material_cost">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:footprint">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:episodeOutcome">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:treatment_cost">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasWall">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_eat">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:call_radius">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:spit_potency">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_scream">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:realizes">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_prophylaxis">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:targetStart">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:hasShelter">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:initial_humans">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:cap_close_gate">
+    <rdf:type rdf:resource="urn:zombie-game:v0.1:Capability"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:actionResult">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:spit_damage">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="urn:zombie-game:v0.1:infectedAgent">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+  </rdf:Description>
+</rdf:RDF>

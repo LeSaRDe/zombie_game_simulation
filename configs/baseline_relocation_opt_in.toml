@@ -1,0 +1,12 @@
+# D5 constrained relocation approximation approved by the user on 2026-11-25.
+# Finite relocation remains approximate; no mixing guarantee is claimed.
+preset = "baseline"
+scenario = "baseline_v0.1_relocation_experimental"
+seed = 20261106
+horizon = 1800.0
+
+[placement]
+sampler = "relocation"
+allow_approximate = true
+max_point_attempts = 10000
+burn_in = 20

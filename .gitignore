@@ -3,3 +3,14 @@
 */__pycache__/
 *.class
 *.zip
+tests/results/
+.venv/
+.venv-*/
+.runtimeenv/
+.runtime/
+gui/node_modules/
+*.egg-info/
+artifacts/
+runs/
+build/
+dist/

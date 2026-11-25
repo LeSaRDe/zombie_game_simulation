@@ -1,0 +1,15 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix zg: <urn:zombie-game:v0.1:> .
+
+[] a sh:ValidationReport ;
+    sh:conforms false ;
+    sh:result [ a sh:ValidationResult ;
+            sh:focusNode <urn:zombie-game:example:treatment> ;
+            sh:resultMessage "ActionCooldown: A completed attempt records its cooldown unless actor death/conversion retires it." ;
+            sh:resultSeverity sh:Violation ;
+            sh:sourceConstraint zg:ActionCooldown ;
+            sh:sourceConstraintComponent sh:SPARQLConstraintComponent ;
+            sh:sourceShape zg:ActionOccurrenceShape ;
+            sh:value <urn:zombie-game:example:treatment> ] .
+

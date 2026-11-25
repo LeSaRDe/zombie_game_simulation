@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in SPARQLConstraintComponent (http://www.w3.org/ns/shacl#SPARQLConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:EventShape
+	Focus Node: ex:init
+	Value Node: ex:init
+	Source Constraint: zg:NoCausalCycle
+	Message: NoCausalCycle: Event causal graph must be acyclic.

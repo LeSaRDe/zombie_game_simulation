@@ -1,0 +1,20 @@
+scenario = "tiny_scenario.toml"
+
+[training]
+decisions = 4096
+rollout = 1024
+epochs = 4
+sequence_length = 32
+minibatch = 256
+hidden_size = 128
+learning_rate = 0.0003
+clip = 0.2
+gamma = 0.99
+lam = 0.95
+entropy = 0.01
+seed = 20261106
+family = "Human"
+device = "cpu"
+train_seeds = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+validation_seeds = [1000, 1001, 1002, 1003, 1004]
+evaluation_seeds = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029]

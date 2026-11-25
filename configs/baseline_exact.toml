@@ -1,0 +1,10 @@
+# Exact ontology baseline. Exhausting the attempt budget is an explicit failure.
+preset = "baseline"
+scenario = "baseline_v0.1"
+seed = 20261106
+horizon = 1800.0
+
+[placement]
+sampler = "exact"
+max_attempts = 10000
+allow_approximate = false

@@ -1,0 +1,1 @@
+{"owl2_dl":true,"profile_violations":[],"consistent":true,"named_class_count":77,"unsatisfiable_classes":["urn:zombie-game:example:ImpossibleDoctorZombie"],"inferred_types":[],"inferred_capabilities":[],"infection_capable_actions":["urn:zombie-game:v0.1:action_bite","urn:zombie-game:v0.1:action_spit"]}

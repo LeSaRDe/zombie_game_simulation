@@ -1,0 +1,10 @@
+Validation Report
+Conforms: False
+Results (1):
+Constraint Violation in MaxInclusiveConstraintComponent (http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: zg:AgentState_lifeShape
+	Focus Node: ex:state
+	Value Node: Literal("101", datatype=xsd:integer)
+	Result Path: zg:life
+	Message: AgentState.life: required datatype, cardinality, range, or reference violated.

@@ -1,0 +1,38 @@
+scenario = "small_v0.1"
+seed = 20261106
+horizon = 120.0
+incubation_duration = 60.0
+
+[world]
+length = 200.0
+width = 200.0
+
+[population]
+humans = 16
+zombies = 8
+infected = 1
+
+[population.human_roles]
+DOCTOR = 2
+WARRIOR = 3
+SCOUT = 2
+ENGINEER = 2
+
+[population.zombie_roles]
+TYRANT = 1
+RUNNER = 2
+SPITTER = 1
+SCREAMER = 1
+
+[placement]
+sampler = "exact"
+max_attempts = 10000
+
+[[stockpiles]]
+id = "supply1"
+x = 100.0
+y = 100.0
+[stockpiles.inventory]
+FOOD = 12
+MEDICAL_SUPPLY = 8
+MATERIAL = 8
