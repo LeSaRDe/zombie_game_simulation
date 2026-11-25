@@ -70,6 +70,8 @@ A simulation instance is required to be configurable, such as its initial states
 > - You must design and implement this hyperparameter & instance management system.
 
 
-
-
+**Visualization & GUI** 
+A friendly, insightful, and comprehensive GUI system is required. The visualization module is responsible to display the evolution of a simulation instance. The display may be implemented with multiple different views, such as an agent view displaying activities of agents, a statistics view displaying dynamics of populations and cohorts, and so on. A GUI control panel is also needed for downstreams users to easily tune hyperparameters and control the simulation instances. 
+> [!todo]
+> - You must design and implement the visualization module and the GUI module.
 
