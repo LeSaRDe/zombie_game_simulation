@@ -268,16 +268,27 @@ class ActionSystemMixin:
         candidates=[]
         if observed==self.time:
             candidates.append(actor)
-            candidates.extend(self._view_agent(aid) for aid in self.state["agents"] if aid!=actor["id"] and self._perceived(actor,self._view_agent(aid)))
+            nearby=([identifier] if identifier in self.state["agents"] else []) if identifier is not None else self._nearby(point(actor),float(actor["sense_r"]))
+            for aid in nearby:
+                if aid==str(actor["id"]):
+                    continue
+                entity=self._view_agent(aid)
+                if self._perceived(actor,entity):
+                    candidates.append(entity)
             for collection in ("stockpiles","remains"):
-                candidates.extend(entity for entity in self.state[collection].values() if self._perceived(actor,entity))
+                entities=([self.state[collection][identifier]] if identifier in self.state[collection] else []) if identifier is not None else self.state[collection].values()
+                candidates.extend(entity for entity in entities if self._perceived(actor,entity))
         # Trust recorded inputs, not arbitrary claims in model-returned memory.
-        for decision in getattr(self,"decisions",[]):
-            if str(decision.get("actor"))!=str(actor["id"]):
-                continue
-            observation=decision.get("observation",{})
-            if _clock(observation.get("time",0))!=observed:
-                continue
+        # Index by actor and exact observation time. Scanning the full history
+        # for every report becomes quadratic in long runs. This index contains
+        # references to durable evidence, is ephemeral, and rebuilds on restore.
+        decisions=getattr(self,"decisions",[])
+        if hasattr(decisions,"observations_at"):
+            observed_inputs=decisions.observations_at(actor["id"],_stamp(observed))
+        else:
+            observed_inputs=[record.get("observation",{}) for record in decisions
+                             if str(record.get("actor"))==str(actor["id"]) and _clock(record.get("observation",{}).get("time",0))==observed]
+        for observation in observed_inputs:
             candidates.append(observation.get("self_state",{}))
             local=observation.get("local_agents",{})
             candidates.extend(local.values() if isinstance(local,dict) else local)
@@ -305,6 +316,28 @@ class ActionSystemMixin:
         parameters["payload"]=payload
 
     def _action_plan(self,actor,action,target_id,parameters,completion=False,occurrence=None):
+        plan=self._action_plan_checked(actor,action,target_id,parameters,completion,occurrence)
+        observed=plan.pop("_read_dependencies",{})
+        declared=deepcopy(observed)
+        from .faults import omit_dependency
+        omit_dependency(declared,actor=actor["id"],action=action,completion=completion)
+        valid=set(observed)<=set(declared)
+        for dependency in declared.values():
+            obj=self.state[dependency["collection"]][dependency["holder"]]
+            resource=dependency["resource"]
+            current=(obj.get("inventory",{}).get(resource,0)-obj.get("reserved",{}).get(resource,0)
+                     if dependency["kind"]=="inventory" else obj.get("biomass",0)-obj.get("reserved_biomass",0)
+                     if dependency["kind"]=="biomass" else obj.get("spit_charges",0)-obj.get("reserved_charges",0))
+            valid=valid and current==dependency["available"]
+        if not valid:
+            # Reject the detached plan before spending or publishing anything.
+            # The coordinator rebuilds it from authoritative current resource reads.
+            self._runtime_dependency_retries=getattr(self,"_runtime_dependency_retries",0)+1
+            plan=self._action_plan_checked(actor,action,target_id,parameters,completion,occurrence)
+            plan.pop("_read_dependencies",None)
+        return plan
+
+    def _action_plan_checked(self,actor,action,target_id,parameters,completion=False,occurrence=None):
         p=profile(actor,_stamp(self.time));definition=ACTIONS[action]
         parameters=deepcopy(parameters)
         duration=_clock(parameters.get("duration",p.get("dash_duration",definition["duration"]) if action=="dash" else p.get("treatment_duration",definition["duration"]) if action=="treat_infection" else definition["duration"]))
@@ -318,7 +351,7 @@ class ActionSystemMixin:
         parameters["duration"]=_stamp(duration)
         reach=p.get("spit_range",12) if action=="spit" else definition.get("reach")
         target_id,target,collection=self._target(actor,action,target_id,reach)
-        reservations=[]
+        reservations=[];read_dependencies={}
         def reserve(collection,holder,kind,resource,quantity):
             if completion:
                 return
@@ -329,6 +362,8 @@ class ActionSystemMixin:
                 available=obj.get("biomass",0)-obj.get("reserved_biomass",0)
             else:
                 available=obj.get("spit_charges",0)-obj.get("reserved_charges",0)
+            token=("stock" if collection=="stockpiles" else collection)+":"+str(holder)+":"+str(resource)
+            read_dependencies[token]={"collection":collection,"holder":str(holder),"kind":kind,"resource":resource,"available":available}
             if available<quantity:
                 raise ActionError("Insufficient unreserved resource")
             reservations.append({"collection":collection,"holder":str(holder),"kind":kind,"resource":resource,"quantity":quantity})
@@ -399,9 +434,21 @@ class ActionSystemMixin:
                     raise ActionError("Reserved biomass is no longer available")
                 if reservation["kind"]=="charge" and (obj.get("spit_charges",0)<q or obj.get("reserved_charges",0)<q):
                     raise ActionError("Reserved charge is no longer available")
-        return {"parameters":parameters,"target":target_id,"duration":duration,"cost":float(definition["cost"]),"cooldown":float(definition["cooldown"]),"reservations":reservations,"travel_cost":travel_cost,"target_collection":collection}
+        return {"parameters":parameters,"target":target_id,"duration":duration,"cost":float(definition["cost"]),"cooldown":float(definition["cooldown"]),"reservations":reservations,"travel_cost":travel_cost,"target_collection":collection,"_read_dependencies":read_dependencies}
 
     def submit_intents(self,intents):
+        """Arbitrate and publish an externally supplied decision batch atomically."""
+        if self._batching:
+            return self._submit_intents_inner(intents)
+        self._batching=True
+        try:
+            result=self._submit_intents_inner(intents)
+        finally:
+            self._batching=False
+        self._commit("admission_batch",intents=[item["id"] for item in result])
+        return result
+
+    def _submit_intents_inner(self,intents):
         if isinstance(intents,dict):
             intents=[intents]
         if not isinstance(intents,(list,tuple)):
@@ -431,7 +478,8 @@ class ActionSystemMixin:
         prepared=[];results={}
         for index,intent in enumerate(intents):
             intent=deepcopy(intent) if isinstance(intent,dict) else {}
-            intent.setdefault("id",self._id("intent"))
+            if "id" not in intent:
+                intent["id"]=self._id("intent")
             identifier=str(intent["id"]);actor=str(intent.get("actor",intent.get("agent_id","")))
             action=intent.get("action",intent.get("name"));parameters=intent.get("parameters",{})
             key=json.dumps([actor,action,intent.get("target"),parameters],sort_keys=True,default=str)
@@ -482,7 +530,9 @@ class ActionSystemMixin:
                 self.occurrences[occurrence_id]=occurrence;self._mark("occurrences",occurrence_id)
                 occurrence["actor_after_start"]=self._capture_action_agent(aid,after=True)
                 outcome={"id":identifier,"actor":aid,"status":"ADMITTED","occurrence_id":occurrence_id}
-                self.intents[identifier]={**deepcopy(intent),"id":identifier,"actor":aid,"action":action,"parameters":plan["parameters"],"outcome":outcome,"proposed_at":_stamp(self.time)}
+                self.intents[identifier]={**deepcopy(intent),"id":identifier,"actor":aid,"action":action,
+                    "parameters":deepcopy(parameters),"resolved_parameters":deepcopy(plan["parameters"]),
+                    "outcome":outcome,"proposed_at":_stamp(self.time)}
                 self._mark("intents",identifier)
                 self._schedule(self.time+plan["duration"],5,"complete",aid,occurrence=occurrence_id)
                 self._commit("action_started",actor=aid,target=plan["target"],action=action,occurrence=occurrence_id,intent_id=identifier,arbitration_priority=priority)
@@ -574,7 +624,9 @@ class ActionSystemMixin:
                 reciprocal["target_before_end"]=deepcopy(occurrence["actor_before_end"])
             if action=="spit":
                 self._release(occurrence,consume=True)
-            probability=min(1.,max(0.,.5+.45*p["combat_skill"])) if action in ("melee","power_strike") else min(.95,max(0.,.6+.3*p["attack_skill"]+p.get("rally_bonus",0)))
+            probability=(float(min(Fraction(1),max(Fraction(0),Fraction(".5")+Fraction(".45")*Fraction(str(p["combat_skill"])))))
+                         if action in ("melee","power_strike") else
+                         float(min(Fraction(".95"),max(Fraction(0),Fraction(".6")+Fraction(".3")*Fraction(str(p["attack_skill"]))+Fraction(str(p.get("rally_bonus",0)))))))
             hit=self._bernoulli(occurrence,"hit",probability)
             occurrence["hit"]=bool(hit)
             if hit:

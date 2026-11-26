@@ -13,9 +13,11 @@ import heapq
 import json
 import math
 import multiprocessing
+import os
 from pathlib import Path
 import random
 import tempfile
+import time as wall_clock
 import uuid
 
 from .config import resolve_config, initialize_world
@@ -136,10 +138,29 @@ def _policy_call(task):
     from .policies import choose
     observation, memory, seed, model, parameters = task
     try:
-        return choose(observation, memory, random.Random(seed), model, parameters)
+        result=choose(observation, memory, random.Random(seed), model, parameters)
+        if (not isinstance(result,(list,tuple)) or len(result)!=3 or not isinstance(result[0],dict)
+                or result[0].get("action") not in RULES or not isinstance(result[0].get("parameters",{}),dict)
+                or not isinstance(result[2],dict)):
+            return ({"actor":observation["self_state"]["id"],"action":"wait","parameters":{"duration":"1"}},
+                    memory,{"fallback_reason":"INVALID_MODEL_OUTPUT","message":"Model violated the typed decision contract"})
+        return result
     except Exception as exc:
         return ({"actor": observation["self_state"]["id"], "action": "wait", "parameters": {"duration": "1"}},
-                memory, {"fallback": type(exc).__name__, "message": str(exc)})
+                memory, {"fallback": type(exc).__name__, "fallback_reason":"MODEL_UNAVAILABLE" if isinstance(exc,FileNotFoundError) else "MODEL_EXCEPTION", "message": str(exc)})
+
+
+def _observe_policy_chunk(task):
+    """Evaluate detached local neighborhoods, including LOS, in a real worker."""
+    started=wall_clock.process_time()
+    view=Simulation.__new__(Simulation)
+    view.state=task["state"];view.occurrences=view.state["occurrences"]
+    view.time=task["time"];view.horizon=task["horizon"];view.revision=task["revision"]
+    rows=[]
+    for aid,memory,seed,model,parameters in task["controllers"]:
+        observation=view.observe(aid)
+        rows.append((observation,_policy_call((observation,memory,seed,model,parameters))))
+    return {"rows":rows,"pid":os.getpid(),"cpu_seconds":wall_clock.process_time()-started}
 
 
 class Simulation(ActionSystemMixin):
@@ -154,10 +175,14 @@ class Simulation(ActionSystemMixin):
         self.seed = int(self.config.get("seed", 20261106))
         execution = self.config.get("execution", {})
         self.backend = backend or self.config.get("storage",{}).get("backend", "memory")
-        self.workers = int(workers or execution.get("workers", self.config.get("workers", 1)))
+        from .hardware import worker_budget
+        self.worker_request=workers if workers is not None else execution.get("workers", "auto")
+        self._runtime_worker_budget = worker_budget(self.worker_request, population=len(self.state["agents"]))
+        self.workers = self._runtime_worker_budget["workers"]
         self.decision_mode = decision_mode or self.config.get("decision_mode", "model")
         self.horizon = clock(self.config.get("horizon", 1800))
         self.events, self.decisions, self.random_draws = [], [], []
+        self.execution_counters={"policy_calls":0,"bernoulli_calls":0}
         self.queue, self._serial, self._counter = [], 0, 0
         self._runtime_queue_delta=[]
         self._identity_counters={}
@@ -176,6 +201,8 @@ class Simulation(ActionSystemMixin):
             self.state.setdefault(name, {})
         self.occurrences, self.intents = self.state["occurrences"], self.state["intents"]
         for aid, a in self.state["agents"].items():
+            if a.get("life",0)>0 and a.get("model_memory") is not None:
+                self.memories[aid]=deepcopy(a.pop("model_memory"))
             a.pop("infected",None)
             a.setdefault("_evaluated_at", stamp(self.time))
             a.setdefault("_generation", 0)
@@ -183,7 +210,11 @@ class Simulation(ActionSystemMixin):
             a.setdefault("effects", {})
             a.setdefault("active_action", None)
             a.setdefault("infection_episode", None)
-            if a["type"] == "Human":
+            if self.config.get("state_import"):
+                for effect_id,effect in a["effects"].items():
+                    if clock(effect["end_at"])>=self.time:
+                        self._schedule(effect["end_at"],0,"expire",aid,effect=effect_id)
+            if a["type"] == "Human" and a["life"]>0:
                 self._schedule_starvation(a)
             if a.get("infection_episode"):
                 ep = self.state["episodes"][a["infection_episode"]]
@@ -210,6 +241,8 @@ class Simulation(ActionSystemMixin):
         self._dirty.clear()
         from .runtime import initialize_history
         initialize_history(self)
+        from .history_sequence import attach_histories
+        attach_histories(self)
 
     @classmethod
     def initialize(cls, config=None, **options):
@@ -221,8 +254,29 @@ class Simulation(ActionSystemMixin):
         return f"{prefix}-{self._identity_counters[prefix]}"
 
     def _random(self, domain, key):
+        if domain in {"hit", "infection"}:
+            occurrence = self.occurrences.get(key, {})
+            token = (str(occurrence.get("intent_id", key)), domain)
+            injected = getattr(self, "_keyed_random_values", {})
+            if token in injected:
+                return injected[token]
         digest = hashlib.sha256(f"{self.seed}:{domain}:{key}".encode()).digest()
         return int.from_bytes(digest[:8], "big") / 2**64
+
+    def inject_random_values(self, draws):
+        """Set explicit keyed variates for controlled, reproducible experiments.
+
+        This supplies numbers, never outcomes. Ordinary handlers still decide
+        whether a draw occurs and calculate/record its actual probability.
+        """
+        values = dict(getattr(self, "_keyed_random_values", {}))
+        for draw in draws:
+            channel = draw["channel"]
+            value = float(Fraction(str(draw["value"])))
+            if channel not in {"hit", "infection"} or not 0 <= value < 1:
+                raise ValueError("Controlled draws require hit/infection and a finite value in [0, 1)")
+            values[(str(draw["intent"]), channel)] = value
+        self._keyed_random_values = values
 
     def _schedule(self, time, phase, kind, agent=None, **fields):
         time = clock(time)
@@ -244,6 +298,9 @@ class Simulation(ActionSystemMixin):
 
     def _mark(self, collection, key):
         self._dirty.add((collection, str(key)))
+        if collection=="agents":
+            if not hasattr(self,"_runtime_spatial_dirty"):self._runtime_spatial_dirty=set()
+            self._runtime_spatial_dirty.add(str(key))
 
     def _evaluate(self, a, at):
         previous = clock(a.get("_evaluated_at", 0))
@@ -288,7 +345,7 @@ class Simulation(ActionSystemMixin):
         active = self.occurrences.get(a.get("active_action"))
         a["current_action"] = active["action"] if active else None
         if active and active["action"] == "dash":
-            a["speed"] = float(a["base_speed"])*float(a.get("dash_multiplier",1.5))
+            a["speed"] = float(Fraction(str(a["base_speed"]))*Fraction(str(a.get("dash_multiplier",1.5))))
         ep = self.state["episodes"].get(a.get("infection_episode"))
         if a["type"] == "Human":
             a["infection_progress"] = min(1., float((self.time-clock(ep["onset_at"]))/clock(ep["incubation_duration"]))) if ep else 0.
@@ -339,7 +396,11 @@ class Simulation(ActionSystemMixin):
             self.run_status, self.termination_reason = "FAILED", "STORAGE_ERROR"
             raise
         self.revision += 1
-        self.events.extend(records)
+        if hasattr(self.events,"publish"):
+            last_sequence=self.history.connection.execute("SELECT MAX(sequence) FROM events").fetchone()[0]
+            for sequence in (self.events,self.decisions,self.random_draws):sequence.publish(records,last_sequence)
+        else:
+            self.events.extend(records)
         self._deferred_events.clear()
         self._effects_buffer.clear()
         self._dirty.clear()
@@ -384,6 +445,9 @@ class Simulation(ActionSystemMixin):
                 nonempty = sum(obj.get("inventory",{}).values()) > 0 if name == "stockpiles" else obj["biomass"] > 0
                 if nonempty and math.dist(here,point(obj)) <= radius and segment_clear(here,point(obj),self.state["barriers"]):
                     environment[name][key] = deepcopy(obj)
+                    if name=="stockpiles":
+                        environment[name][key]["available"]={resource:quantity-obj.get("reserved",{}).get(resource,0)
+                                                               for resource,quantity in obj["inventory"].items()}
         for key, b in self.state["barriers"].items():
             if distance_to(here,b) > radius:
                 continue
@@ -411,20 +475,51 @@ class Simulation(ActionSystemMixin):
         return {k:deepcopy(v) for k,v in a.items() if not k.startswith("_") and k not in {"memory","model_memory"}}
 
     def _nearby(self,position,radius):
-        """Uniform-grid broad phase rebuilt at exact query times, never stale."""
+        """Conservative swept-path buckets, followed by exact-time filtering.
+
+        A movement's entire recorded path is in its broad-phase envelope. Thus
+        time advancing never requires scanning every agent to update the grid.
+        Admission, interruption, relocation and lifecycle writes invalidate only
+        their actors. Candidates still use exact trajectory coordinates and LOS.
+        """
         cell_size=50.
         if getattr(self,"_spatial_time",None)!=self.time:
             self._spatial_time=self.time
-            self._spatial_cells={};self._position_cache={}
-            for aid,a in self.state["agents"].items():
-                occurrence=self.occurrences.get(a.get("active_action"))
-                location=self._path_position(occurrence,self.time)[0] if occurrence and occurrence["action"] in {"move","dash"} else point(a)
-                self._position_cache[aid]=location
-                cell=(math.floor(location[0]/cell_size),math.floor(location[1]/cell_size))
-                self._spatial_cells.setdefault(cell,[]).append(aid)
+            self._position_cache={}
+        if not hasattr(self,"_runtime_spatial_membership"):
+            self._spatial_cells={};self._runtime_spatial_membership={}
+            self._runtime_spatial_order={aid:index for index,aid in enumerate(self.state["agents"])}
+            self._runtime_spatial_dirty=set(self.state["agents"])
+        for aid in getattr(self,"_runtime_spatial_dirty",set()):
+            for cell in self._runtime_spatial_membership.pop(aid,()):
+                self._spatial_cells[cell].discard(aid)
+                if not self._spatial_cells[cell]:del self._spatial_cells[cell]
+            self._position_cache.pop(aid,None)
+            a=self.state["agents"].get(aid)
+            if a is None:continue
+            self._runtime_spatial_order.setdefault(aid,len(self._runtime_spatial_order))
+            occurrence=self.occurrences.get(a.get("active_action"))
+            points=occurrence["parameters"]["path"] if occurrence and occurrence["action"] in {"move","dash"} else [a]
+            lowx=math.floor(min(float(p["x"]) for p in points)/cell_size);highx=math.floor(max(float(p["x"]) for p in points)/cell_size)
+            lowy=math.floor(min(float(p["y"]) for p in points)/cell_size);highy=math.floor(max(float(p["y"]) for p in points)/cell_size)
+            cells=[(x,y) for x in range(lowx,highx+1) for y in range(lowy,highy+1)]
+            self._runtime_spatial_membership[aid]=cells
+            for cell in cells:self._spatial_cells.setdefault(cell,set()).add(aid)
+        self._runtime_spatial_dirty=set()
         lowx,highx=math.floor((position[0]-radius)/cell_size),math.floor((position[0]+radius)/cell_size)
         lowy,highy=math.floor((position[1]-radius)/cell_size),math.floor((position[1]+radius)/cell_size)
-        return [aid for x in range(lowx,highx+1) for y in range(lowy,highy+1) for aid in self._spatial_cells.get((x,y),[])]
+        candidates={aid for x in range(lowx,highx+1) for y in range(lowy,highy+1) for aid in self._spatial_cells.get((x,y),())}
+        # Preserve the reference point-grid order even though envelopes may
+        # occupy multiple cells and return a conservative superset.
+        for aid in candidates:
+            self._position_at(aid)
+        return sorted(candidates,key=lambda aid:(math.floor(self._position_cache[aid][0]/cell_size),math.floor(self._position_cache[aid][1]/cell_size),self._runtime_spatial_order[aid]))
+
+    def _position_at(self,aid):
+        if aid not in self._position_cache:
+            agent=self.state["agents"][aid];occurrence=self.occurrences.get(agent.get("active_action"))
+            self._position_cache[aid]=self._path_position(occurrence,self.time)[0] if occurrence and occurrence["action"] in {"move","dash"} else point(agent)
+        return self._position_cache[aid]
 
     def _schedule_starvation(self,a):
         generation = a.setdefault("_hunger_generation",0)
@@ -455,39 +550,101 @@ class Simulation(ActionSystemMixin):
 
     def _decide_inner(self, aids):
         aids = sorted(set(aids))
-        tasks, observations = [], []
+        controllers=[]
         for aid in aids:
             a = self.state["agents"][aid]
             if a["life"] == 0 or a.get("active_action"):
                 continue
-            observation = self.observe(aid)
             assignment = a.get("model_assignment") or {}
             model = assignment.get("model_id", "HumanDefaultModel" if a["type"] == "Human" else "ZombieDefaultModel")
             seed = int(self._random("policy",f"{aid}:{stamp(self.time)}")*2**64)
-            tasks.append((observation,deepcopy(self.memories.get(aid,{})),seed,model,assignment.get("parameters")))
-            observations.append(observation)
-        if self.workers > 1 and len(tasks) >= 8:
+            controllers.append((aid,self.memories.get(aid,{}),seed,model,assignment.get("parameters")))
+        started=wall_clock.perf_counter()
+        execution=self.config.get("execution",{})
+        if self.workers > 1 and len(controllers) >= execution.get("parallel_min_agents",32):
             if self._pool is None:
                 self._pool = ProcessPoolExecutor(self.workers,mp_context=multiprocessing.get_context("spawn"))
-            choices = list(self._pool.map(_policy_call,tasks))
+            tasks=self._observation_tasks(controllers)
+            from .parallel import ordered_results
+            chunks=ordered_results(self._pool,_observe_policy_chunk,tasks,
+                completion_order=execution.get("completion_order","native"),seed=execution.get("completion_order_seed",0))
+            rows=[row for chunk in chunks for row in chunk["rows"]]
+            metrics=getattr(self,"_runtime_performance",{})
+            worker_cpu=metrics.setdefault("worker_cpu_seconds",{})
+            for chunk in chunks:
+                key=str(chunk["pid"]);worker_cpu[key]=worker_cpu.get(key,0.)+chunk["cpu_seconds"]
+            metrics["parallel_decisions"]=metrics.get("parallel_decisions",0)+len(rows)
+            metrics["parallel_batches"]=metrics.get("parallel_batches",0)+1
+            self._runtime_performance=metrics
         else:
-            choices = list(map(_policy_call,tasks))
+            rows=[]
+            for aid,memory,seed,model,parameters in controllers:
+                observation=self.observe(aid)
+                rows.append((observation,_policy_call((observation,memory,seed,model,parameters))))
+        metrics=getattr(self,"_runtime_performance",{})
+        metrics["observation_policy_wall_seconds"]=metrics.get("observation_policy_wall_seconds",0.)+wall_clock.perf_counter()-started
+        metrics["decisions"]=metrics.get("decisions",0)+len(rows)
+        self._runtime_performance=metrics
+        counters=self.__dict__.setdefault("execution_counters",{"policy_calls":0,"bernoulli_calls":0})
+        counters["policy_calls"]+=len(rows)
         proposals = []
-        for observation, (intent,memory,diagnostics) in zip(observations,choices):
+        for observation, (intent,memory,diagnostics) in rows:
             aid = observation["self_state"]["id"]
             self.memories[aid] = deepcopy(memory)
             intent = deepcopy(intent) if isinstance(intent,dict) else {}
             intent["actor"] = aid
-            intent.setdefault("id",self._id("intent"))
-            decision={"id":self._id("decision"),"time":stamp(self.time),"actor":aid,
+            if "id" not in intent:
+                intent["id"]=self._id("intent")
+            decision_id=self._id("decision")
+            intent["decision_id"]=decision_id
+            decision={"id":decision_id,"time":stamp(self.time),"actor":aid,
                       "observation":observation,"intent":deepcopy(intent),"diagnostics":deepcopy(diagnostics)}
+            if diagnostics.get("fallback_reason"):decision["fallback_reason"]=diagnostics["fallback_reason"]
             self.decisions.append(decision)
             self._commit("decision",**decision)
             proposals.append(intent)
         results = self.submit_intents(proposals)
         for result in results:
             if result["status"] == "REJECTED":
+                # Rejection recovery is bounded to one valid wait at this boundary.
+                for decision in reversed(self._deferred_events):
+                    if decision.get("kind")!="decision":continue
+                    if decision["intent"]["id"]==result["id"]:
+                        decision["fallback_reason"]="REJECTION_LIMIT"
+                        decision["diagnostics"]["fallback_reason"]="REJECTION_LIMIT"
+                        break
                 self.submit_intents([{"actor":result["actor"],"action":"wait","parameters":{"duration":"1"},"fallback_for":result["id"]}])
+
+    def _observation_tasks(self,controllers):
+        """Freeze only neighborhood records needed by each observer chunk.
+
+        Workers receive no store or coordinator, and policies receive only the
+        usual visibility-filtered observation produced inside that worker.
+        """
+        self._nearby((0.,0.),0.)  # Build the exact-time broad-phase once.
+        ordering={aid:index for index,aid in enumerate(self.state["agents"])}
+        size=max(1,math.ceil(len(controllers)/(self.workers*4)))
+        tasks=[]
+        for start in range(0,len(controllers),size):
+            chunk=controllers[start:start+size];nearby=set()
+            for aid,*_ in chunk:
+                radius=float(profile(self.state["agents"][aid],stamp(self.time))["sense_r"])
+                nearby.update(self._nearby(self._position_at(aid),radius));nearby.add(aid)
+            agents={aid:self.state["agents"][aid] for aid in sorted(nearby,key=ordering.get)}
+            occurrence_ids={a.get("active_action") for a in agents.values()}
+            episode_ids={a.get("infection_episode") for a in agents.values()}
+            state={name:self.state[name] for name in ("world","barriers","stockpiles","remains","signals")}
+            state.update(agents=agents,occurrences={key:self.occurrences[key] for key in occurrence_ids if key in self.occurrences},
+                         episodes={key:self.state["episodes"][key] for key in episode_ids if key in self.state["episodes"]})
+            tasks.append({"state":state,"controllers":chunk,"time":self.time,"horizon":self.horizon,"revision":self.revision})
+        return tasks
+
+    def execution_diagnostics(self):
+        """Measured execution metadata, deliberately outside semantic history."""
+        return {"workers":self.workers,"hardware":deepcopy(getattr(self,"_runtime_worker_budget",{})),
+                "performance":deepcopy(getattr(self,"_runtime_performance",{})),
+                "dependency_retries":getattr(self,"_runtime_dependency_retries",0),
+                "effects":deepcopy(getattr(self,"parallel_effect_stats",{}))}
 
     def _prepare_completions(self,current):
         """Parallelize the independent continuous phase, then commit canonically.
@@ -542,13 +699,17 @@ class Simulation(ActionSystemMixin):
             self.parallel_effect_stats[key]=self.parallel_effect_stats.get(key,0)+value
         self._prepared_boundary=self.time
 
-    def advance_until(self, until, max_events=None,return_snapshot=True):
+    def advance_until(self, until, max_events=None,return_snapshot=True,should_yield=None):
         until = min(clock(until),self.horizon)
         if until < self.time:
             raise ValueError("Use history replay to inspect the past")
         count = 0
+        yielded = False
         self.run_status = "RUNNING"
         while self.queue and self.queue[0][0] <= until:
+            if should_yield is not None and should_yield():
+                yielded = True
+                break
             if max_events is not None and count >= max_events:
                 break
             when,phase,priority,serial,event = heapq.heappop(self.queue)
@@ -572,18 +733,26 @@ class Simulation(ActionSystemMixin):
             if self.revision==previous_revision:
                 self._commit("scheduler_advanced",scheduled_kind=event["kind"])
             count += 1
-            self._checkpoint_if_due()
             if not any(a["life"] > 0 for a in self.state["agents"].values()):
                 self.run_status,self.termination_reason="COMPLETED","NO_LIVING_AGENTS"
                 break
-        if max_events is None and self.run_status != "COMPLETED":
+            if should_yield is not None and should_yield():
+                yielded = True
+                break
+            self._checkpoint_if_due()
+        if not yielded and should_yield is not None and should_yield():
+            yielded = True
+        if not yielded and max_events is None and self.run_status != "COMPLETED":
             self.time = until
             self._commit("clock_advanced")
         if self.time >= self.horizon and (not self.queue or self.queue[0][0]>self.horizon):
             self.run_status,self.termination_reason="COMPLETED","HORIZON"
         elif self.run_status == "RUNNING":
             self.run_status="PAUSED"
-        self._checkpoint_if_due()
+        # A request can arrive while the final clock commit is made durable.
+        # Recheck before beginning another synchronous checkpoint.
+        if not yielded and (should_yield is None or not should_yield()):
+            self._checkpoint_if_due()
         return self.snapshot() if return_snapshot else {"time":stamp(self.time),"revision":self.revision,"status":self.run_status}
 
     def _checkpoint_if_due(self):
@@ -593,10 +762,10 @@ class Simulation(ActionSystemMixin):
         if self.time-self._last_checkpoint>=interval or self._since_checkpoint>=transactions:
             self.checkpoint(str(Path(self.history_path).with_suffix(".checkpoint.json")))
 
-    def step(self, timestamp=False,return_snapshot=True):
+    def step(self, timestamp=False,return_snapshot=True,should_yield=None):
         if not self.queue:
             return self.snapshot()
-        return self.advance_until(self.queue[0][0],max_events=None if timestamp else 1,return_snapshot=return_snapshot)
+        return self.advance_until(self.queue[0][0],max_events=None if timestamp else 1,return_snapshot=return_snapshot,should_yield=should_yield)
 
     def _dispatch(self,event):
         kind,aid=event["kind"],event.get("agent")
@@ -649,6 +818,8 @@ class Simulation(ActionSystemMixin):
                 self._commit("signal_expired",signal=sid)
 
     def _bernoulli(self, occurrence, channel, probability):
+        counters=self.__dict__.setdefault("execution_counters",{"policy_calls":0,"bernoulli_calls":0})
+        counters["bernoulli_calls"]+=1
         probability=min(1.,max(0.,float(probability)))
         raw=self._random(channel,occurrence["id"])
         result=raw < probability
@@ -745,9 +916,10 @@ class Simulation(ActionSystemMixin):
         for key in ("hunger","inventory","reserved","carry_capacity","starvation_started_at",
                     "next_starvation_damage_at","_starvation_due_at","type_profile","role_profile","profile"):
             a.pop(key,None)
+        from .domain import decision_model_assignment
         a.update(type="Zombie",status="ACTIVE",role=None,effects={},cooldowns={},active_action=None,
                  profile={},type_profile=deepcopy(self.config.get("profiles",{}).get("Zombie",{})),
-                 model_assignment={"model_id":"ZombieDefaultModel","version":"1"})
+                 model_assignment=decision_model_assignment("ZombieDefaultModel"))
         a["_generation"]+=1
         a["_hunger_generation"]=a.get("_hunger_generation",0)+1
         if active:
@@ -763,7 +935,7 @@ class Simulation(ActionSystemMixin):
         if a["life"]==0 or a["type"]!="Human" or a.get("infection_episode"):
             return False
         resistance=float(profile(a,stamp(self.time))["infection_resistance_effective"])
-        if not self._bernoulli(occurrence,"infection",float(potency)*(1-resistance)):
+        if not self._bernoulli(occurrence,"infection",float(Fraction(str(potency))*(1-Fraction(str(resistance))))):
             return False
         eid=self._id("episode")
         duration=clock(self.config.get("incubation_duration",300))
@@ -960,11 +1132,12 @@ class Simulation(ActionSystemMixin):
                                 amount=min(excess,a["inventory"][resource]);a["inventory"][resource]-=amount;excess-=amount;dropped[resource]=dropped.get(resource,0)+amount
                         self._drop(a,dropped)
                 else:
-                    create_model(change["model_id"])
+                    from .domain import decision_model_assignment
+                    assignment=decision_model_assignment(change["model_id"],change.get("model_version"))
                     policy=change.get("memory_policy")
                     if policy not in {"reset","preserve"}:
                         raise ValueError("Model replacement requires reset or preserve memory policy")
-                    a["model_assignment"]={"model_id":change["model_id"],"version":str(change.get("model_version","1"))}
+                    a["model_assignment"]=assignment
                     if policy=="reset":self.memories.pop(aid,None)
             else:
                 raise ValueError("Unknown intervention kind")

@@ -22,6 +22,16 @@ def _print(value):
     print(json.dumps(value, indent=2, default=str))
 
 
+def _worker_count(value):
+    if value=="auto":return value
+    try:
+        count=int(value)
+        if count>0:return count
+    except ValueError:
+        pass
+    raise argparse.ArgumentTypeError("Use a positive worker count or 'auto'")
+
+
 def _configuration(path):
     from .config import resolve_config
     path = Path(path)
@@ -101,6 +111,7 @@ def _headless_run(config, output, workers=None, backend=None, until=None):
         state = simulation.snapshot()
         manifest.update(status=status, time=str(simulation.time), revision=simulation.revision,
                         elapsed_wall_seconds=time.monotonic() - started,
+                        execution=simulation.execution_diagnostics(),
                         populations=populations(state), resources=resources(state))
         (directory / "manifest.json").write_text(canonical(manifest))
         simulation.close()
@@ -129,14 +140,14 @@ def main(argv=None):
     validate = sub.add_parser("validate", help="Resolve a scenario and validate parameters")
     validate.add_argument("config"); validate.add_argument("--preview", action="store_true")
     run = sub.add_parser("run", help="Execute a scenario with durable history")
-    run.add_argument("config"); run.add_argument("--seed", type=int); run.add_argument("--workers", type=int)
+    run.add_argument("config"); run.add_argument("--seed", type=int); run.add_argument("--workers", type=_worker_count)
     run.add_argument("--backend", choices=("memory", "sqlite")); run.add_argument("--until")
     run.add_argument("--output")
     inspect = sub.add_parser("inspect"); inspect.add_argument("run")
     replay = sub.add_parser("replay"); replay.add_argument("run"); replay.add_argument("--time"); replay.add_argument("--revision", type=int); replay.add_argument("--output")
     resume = sub.add_parser("resume"); resume.add_argument("run"); resume.add_argument("--until")
     branch = sub.add_parser("branch"); branch.add_argument("run"); branch.add_argument("--revision", type=int, required=True); branch.add_argument("--interventions"); branch.add_argument("--output"); branch.add_argument("--seed", type=int)
-    experiment = sub.add_parser("experiment"); experiment.add_argument("config"); experiment.add_argument("--jobs", type=int, default=1)
+    experiment = sub.add_parser("experiment"); experiment.add_argument("config"); experiment.add_argument("--jobs", type=_worker_count, default="auto")
     export = sub.add_parser("export"); export.add_argument("run"); export.add_argument("--format", choices=("json", "csv", "svg", "parquet", "ttl"), default="json"); export.add_argument("--time"); export.add_argument("--revision", type=int); export.add_argument("--output")
     analyze = sub.add_parser("analyze"); analyze.add_argument("run"); analyze.add_argument("--interval", default="1"); analyze.add_argument("--output")
     train = sub.add_parser("train"); train.add_argument("config"); train.add_argument("--output", default="training/model"); train.add_argument("--decisions", type=int)
@@ -305,9 +316,12 @@ def main(argv=None):
                         for part in parts[:-1]:
                             node = node.setdefault(part, {})
                         node[parts[-1]] = value
-                    jobs.append((config, str(directory / f"instance-{index}" / f"seed-{seed}"), settings.get("workers", 1), settings.get("backend", "memory")))
-            if args.jobs > 1:
-                with ProcessPoolExecutor(max_workers=args.jobs) as executor:
+                    jobs.append((config, str(directory / f"instance-{index}" / f"seed-{seed}"), settings.get("workers", "auto"), settings.get("backend", "memory")))
+            from .hardware import worker_budget
+            run_workers=worker_budget(args.jobs,population=len(jobs))["workers"]
+            jobs=[(config,output,worker_budget(workers,concurrent_runs=run_workers)["workers"],backend) for config,output,workers,backend in jobs]
+            if run_workers > 1:
+                with ProcessPoolExecutor(max_workers=run_workers) as executor:
                     results = list(executor.map(_experiment_job, jobs))
             else:
                 results = [_experiment_job(job) for job in jobs]

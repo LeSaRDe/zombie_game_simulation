@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from .actions import _base_cases
 from .dsl import agent, world, intent, check, case
+from .enclosures import with_gate_enclosures
 
 
 def _items(food=0, medical=0, material=0):
@@ -23,8 +24,22 @@ def _door(mode="CLOSED", integrity=200):
         {"id": "lower", "kind": "Obstacle", "rect": ["12", "0", "13", "9"]},
         {"id": "upper", "kind": "Obstacle", "rect": ["12", "11", "13", "100"]},
         {"id": "g", "kind": "Gate", "rect": ["12", "9", "13", "11"],
-         "mode": mode, "integrity": integrity, "max_integrity": 200},
+         "mode": mode, "integrity": integrity, "max_integrity": 200, "shelter_id": "shelter-g"},
+        {"id": "south", "kind": "Obstacle", "rect": ["13", "0", "100", "1"]},
+        {"id": "north", "kind": "Obstacle", "rect": ["13", "99", "100", "100"]},
+        {"id": "east", "kind": "Obstacle", "rect": ["99", "1", "100", "99"]},
     ]
+
+
+def _door_world(*agents, mode="CLOSED", integrity=200):
+    """Complete the original full-height doorway into a valid east enclosure.
+
+    The original lower/upper walls and gate are unchanged; the three distant
+    closing walls leave every original local contact and horizontal route intact.
+    """
+    return world(*agents, barriers=_door(mode,integrity), shelters=[{
+        "id":"shelter-g","interior":["13","1","99","99"],
+        "walls":["lower","upper","south","north","east"],"gates":["g"]}])
 
 
 def witness_bank():
@@ -68,10 +83,10 @@ def witness_bank():
         "Food in hand can prevent upcoming starvation in a safe scene.")
     add("own_severe_wound", world(agent("a", life=20, inventory=_items(medical=1))), ["first_aid"],
         "A safe uninfected injured actor can use its own medicine for physical recovery.")
-    add("closed_route", world(agent("a"), barriers=_door()), ["open_gate", "move"],
+    add("closed_route", _door_world(agent("a")), ["open_gate", "move"],
         "An impassable wall makes the closed gate the useful route to the remembered destination.", objective=route)
-    add("exposed_refuge", world(agent("a"), agent("ally", x="5"), agent("enemy", "Zombie", x="14"),
-        barriers=_door("OPEN")), ["close_gate"],
+    add("exposed_refuge", _door_world(agent("a"), agent("ally", x="5"), agent("enemy", "Zombie", x="14"),
+        mode="OPEN"), ["close_gate"],
         "Closing the open door separates a nearby outside threat from the defended side.", objective=defense)
     add("fragile_prey", world(agent("a", "Zombie"), agent("t", x="11", life=10)), ["claw"],
         "Claw kills this nearby prey faster than an insufficient six-damage bite.")
@@ -83,7 +98,7 @@ def witness_bank():
         agent("body", x="11", life=0, death_at="0", death_cause="initial_condition"),
         remains=[{"id": "r", "source_agent": "body", "x": "11", "y": "10", "biomass": 4}]), ["feed"],
         "Feeding nearby remains restores both scarce life and energy.")
-    add("weak_blocking_door", world(agent("a", "Zombie"), barriers=_door(integrity=15)), ["smash"],
+    add("weak_blocking_door", _door_world(agent("a", "Zombie"), integrity=15), ["smash"],
         "A baseline zombie needs one smash to clear the only known route.", objective=route)
     add("curable_neighbor", world(agent("a", role="DOCTOR", inventory=_items(medical=2)),
         agent("t", x="11", infection={"onset_at": "0", "incubation_duration": "25"})), ["treat_infection"],
@@ -109,14 +124,14 @@ def witness_bank():
     add("unprotected_chokepoint", world(agent("a", role="ENGINEER", x="10.5", inventory=_items(material=2)),
         agent("ally", x="5"), agent("enemy", "Zombie", x="40"), barriers=_door()[:2]), ["build_barricade"],
         "The empty two-metre wall gap has no gate to close or repair and a legal defensive footprint.", objective=defense)
-    add("damaged_refuge", world(agent("a", role="ENGINEER", inventory=_items(material=1)),
-        agent("ally", x="5"), barriers=_door(integrity=100)), ["repair_barrier"],
+    add("damaged_refuge", _door_world(agent("a", role="ENGINEER", inventory=_items(material=1)),
+        agent("ally", x="5"), integrity=100), ["repair_barrier"],
         "One material can restore a useful closed defense; two-material construction is unavailable.", objective=defense)
     add("ready_zombie_allies", world(agent("a", "Zombie", role="TYRANT"),
         agent("z1", "Zombie", x="13"), agent("z2", "Zombie", x="13", y="10.5"),
         agent("z3", "Zombie", x="13", y="9.5"), agent("t", x="14")), ["rally"],
         "Several visible allies already have contact opportunities while the Tyrant is out of contact.")
-    add("strong_blocking_door", world(agent("a", "Zombie", role="TYRANT"), barriers=_door()), ["demolish"],
+    add("strong_blocking_door", _door_world(agent("a", "Zombie", role="TYRANT")), ["demolish"],
         "High integrity rewards demolish's greater damage per unit time and stamina.", objective=route)
     add("distant_runner_prey", world(agent("a", "Zombie", role="RUNNER"), agent("t", x="20")), ["dash"],
         "A well-rested Runner can close distance faster while retaining follow-up attack energy.")
@@ -147,7 +162,7 @@ def cases():
     for row in rows:
         id = "codec_" + row["name"]
         command = {k: deepcopy(v) for k, v in row["command"].items() if k != "op"}
-        fixtures.append({"id": id, "world": deepcopy(row["setup"]), "actor": "a", "candidates": [command],
+        fixtures.append({"id": id, "world": with_gate_enclosures(row["setup"]), "actor": "a", "candidates": [command],
                          "padding": 2, "draws": row["draws"], "duration": row["duration"]})
         expected[id] = {"intent": command, "checks": deepcopy(row["case"]["checks"])}
     encoder = case("POL_ENCODER_ALL_ACTION_ROUNDTRIPS", ["V09", "V13", "V15", "V24"],

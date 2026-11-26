@@ -1,6 +1,7 @@
 """TOML configuration resolution, validation, and accountable initial placement."""
 from __future__ import annotations
 from copy import deepcopy
+from fractions import Fraction
 import hashlib
 import json
 import math
@@ -24,8 +25,8 @@ DEFAULTS = {
     "population": {"humans": 16, "zombies": 4, "infected": 0, "human_roles": {}, "zombie_roles": {}},
     "placement": {"sampler": "exact", "max_attempts": 10000, "max_point_attempts": 10000, "allow_approximate": False, "burn_in": 10, "minimum_separation": 2.0, "cross_type_separation": 15.0},
     "profiles": {}, "barriers": [], "shelters": [], "stockpiles": [],
-    "storage": {"backend": "memory"}, "execution": {"workers": 1},
-    "checkpoint_interval": 30.0, "checkpoint_transactions": 50000,
+    "storage": {"backend": "memory"}, "execution": {"workers": "auto"},
+    "checkpoint_interval": 300.0, "checkpoint_transactions": 250000,
 }
 
 
@@ -36,6 +37,26 @@ def _merge(base, update):
         else:
             base[key]=deepcopy(value)
     return base
+
+
+def semantic_config(config):
+    """Return modeled scenario inputs, excluding operational execution choices.
+
+    Backends, pool budgets, checkpoint cadence, telemetry, and provenance do not
+    change a world's laws or initial conditions and cannot change its identity.
+    """
+    execution_only={"execution","storage","backend","workers","checkpoint_interval",
+                    "checkpoint_transactions","telemetry","profiling","gui","visualization",
+                    "history_path","output","fingerprint","semantic_fingerprint","provenance","preset"}
+    def canonical_value(value):
+        # JSON and TOML may spell the same modeled number as 5 or 5.0.
+        # Identity follows its value, without modifying resolved runtime inputs.
+        if isinstance(value,float) and math.isfinite(value) and value.is_integer():
+            return int(value)
+        if isinstance(value,dict):return {key:canonical_value(child) for key,child in value.items()}
+        if isinstance(value,(list,tuple)):return [canonical_value(child) for child in value]
+        return deepcopy(value)
+    return {key:canonical_value(value) for key,value in config.items() if key not in execution_only}
 
 
 def baseline_config():
@@ -95,6 +116,15 @@ def _validate_profile(values,path):
 
 
 def validate_config(config):
+    from .policies import create_model
+    for field in ("human_model", "zombie_model"):
+        if field in config:
+            try:
+                create_model(str(config[field]))
+            except (ValueError, OSError) as error:
+                failure = ConfigError(f"{field}: {error}")
+                failure.code = "MODEL_UNAVAILABLE"
+                raise failure from error
     for key in ("length","width"):
         _number(config["world"][key],f"world.{key}",positive=True)
     if config["world"].get("boundary_policy","CLOSED")!="CLOSED":
@@ -212,7 +242,13 @@ def validate_config(config):
         raise ConfigError("allow_intraspecies_combat must be boolean")
     if config.get("storage",{}).get("backend","memory") not in ("memory","sqlite"):
         raise ConfigError("storage.backend must be memory or sqlite")
-    _number(config.get("execution",{}).get("workers",1),"execution.workers",integer=True,positive=True)
+    workers=config.get("execution",{}).get("workers","auto")
+    if workers != "auto":
+        _number(workers,"execution.workers",integer=True,positive=True)
+    execution=config.get("execution",{})
+    _number(execution.get("parallel_min_agents",32),"execution.parallel_min_agents",integer=True,positive=True)
+    if execution.get("completion_order","native") not in {"native","reverse","seeded_shuffle","shuffle"}:
+        raise ConfigError("execution.completion_order must be native, reverse, or seeded_shuffle")
     return config
 
 
@@ -224,8 +260,26 @@ def resolve_config(config=None):
             config=tomllib.load(stream)
     if not isinstance(config,dict):
         raise ConfigError("configuration must be a mapping or TOML path")
+    def finite_tree(value,path="config"):
+        if isinstance(value,float) and not math.isfinite(value):
+            raise ConfigError(path+": expected finite number")
+        if isinstance(value,dict):
+            for key,child in value.items():finite_tree(child,path+"."+str(key))
+        elif isinstance(value,(list,tuple)):
+            for index,child in enumerate(value):finite_tree(child,f"{path}[{index}]")
+    finite_tree(config)
     values=deepcopy(config)
     values.pop("fingerprint",None); values.pop("provenance",None)
+    semantic=values.pop("semantic",None)
+    if semantic is not None:
+        if not isinstance(semantic,dict):raise ConfigError("semantic must be a mapping")
+        _merge(values,semantic)
+    execution=values.get("execution",{})
+    if "backend" in execution:values.setdefault("storage",{})["backend"]=execution["backend"]
+    if "checkpoint_interval" in execution:values["checkpoint_interval"]=execution["checkpoint_interval"]
+    if "backend" in values:values.setdefault("storage",{})["backend"]=values.pop("backend")
+    if "workers" in values:
+        values.setdefault("execution",{})["workers"]=values.pop("workers")
     baseline=values.get("preset") in ("baseline","baseline_v0.1") or values.get("scenario")=="baseline_v0.1"
     result=_merge(baseline_config() if baseline else deepcopy(DEFAULTS),values)
     # Explicit agent scenarios derive their population rather than inheriting defaults.
@@ -246,8 +300,12 @@ def resolve_config(config=None):
                 roles[role]=roles.get(role,0)+1
         result["population"]=counts
     validate_config(result)
+    # Use the same modeled numeric values after JSON/TOML round trips, including
+    # in observations and durable records; transport number spelling is not a
+    # distinct initial condition. Integer-domain validation ran before this.
+    result.update(semantic_config(result))
     result["provenance"]=provenance()
-    result["fingerprint"]=hashlib.sha256(json.dumps(result,sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest()
+    result["fingerprint"]=hashlib.sha256(json.dumps(semantic_config(result),sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest()
     return result
 
 
@@ -323,6 +381,9 @@ def _place(agents,config):
 
 def initialize_world(config=None):
     config=resolve_config(config)
+    if config.get("state_import"):
+        from .initial_state import initialize_explicit_world
+        return initialize_explicit_world(config)
     validate_connectivity(config)
     rng=random.Random(str(config["seed"])+":roles:v1")
     agents=[]
@@ -348,7 +409,9 @@ def initialize_world(config=None):
             roles=[role for role,count in config["population"][roles_key].items() for _ in range(count)]
             roles += [None]*(config["population"][count_key]-len(roles)); rng.shuffle(roles)
             for role in roles:
-                agents.append(make_agent(len(agents)+1,kind,role))
+                assignment = config.get("human_model" if kind == "Human" else "zombie_model")
+                options = {"model_assignment": {"model_id": assignment}} if assignment else {}
+                agents.append(make_agent(len(agents)+1,kind,role,**options))
         sampling=_place(agents,config)
     episodes={}; infected_ids=set(rng.sample([a["id"] for a in agents if a["type"]=="Human"],config["population"]["infected"])) if "agents" not in config else {a["id"] for a in agents if a.get("infected") or a.get("infection_episode")}
     for agent in agents:
@@ -395,13 +458,14 @@ def initialize_world(config=None):
         if identifier in infected_ids:
             episode_id=f"episode:initial:{identifier}"
             agent["infection_episode"]=episode_id
-            episodes[episode_id]={"id":episode_id,"agent_id":identifier,"source_kind":"INITIAL_CONDITION","source_agent_id":None,"source_event_id":"initialization","onset_at":"0","onset_revision":0,"incubation_duration":str(config["incubation_duration"]),"conversion_due_at":str(config["incubation_duration"]),"outcome":None,"ended_at":None,"end_revision":None}
+            incubation=str(Fraction(str(config["incubation_duration"])))
+            episodes[episode_id]={"id":episode_id,"agent_id":identifier,"source_kind":"INITIAL_CONDITION","source_agent_id":None,"source_event_id":"initialization","onset_at":"0","onset_revision":0,"incubation_duration":incubation,"conversion_due_at":incubation,"outcome":None,"ended_at":None,"end_revision":None}
         agent.pop("infected",None)
-    if "agents" in config:
+    if "agents" in config and max(config["placement"]["minimum_separation"], config["placement"]["cross_type_separation"]) > 0:
         for i,a in enumerate(agents):
             for b in agents[i+1:]:
                 minimum=config["placement"]["cross_type_separation" if a["type"]!=b["type"] else "minimum_separation"]
-                if distance_to(a,b)<minimum:
+                if minimum > 0 and distance_to(a,b)<minimum:
                     raise ConfigError(f"agents.{a['id']} and agents.{b['id']}: initial separation is below {minimum} m; scenario overrides must explicitly declare alternative distances")
     def items(collection):
         return {str(i["id"]):deepcopy(i) for i in config[collection]}

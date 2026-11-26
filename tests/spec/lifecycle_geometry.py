@@ -8,6 +8,7 @@ inapplicable type fields and expired effects are omitted by the adapter.
 from copy import deepcopy
 
 from .dsl import agent, world, intent, submit, advance, snapshot, check, case
+from .enclosures import with_gate_enclosures
 
 
 def infection(duration="300", onset="0"):
@@ -538,7 +539,7 @@ def geometry_cases():
             [submit("build", "e", "build_barricade", center=["11.5", "10"], orientation="y", length="2"),
              advance("8"), snapshot()],
             [check("/intents/build/status", "REJECTED" if mode == "CLOSED" else "ADMITTED"),
-             check("/snapshots/end/barriers/*", 1 if mode == "CLOSED" else 2, "count")],
+             check("/snapshots/end/barriers/*", 4 if mode == "CLOSED" else 5, "count")],
             actions=["build_barricade"], source=["ontology §§3.2,13.4"]))
     out.append(case(
         "GEO_repair_breached_gate_with_living_occupant_rejected", ["V20"],
@@ -740,4 +741,7 @@ def validation_cases():
 
 
 def cases():
-    return lifecycle_cases() + conflict_resource_cases() + geometry_cases() + observation_cases() + validation_cases()
+    result=lifecycle_cases() + conflict_resource_cases() + geometry_cases() + observation_cases() + validation_cases()
+    for item in result:
+        item["request"]["setup"]=with_gate_enclosures(item["request"]["setup"])
+    return result

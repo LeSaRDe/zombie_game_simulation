@@ -24,6 +24,32 @@ _EPHEMERAL = {"store", "history", "_pool", "_temporary", "_closed", "_spatial_ti
               "_source_history_path", "_admission_boundary_agents", "_admission_boundary_entities", "_admission_boundary_token"}
 
 
+class ModelStateUnavailable(ValueError):
+    code="MODEL_STATE_UNAVAILABLE"
+
+
+def _memory_encode(sim,identifier,value):
+    try:return _encode(value)
+    except TypeError:
+        from .policies import create_model
+        model_id=sim.state["agents"][identifier]["model_assignment"]["model_id"]
+        if create_model(model_id).manifest().get("restartable",True):raise
+        return {"$runtime_type":"unavailable_model_memory","model_id":model_id,
+                "reason":"Model declares no exact memory codec"}
+
+
+def _contains_unavailable(value):
+    if isinstance(value,dict):
+        return value.get("$runtime_type")=="unavailable_model_memory" or any(_contains_unavailable(v) for v in value.values())
+    if isinstance(value,(list,tuple)):return any(_contains_unavailable(v) for v in value)
+    return False
+
+
+def assert_exact_restart(payload):
+    if _contains_unavailable(payload.get("attributes",{}).get("memories",{})):
+        raise ModelStateUnavailable("Model memory has no exact restart codec; state and history replay remain available")
+
+
 def _stamp(value):
     value=exact_time(value)
     return str(value.numerator) if value.denominator==1 else str(value)
@@ -69,6 +95,7 @@ def _decode(value):
         return set(items) if kind=="set" else tuple(items)
     if kind=="mapping":
         return {_decode(k):_decode(v) for k,v in value["items"]}
+    if kind=="unavailable_model_memory":return value
     if kind is not None:
         raise ValueError(f"Unsupported runtime codec {kind!r}")
     return {k:_decode(v) for k,v in value.items()}
@@ -78,16 +105,27 @@ def _digest(value):
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
 
+def _file_digest(path):
+    """Hash a history sidecar without allocating memory proportional to its size."""
+    checksum=hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda:stream.read(1024**2),b""):
+            checksum.update(block)
+    return checksum.hexdigest()
+
+
 def serialize(sim):
     """Return a detached JSON object for a committed coordinator boundary."""
     if getattr(sim,"_dirty",None):
         raise ValueError("Runtime snapshots require a committed boundary; pending state writes exist")
     if sim.revision!=sim.history.revision:
         raise ValueError("Runtime revision differs from durable history; cannot checkpoint an uncommitted boundary")
-    attributes={k:_encode(v) for k,v in vars(sim).items() if k not in _EPHEMERAL and k not in ("occurrences","intents","events","decisions","random_draws") and not k.startswith("_runtime_")}
+    attributes={k:_encode(v) for k,v in vars(sim).items() if k not in _EPHEMERAL and k not in ("occurrences","intents","events","decisions","random_draws","memories") and not k.startswith("_runtime_")}
+    attributes["memories"]={str(key):_memory_encode(sim,key,value) for key,value in sim.memories.items()}
     payload={"schema":SCHEMA,"attributes":attributes,"history_path":str(Path(sim.history_path).absolute()),
              "history_revision":int(sim.revision),"state_sha256":_digest(sim.state),"attributes_sha256":_digest(attributes),
              "event_history":"ledger"}
+    payload["restart_capability"]="STATE_REPLAY_ONLY" if _contains_unavailable(attributes["memories"]) else "EXACT"
     return json.loads(canonical(payload))
 
 
@@ -96,7 +134,9 @@ def _validated_payload(payload):
         raise ValueError("Unsupported or missing runtime checkpoint schema")
     if _digest(payload["attributes"])!=payload.get("attributes_sha256"):
         raise ValueError("Runtime checkpoint checksum mismatch")
+    assert_exact_restart(payload)
     attributes=_decode(payload["attributes"])
+    assert_exact_restart({"attributes":attributes})
     if _digest(attributes["state"])!=payload.get("state_sha256"):
         raise ValueError("Runtime state checksum mismatch")
     if int(attributes["revision"])!=int(payload["history_revision"]):
@@ -179,9 +219,11 @@ def from_serialized(SimulationClass,payload,history_path=None,backend=None,worke
         sim.backend=backend or sim.backend
         if sim.backend not in ("memory","sqlite"):
             raise ValueError("backend must be memory or sqlite")
-        sim.workers=int(workers if workers is not None else sim.workers)
-        if sim.workers<1:
-            raise ValueError("workers must be positive")
+        from .hardware import worker_budget
+        requested=workers if workers is not None else getattr(sim,"worker_request",sim.config.get("execution",{}).get("workers",sim.workers))
+        sim.worker_request=requested
+        sim._runtime_worker_budget=worker_budget(requested,population=len(sim.state["agents"]))
+        sim.workers=sim._runtime_worker_budget["workers"]
         sim.history_path=str(target.absolute())
         if sim.backend=="sqlite":
             sim.store=SQLiteStore(target)
@@ -215,13 +257,11 @@ def from_serialized(SimulationClass,payload,history_path=None,backend=None,worke
 
 
 def _recorded_histories(history,revision):
-    records=[{key:value for key,value in event.items() if key not in ("ledger_sequence","ledger_revision")}
-             for event in history.events(end=revision)]
-    return {"events":records,
-            "decisions":[{key:value for key,value in event.items() if key not in ("kind","revision","causes")}
-                         for event in records if event.get("kind")=="decision"],
-            "random_draws":[{key:value for key,value in event.items() if key not in ("id","kind","revision","causes")}
-                            for event in records if event.get("kind")=="random_draw"]}
+    from .history_sequence import LedgerRecords
+    # Continuation ledgers have already been verified/truncated to this prefix.
+    if history.revision!=revision:raise ValueError("History view requires the selected continuation prefix")
+    return {"events":LedgerRecords(history),"decisions":LedgerRecords(history,"decision"),
+            "random_draws":LedgerRecords(history,"random_draw")}
 
 
 def restore_revision(SimulationClass,history_path,revision=None,output_history_path=None,backend=None,workers=None):
@@ -273,35 +313,54 @@ def checkpoint(sim,path=None):
     if path is None:
         path=Path(sim.history_path).parent/"checkpoints"/f"revision-{sim.revision}.json"
     path=Path(path).absolute();path.parent.mkdir(parents=True,exist_ok=True)
-    sim._last_checkpoint=exact_time(sim.time);sim._since_checkpoint=0
-    payload=serialize(sim)
-    sidecar=path.with_suffix(".history.sqlite")
-    if sidecar.resolve()==Path(sim.history_path).resolve():
-        raise ValueError("Checkpoint sidecar would replace the live ledger; choose another checkpoint path")
-    temporary=sidecar.with_name(sidecar.name+"."+uuid.uuid4().hex+".partial")
-    _copy_history(sim.history_path,temporary,sim.revision,sim.state)
-    with temporary.open("rb") as stream:
-        os.fsync(stream.fileno())
-    os.replace(temporary,sidecar)
-    payload["history_path"]=str(sidecar)
-    payload["history_sha256"]=hashlib.sha256(sidecar.read_bytes()).hexdigest()
-    # History.save_checkpoint provides atomic replacement, file/directory fsync,
-    # and a verified envelope. The runtime digest separately checks typed values.
-    return sim.history.save_checkpoint(payload,path)
+    previous_markers=sim._last_checkpoint,sim._since_checkpoint
+    temporary=None
+    try:
+        sim._last_checkpoint=exact_time(sim.time);sim._since_checkpoint=0
+        payload=serialize(sim)
+        sidecar=path.with_suffix(".history.sqlite")
+        if sidecar.resolve()==Path(sim.history_path).resolve():
+            raise ValueError("Checkpoint sidecar would replace the live ledger; choose another checkpoint path")
+        candidate=sidecar.with_name(sidecar.name+"."+uuid.uuid4().hex+".partial")
+        # Reserve ownership exclusively; a collision must never delete another
+        # generation's files during failure cleanup. _copy_history accepts empty files.
+        with candidate.open("xb"):
+            temporary=candidate
+        _copy_history(sim.history_path,temporary,sim.revision,sim.state)
+        with temporary.open("rb") as stream:
+            os.fsync(stream.fileno())
+        os.replace(temporary,sidecar)
+        temporary=None
+        payload["history_path"]=str(sidecar)
+        payload["history_sha256"]=_file_digest(sidecar)
+        from .artifact_pins import write_pins
+        payload["artifact_pins"]=write_pins(sim,path)
+        # History.save_checkpoint provides atomic replacement, file/directory fsync,
+        # and a verified envelope. The runtime digest separately checks typed values.
+        return sim.history.save_checkpoint(payload,path)
+    except BaseException:
+        sim._last_checkpoint,sim._since_checkpoint=previous_markers
+        if temporary is not None:
+            for suffix in ("","-wal","-shm","-journal"):
+                try:Path(str(temporary)+suffix).unlink(missing_ok=True)
+                except OSError:pass  # Preserve the original checkpoint failure.
+        raise
 
 
 def restore(SimulationClass,path,history_path=None,backend=None,workers=None):
+    from .artifact_pins import ArtifactMismatch,validate_pins
     path=Path(path)
     envelope=json.loads(path.read_text())
     if "document" not in envelope or _digest(envelope["document"])!=envelope.get("checksum"):
-        raise ValueError("Checkpoint envelope checksum mismatch")
+        raise ArtifactMismatch("checkpoint_checksum","Checkpoint envelope checksum mismatch")
     payload=envelope["document"]["payload"]
-    # Sidecars are portable together with the JSON even after directory moves.
-    sidecar=Path(payload["history_path"])
-    moved=path.with_suffix(".history.sqlite")
-    if not sidecar.is_file() and moved.is_file():
-        sidecar=moved;payload["history_path"]=str(sidecar)
-    if payload.get("history_sha256") and hashlib.sha256(sidecar.read_bytes()).hexdigest()!=payload["history_sha256"]:
+    if "artifact_pins" in payload:validate_pins(payload["artifact_pins"],path)
+    # A portable bundle owns its adjacent history, even if the original rolling
+    # checkpoint still exists. Never hide a damaged local sidecar by falling back.
+    adjacent=path.with_suffix(".history.sqlite")
+    sidecar=adjacent if adjacent.exists() or adjacent.is_symlink() else Path(payload["history_path"])
+    payload["history_path"]=str(sidecar)
+    if payload.get("history_sha256") and _file_digest(sidecar)!=payload["history_sha256"]:
         raise ValueError("Checkpoint history sidecar checksum mismatch")
     return from_serialized(SimulationClass,payload,history_path=history_path,backend=backend,workers=workers)
 
@@ -380,7 +439,7 @@ def _journal_attributes(sim, *, include_config=False):
 def initialize_history(sim):
     document = {"schema": JOURNAL_SCHEMA, "attributes": _journal_attributes(sim, include_config=True),
                 "queue": {str(row[3]): _encode(row) for row in sim.queue},
-                "memories": {str(key): _encode(value) for key, value in sim.memories.items()}}
+                "memories": {str(key): _memory_encode(sim,key,value) for key, value in sim.memories.items()}}
     sim.history.initialize_runtime(document, revision=sim.revision)
     mark_committed(sim)
 
@@ -394,16 +453,30 @@ def capture_delta(sim, next_revision, records):
     attributes["_since_checkpoint"] = int(sim._since_checkpoint) + 1
     patch = [["set", ["attributes", key], value] for key, value in attributes.items()]
     patch.extend(deepcopy(getattr(sim, "_runtime_queue_delta", [])))
-    memory_ids = {str(key) for collection, key in sim._dirty if collection == "agents"}
+    # Agent movement, hunger and effects do not change private model memory.
+    # Keep references to the last durably committed values so those frequent
+    # state writes need not re-encode an unchanged, potentially large map.
+    # Every actual policy invocation is forced through the codec, including a
+    # plugin which mutates its memory in place. References (rather than id())
+    # prevent allocator reuse from hiding a replaced memory object.
+    committed_memories = getattr(sim, "_runtime_committed_memories", {})
+    memory_ids = {str(key) for key, value in sim.memories.items()
+                  if key not in committed_memories or committed_memories[key] is not value}
+    memory_ids.update(str(key) for key in committed_memories if key not in sim.memories)
     memory_ids.update(str(record["actor"]) for record in records if record.get("kind") == "decision" and record.get("actor") is not None)
     for key in sorted(memory_ids):
-        patch.append(["set", ["memories", key], _encode(sim.memories[key])] if key in sim.memories else ["remove", ["memories", key]])
+        patch.append(["set", ["memories", key], _memory_encode(sim,key,sim.memories[key])] if key in sim.memories else ["remove", ["memories", key]])
     command_result = None
     command = getattr(sim, "_active_control_command", None)
     if command:
         operation = command["operation"]
         kinds = {record.get("kind") for record in records}
-        completed = operation == "step" or (operation == "intervene" and "intervention_scheduled" in kinds)
+        intervention_boundary = "intervention" if command.get("request", {}).get("apply_now") else "intervention_scheduled"
+        intervention_id = command.get("request", {}).get("id", command["id"])
+        completed = operation == "step" or (operation == "intervene" and any(
+            record.get("kind") == intervention_boundary and record.get("intervention") == intervention_id
+            for record in records))
+        completed = completed or (operation == "script_submit" and "admission_batch" in kinds)
         if operation in {"advance", "step_timestamp"}:
             target = min(exact_time(command["target"]), sim.horizon)
             completed = ("clock_advanced" in kinds and sim.time >= target) or not any(a["life"] > 0 for a in sim.state["agents"].values())
@@ -423,6 +496,9 @@ def capture_delta(sim, next_revision, records):
 def mark_committed(sim):
     sim._runtime_queue_delta = []
     sim._runtime_config_marker = id(sim.config)
+    # This marker moves only after the enclosing world/runtime transaction is
+    # durable. A failed publication must retry the same memory changes.
+    sim._runtime_committed_memories = dict(sim.memories)
     if getattr(sim, "_runtime_command_result", None) is not None:
         sim._active_control_command = None
     sim._runtime_command_result = None
@@ -500,6 +576,7 @@ def materialize_snapshot(state,time=None):
             properties["speed"]=properties["base_speed"]*properties.get("dash_multiplier",1.5)
         agent.update(properties)
         agent["status"]=status(agent);agent["action_state"]=action_status(agent)
+        agent["current_action"]=occurrence.get("action") if occurrence else None
         if agent["type"]=="Human":
             episode=view.get("episodes",{}).get(agent.get("infection_episode"))
             agent["infection_progress"]=float(max(Fraction(0),min(Fraction(1),(at-exact_time(episode["onset_at"]))/exact_time(episode["incubation_duration"])))) if episode else 0.

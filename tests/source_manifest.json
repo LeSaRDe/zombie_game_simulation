@@ -46,13 +46,23 @@
     "ontology/formal_v0.1/examples/valid_state.ttl": "124571f8115c9cde48dbf5a6d5f14400b5d533da65f29c5333681d3b3ecba90a",
     "ontology/formal_v0.1/examples/valid_treatment.ttl": "5b6940692cb8dbab599f700f4c34f5eb5e93d7499c33e948a9e6169363e9b1f0",
     "ontology/formal_v0.1/examples.json": "8ce3cf312dc2e66cb5f3c99af2fe3ba6f47765b3df81c6437f74757a857142e9",
-    "ontology/formal_v0.1/manifest.json": "89e6d6d8e0d0f62916688088945344d2755e34788c70b92db7c4d025ebf9d465",
+    "ontology/formal_v0.1/manifest.json": "53410a26478422445e94b26e9526689f0b8adf30d0a74facb4c37288dc2c1a70",
     "ontology/formal_v0.1/ontology.owl": "9c0f8e4a078b2641bd83120d8ecc9f3555b3d2c4eff3371f235022eed75d7618",
     "ontology/formal_v0.1/ontology.ttl": "f8fd0875d3c7373a6778edf19b85d5dc9ffe784e9321ef33af3d5d9684571315",
     "ontology/formal_v0.1/shapes.ttl": "4f8aa75e1440542188f98964421e710b85da9fb91c174d26feb3b05f7054f778",
     "ontology/zombie_game_ontology_v0.1.md": "20620b8f7f01a3b758fcbea0f0ca83ea3e65a5354071e6d7ef4dfa21a7ec9641",
     "prompts/task_2_action_and_validation_matrix.md": "ea470df641afb82d0d104e665736ddb9c826cc6915eea2591bc986391f788a29",
     "prompts/task_2_implementation_plan.md": "58e67205b76e43841bbf725f0dc59b7dc5603e66d472465ce635b4a1ba4e56c6",
-    "prompts/zombie_game_plans.md": "a532d4f77211589245842474f3abbf7bbda6fbf6a0a05527c992f7273a1c57ec"
+    "prompts/zombie_game_plans.md": "22242282083dd20afe56c92fc19df8aa52dd12d717ef00677cb07e5ef6eda867",
+    "tests/spec/__init__.py": "87ddb5e255d404703c5bc8b64f450546bd4ba730ba8fb240a82735e56eb69777",
+    "tests/spec/actions.py": "f40d9c3b2f2c0704374d9a4c03e800a9b2550e2ca75fddcf4aab515ae9196f6b",
+    "tests/spec/dsl.py": "66b53bac9d7bcf45a83d5fb40afa267e8afef2cc8ae619b748e2b98de7e30b40",
+    "tests/spec/enclosures.py": "26042ce60fe8574a58bc5cf843e40cc605ce68aa7c9a53f640584dc2329ef81d",
+    "tests/spec/formal.py": "c1a9f49160a5e81784b4e8b826806484b51c01ab22504705686aed461a30bfec",
+    "tests/spec/generated.py": "55947fe9001626119307c8981c79c756a96179f72a6cfd9173f09bd7de924321",
+    "tests/spec/lifecycle_geometry.py": "469314a6fe67cc2e3c603efbe6dc7e65fc50d82e471c5f42925c383bb25bc49e",
+    "tests/spec/policies.py": "9d7454f6ff3b12f64e28c635ef8e6d3d641f964e29c802c04cdd6980951be21c",
+    "tests/spec/research.py": "5cb37de47ad44589fce2a334030cbc4362ec49fb5160cd2ea44bcad01be5867f",
+    "tests/spec/systems.py": "7a06ebe4f3d4a27444b81ca5880ca08c0587de67748635c0b1ca00f2f38c6f23"
   }
 }

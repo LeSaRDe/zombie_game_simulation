@@ -71,11 +71,28 @@ def profile(agent, time=None):
     return result
 
 
+def decision_model_assignment(model_id,version=None,parameters=None):
+    """Resolve new assignments to their real implementation version.
+
+    A bare major version is an explicit compatible-family request. Full pinned
+    versions must match exactly; old stored assignments are never rewritten.
+    """
+    from .policies import create_model
+    model=create_model(model_id,parameters)
+    actual=str(model.version)
+    if version is not None and str(version) not in {actual,actual.split(".",1)[0]}:
+        raise ValueError(f"Model {model_id} version {version} unavailable; installed version is {actual}")
+    result={"model_id":model_id,"version":actual}
+    if parameters is not None:result["parameters"]=deepcopy(parameters)
+    if version is not None and str(version)!=actual:result["requested_version"]=str(version)
+    return result
+
+
 def make_agent(identifier, kind="Human", role=None, **overrides):
     agent = {"id": str(identifier), "type": kind, "role": role, "life": 100,
              "stamina": 100.0, "x": 0.0, "y": 0.0, "created_at": "0",
              "infection_episode": None, "cooldowns": {}, "effects": {},
-             "active_action": None, "model_assignment": {"model_id": kind + "DefaultModel", "version": "1"},
+             "active_action": None, "model_assignment": None,
              "profile": {}, "last_state_event_id": "initialization", "revision": 0}
     if kind == "Human":
         agent.update(hunger=20.0,inventory={r:0 for r in RESOURCES},reserved={r:0 for r in RESOURCES},carry_capacity=ROLES.get(role,{}).get("carry_capacity",10),starvation_started_at=None,next_starvation_damage_at=None)
@@ -86,6 +103,11 @@ def make_agent(identifier, kind="Human", role=None, **overrides):
     elif role == "SPITTER":
         agent.update(spit_charges=ROLES[role]["max_spit_charges"],reserved_charges=0,next_charge_at=None)
     agent.update(deepcopy(overrides))
+    if "model_assignment" not in overrides:
+        agent["model_assignment"]=decision_model_assignment(kind+"DefaultModel")
+    elif isinstance(agent["model_assignment"],dict) and agent["model_assignment"].get("model_id"):
+        assignment=agent["model_assignment"]
+        agent["model_assignment"]={**assignment,**decision_model_assignment(assignment["model_id"],assignment.get("version"),assignment.get("parameters"))}
     if kind == "Human":
         agent["inventory"] = {r:agent["inventory"].get(r,0) for r in RESOURCES}
         agent["reserved"] = {r:agent["reserved"].get(r,0) for r in RESOURCES}

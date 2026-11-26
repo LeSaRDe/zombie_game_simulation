@@ -1,6 +1,6 @@
 # Application validation record
 
-Recorded on 2026-11-25. These checks were written for the implementation and did not read, import, enumerate, or execute the supplied acceptance suite.
+Initial implementation record, 2026-11-25. Current supplied-suite testing and runtime refinements are tracked in [TESTING_REFINEMENT.md](TESTING_REFINEMENT.md). These checks were written for the implementation and did not read, import, enumerate, or execute the supplied acceptance suite.
 
 ## Executed checks
 

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Use the checkout's Python environment without requiring manual activation.
+set -euo pipefail
+SIM_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -n "${ZOMBIE_SIM_PYTHON:-}" ]]; then
+  SIM_PYTHON="$ZOMBIE_SIM_PYTHON"
+elif [[ -x "$SIM_ROOT/.runtimeenv/bin/python" ]]; then
+  SIM_PYTHON="$SIM_ROOT/.runtimeenv/bin/python"
+elif [[ -x "$SIM_ROOT/.venv/bin/python" ]]; then
+  SIM_PYTHON="$SIM_ROOT/.venv/bin/python"
+else
+  SIM_PYTHON="$(command -v python3 || true)"
+fi
+if [[ -z "$SIM_PYTHON" ]]; then
+  echo 'Python 3.12 or later is needed. See docs/START_STOP_GUIDE.md.' >&2
+  exit 2
+fi
+export PYTHONDONTWRITEBYTECODE=1
+exec "$SIM_PYTHON" "$SIM_ROOT/scripts/simulation_launcher.py" "$@"

@@ -4,3 +4,5 @@
 
 .comparison-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 25px}.comparison-choices .check{white-space:normal}.statistics>label{display:block;max-width:250px;font-size:11px}.statistics>label select{margin-top:6px}.statistics>button{margin-top:18px}
 @media(max-width:720px){.comparison-choices{grid-template-columns:1fr}.tabs{overflow:auto}.tabs button{padding:0 8px;font-size:10px}}
+
+button.danger{border-color:#985966;color:#ffd2d8;background:#482b35}button.danger:hover:not(:disabled){background:#633744}

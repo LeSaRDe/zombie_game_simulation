@@ -97,6 +97,39 @@ def encode_candidate(candidate: Candidate, observation: dict) -> list[float]:
     return onehot+fs+extra
 
 
+class CandidateCodec:
+    """Lossless typed action table paired with neural features and a padding mask.
+
+    Neural features intentionally pool and normalize values. Decoding uses the
+    immutable typed table, so quantities, IDs, payloads and path offsets retain
+    their original precision instead of being reconstructed from lossy tensors.
+    """
+    version = ENCODER_VERSION
+
+    def __init__(self, observation, candidates, *, padding=0):
+        if not isinstance(padding, int) or isinstance(padding, bool) or padding < 0:
+            raise ValueError("padding must be a nonnegative integer")
+        self.intents=[];self.features=[]
+        for candidate in candidates:
+            if isinstance(candidate,Candidate):row=candidate
+            else:
+                intent=deepcopy(candidate)
+                if not isinstance(intent,dict) or intent.get("action") not in ACTION_NAMES or "actor" not in intent:
+                    raise ValueError("Invalid typed candidate")
+                from .policies import COST,DURATION
+                action=intent["action"]
+                row=Candidate(intent,{},"Explicit typed candidate",number(intent.get("parameters",{}).get("duration",DURATION[action])),COST[action])
+            self.intents.append(deepcopy(row.intent));self.features.append(encode_candidate(row,observation))
+        self.mask=[True]*len(self.intents)+[False]*padding
+        self.features.extend([[0.]*CANDIDATE_SIZE for _ in range(padding)])
+        self.context=encode_observation(observation)
+
+    def decode(self,index):
+        if isinstance(index,bool) or not isinstance(index,int) or not 0<=index<len(self.intents):
+            raise ValueError("INVALID_CANDIDATE: padded or out-of-range candidate")
+        return deepcopy(self.intents[index])
+
+
 def build_network(hidden_size: int = 128):
     import torch
     from torch import nn
@@ -215,8 +248,6 @@ def reward_terms(events, actor_id, family, start, end, before, after, occurrence
         if family=="Human":
             resolved=(occurrences or {}).get(str(event.get("occurrence")),{})
             if kind=="action_completed" and event.get("outcome")=="SUCCEEDED" and target!=actor_id:
-                if event.get("action")=="treat_infection" and resolved.get("cure"):
-                    terms.append({"name":"cure_other","value":2,"offset":offset})
                 if event.get("action")=="first_aid" and number(resolved.get("healing",0))>0:
                     terms.append({"name":"heal_other","value":.01*number(resolved["healing"]),"offset":offset})
             if kind in ("cure","infection_cured") and target!=actor_id:
@@ -273,6 +304,8 @@ class ControlledAgentEnv(_GymBase):
         batch=self.sim.next_decision_batch()
         if isinstance(batch,dict):
             batch=list(batch.values())
+        if getattr(self,"scripted_others",False):
+            batch=[o for o in batch if str(identifier(o["self_state"]))==str(self.actor_id)]
         return batch
     def _opponent_intent(self,obs):
         aid=str(identifier(obs["self_state"]));a=obs["self_state"]
@@ -289,12 +322,18 @@ class ControlledAgentEnv(_GymBase):
             if waits: self.sim.submit_intents(waits)
         return results
     def _advance_event(self):
+        cutoff=getattr(self,"rollout_cutoff_at",None)
+        if cutoff is not None and number(self.sim.next_event_time())>cutoff:
+            self.sim.advance_until(cutoff,return_snapshot=False)
+            return
         old=(self.sim.time,self.sim.revision)
         self.sim.step(timestamp=True,return_snapshot=False)
         if old==(self.sim.time,self.sim.revision):
             self.sim.advance_until(self.config.get("horizon",1800),return_snapshot=False)
     def _seek_actor(self):
         while not self._terminal():
+            if getattr(self,"rollout_cutoff_at",None) is not None and number(self.sim.time)>=self.rollout_cutoff_at:
+                return
             self.batch=self._next_batch()
             if not self.batch:
                 self._advance_event()
@@ -311,10 +350,9 @@ class ControlledAgentEnv(_GymBase):
         m=deepcopy(prior) if terminal and prior is not None else update_memory(obs,prior,DEFAULT_PARAMETERS)
         self.memories[str(self.actor_id)]=m;self.raw_observation=obs
         self.current_candidates=generate_candidates(obs,m)[:self.max_candidates] if not terminal else []
-        matrix=np.zeros((self.max_candidates,CANDIDATE_SIZE),dtype=np.float32)
-        mask=np.zeros(self.max_candidates,dtype=np.int8)
-        for i,c in enumerate(self.current_candidates):
-            matrix[i]=encode_candidate(c,obs);mask[i]=1
+        self.candidate_codec=CandidateCodec(obs,self.current_candidates,padding=self.max_candidates-len(self.current_candidates))
+        matrix=np.asarray(self.candidate_codec.features,dtype=np.float32)
+        mask=np.asarray(self.candidate_codec.mask,dtype=np.int8)
         return {"context":np.array(encode_observation(obs,m),dtype=np.float32),"candidates":matrix,"action_mask":mask}
     def reset(self,*,seed=None,options=None):
         super().reset(seed=seed)
@@ -335,6 +373,18 @@ class ControlledAgentEnv(_GymBase):
             raise ValueError("Requested actor is not a living member of the controlled policy family")
         self.memories={};self.opponent_steps={};self.decisions=0;self.controller_generation=0;self.retired_controller_memories=[]
         self.episode_id=f"{self.sim.state.get('run_id',self.seed_value)}:{self.actor_id}:{self.family}:0"
+        self._seek_actor()
+        return self._observation(),{"controller_episode_id":self.episode_id,"actor_id":self.actor_id,"elapsed":0.0}
+    def attach(self,simulation,actor_id,*,scripted_others=True,rollout_cutoff=None):
+        """Attach an existing coordinator without resetting its world or RNG."""
+        if self.sim is not None and self.sim is not simulation:raise RuntimeError("Environment already owns a simulation")
+        self.sim=simulation;self.actor_id=str(actor_id)
+        if self.actor_id not in self._agents() or self._actor()["life"]<=0 or self._actor()["type"]!=self.family:
+            raise ValueError("Controlled identity is not a living member of the policy family")
+        self.seed_value=simulation.seed;self.scripted_others=scripted_others
+        self.rollout_cutoff_at=number(simulation.time)+number(rollout_cutoff) if rollout_cutoff is not None else None
+        self.memories={};self.opponent_steps={};self.decisions=0;self.controller_generation=0;self.retired_controller_memories=[]
+        self.episode_id=f"{simulation.state['run_id']}:{self.actor_id}:{self.family}:0"
         self._seek_actor()
         return self._observation(),{"controller_episode_id":self.episode_id,"actor_id":self.actor_id,"elapsed":0.0}
     def begin_controller_episode(self,actor_id,family=None):
@@ -364,7 +414,7 @@ class ControlledAgentEnv(_GymBase):
         if not self.action_space.contains(action) or int(action)>=len(self.current_candidates):
             raise ValueError("Padded or masked candidate cannot be executed")
         chosen=self.current_candidates[int(action)]
-        return self.step_intent(chosen.intent,reason=chosen.reason)
+        return self.step_intent(self.candidate_codec.decode(int(action)),reason=chosen.reason)
     def step_intent(self,intent,*,reason=None):
         """Execute an observation-derived typed intent, without encoder pruning.
 
@@ -380,7 +430,8 @@ class ControlledAgentEnv(_GymBase):
         self._submit_batch(submissions);self.decisions+=1
         self._seek_actor();end=number(self.sim.time)
         terms=reward_terms(self.sim.events[event_start:],self.actor_id,self.family,start,end,before,self._actor(),self.sim.occurrences)
-        terminal=self._terminal();truncated=bool(not terminal and self.decision_limit is not None and self.decisions>=self.decision_limit)
+        terminal=self._terminal();truncated=bool(not terminal and ((self.decision_limit is not None and self.decisions>=self.decision_limit) or
+            (getattr(self,"rollout_cutoff_at",None) is not None and end>=self.rollout_cutoff_at)))
         obs=self._observation()
         info={"elapsed":end-start,"reward_terms":terms,"undiscounted_reward":sum(t.get("value",0) for t in terms),
               "intent":intent,"controller_episode_id":self.episode_id,"time":end,"actor_id":self.actor_id,
@@ -416,6 +467,14 @@ class DecisionBatchAEC(_AECBase):
     def action_space(self,agent): return self._env.action_space
     def reset(self,seed=None,options=None):
         self._env.reset(seed=seed)
+        self._initialize_batch_state()
+    def attach(self,simulation):
+        first=str(self.controlled_ids[0]) if self.controlled_ids else next(iter(simulation.state["agents"]))
+        self._env.family=simulation.state["agents"][first]["type"]
+        self._env.attach(simulation,first,scripted_others=False)
+        self._initialize_batch_state()
+        return self
+    def _initialize_batch_state(self):
         all_ids=list(self._env._agents())
         self.possible_agents=[str(x) for x in self.controlled_ids] if self.controlled_ids is not None else [i for i in all_ids if self.family is None or self._env._agents()[i]["type"]==self.family]
         self.agents=list(self.possible_agents);self.initial_types={i:self._env._agents()[i]["type"] for i in self.agents}
@@ -426,6 +485,13 @@ class DecisionBatchAEC(_AECBase):
         self._interval_terms={i:[] for i in self.agents}
         self._episode_ids={i:f"{self._env.sim.state.get('run_id')}:{i}:{self.initial_types[i]}:0" for i in self.agents}
         self._freeze_next()
+    def set_batch_order(self,order):
+        """Choose a collection order without changing the frozen observations."""
+        if set(order)!=set(self._queue) or len(order)!=len(self._queue) or any(i in self._pending for i in order):
+            raise ValueError("Order must cover exactly the unsubmitted frozen controllers")
+        self._queue=list(order);self.agent_selection=self._queue[0]
+    def raw_observation(self,agent):
+        return deepcopy(self._raw_frozen[agent])
     def _freeze_next(self):
         import numpy as np
         while self.agents:
@@ -499,8 +565,18 @@ class DecisionBatchAEC(_AECBase):
         self._cumulative_rewards[aid]=0;self._clear_rewards()
         self._interval_start[aid]=number(self._env.sim.time);self._interval_terms[aid]=[]
         chosen=self._candidates[aid][int(action)]
-        self._env.memories[aid]=commit_action_memory(self._raw_frozen[aid],self._env.memories[aid],chosen.intent,chosen.reason)
-        self._pending[aid]=deepcopy(chosen.intent);self._queue.pop(0)
+        self._step_typed(chosen.intent,chosen.reason)
+    def step_intent(self,intent,*,reason=None):
+        aid=self.agent_selection
+        if self.terminations[aid] or self.truncations[aid]:raise ValueError("Dead controller cannot submit an intent")
+        if str(intent.get("actor"))!=aid:raise ValueError("Intent actor differs from AEC selection")
+        self._cumulative_rewards[aid]=0;self._clear_rewards()
+        self._interval_start[aid]=number(self._env.sim.time);self._interval_terms[aid]=[]
+        self._step_typed(intent,reason)
+    def _step_typed(self,intent,reason):
+        aid=self.agent_selection
+        self._env.memories[aid]=commit_action_memory(self._raw_frozen[aid],self._env.memories[aid],intent,reason)
+        self._pending[aid]=deepcopy(intent);self._queue.pop(0)
         if self._queue:
             self.agent_selection=self._queue[0];return
         start=number(self._env.sim.time);event_start=len(self._env.sim.events)
@@ -561,7 +637,7 @@ def _tensor_state(obs,torch,device=None):
     return torch.tensor(obs["context"],dtype=torch.float32,device=device),torch.tensor(obs["candidates"][:valid],dtype=torch.float32,device=device)
 
 
-def evaluate(config,artifact=None,seeds=range(2000,2030),*,family="Human",policy="default",max_decisions=10000):
+def evaluate(config,artifact=None,seeds=range(2000,2030),*,family="Human",policy="default",max_decisions=10000,access_log=None,split=None,phase=None):
     import torch
     model=LearnedModel.load(artifact) if artifact else None
     if model and family not in model.applicable_types:
@@ -571,6 +647,7 @@ def evaluate(config,artifact=None,seeds=range(2000,2030),*,family="Human",policy
     for seed in seeds:
         env=ControlledAgentEnv(config,family=family,decision_limit=max_decisions,max_candidates=model.candidate_limit if model else 128)
         obs,_=env.reset(seed=int(seed));reward_total=0.;steps=0;done=False;terms={};hidden=torch.zeros(model.hidden_size) if model else None
+        if access_log is not None:access_log.append({"split":split,"phase":phase,"seed":int(seed),"operation":"evaluate","policy":policy})
         rng=random.Random(int(seed))
         while not done:
             if model:
@@ -607,6 +684,7 @@ def train(config,output,settings:TrainingConfig|None=None):
     network=build_network(s.hidden_size).to(s.device);optimizer=torch.optim.Adam(network.parameters(),lr=s.learning_rate)
     env=ControlledAgentEnv(config,family=s.family,gamma=s.gamma)
     episode=0;obs,_=env.reset(seed=s.train_seeds[0]);hidden=torch.zeros(s.hidden_size,device=s.device)
+    split_accesses=[{"split":"train","phase":"optimization","seed":s.train_seeds[0],"operation":"reset"}]
     steps=0;losses=[];rollout_log=[];episode_returns=[];episode_return=0.
     initial_checksum=hashlib.sha256(b"".join(t.detach().cpu().numpy().tobytes() for t in network.state_dict().values())).hexdigest()
     # An imitation checkpoint supplies a reproducible pipeline baseline.
@@ -614,6 +692,7 @@ def train(config,output,settings:TrainingConfig|None=None):
     imitation_rows=[]
     imitation_env=ControlledAgentEnv(config,family=s.family,decision_limit=128)
     io,_=imitation_env.reset(seed=s.train_seeds[0]);ih=torch.zeros(s.hidden_size,device=s.device)
+    split_accesses.append({"split":"train","phase":"imitation","seed":s.train_seeds[0],"operation":"reset"})
     imitation_rng=random.Random(s.train_seeds[0])
     for _ in range(min(128,s.decisions)):
         context,candidate_tensor=_tensor_state(io,torch,s.device);label=select_utility_index(imitation_env.current_candidates,imitation_rng)
@@ -650,6 +729,7 @@ def train(config,output,settings:TrainingConfig|None=None):
             if terminated or truncated:
                 episode_returns.append(episode_return);episode_return=0.;episode+=1
                 obs,_=env.reset(seed=s.train_seeds[episode%len(s.train_seeds)]);hidden=torch.zeros(s.hidden_size,device=s.device)
+                split_accesses.append({"split":"train","phase":"optimization","seed":s.train_seeds[episode%len(s.train_seeds)],"operation":"reset"})
         advantages,returns=semi_markov_gae([r["reward"] for r in rollout],[r["value"] for r in rollout],[r["next_value"] for r in rollout],
             [r["elapsed"] for r in rollout],[r["terminated"] for r in rollout],[r["truncated"] for r in rollout],s.gamma,s.lam)
         av=torch.tensor(advantages,device=s.device);av=(av-av.mean())/(av.std(unbiased=False)+1e-8)
@@ -678,16 +758,16 @@ def train(config,output,settings:TrainingConfig|None=None):
         LearnedModel(network,hidden_size=s.hidden_size).save(output/"latest",optimizer=optimizer,metadata={"decisions":steps,"settings":asdict(s)})
     env.close()
     final_checksum=hashlib.sha256(b"".join(t.detach().cpu().numpy().tobytes() for t in network.state_dict().values())).hexdigest()
-    validation=evaluate(config,output/"latest",s.validation_seeds,family=s.family)
+    validation=evaluate(config,output/"latest",s.validation_seeds,family=s.family,access_log=split_accesses,split="validation",phase="selection")
     # Only one PPO checkpoint is selected here; broader search may use validation only.
     model=LearnedModel.load(output/"latest")
     manifest=model.save(output/"selected",metadata={"method":"recurrent_candidate_ppo","initialization":"imitation", "decisions":steps,"settings":asdict(s),"validation":validation})
-    comparisons={name:evaluate(config,artifact,seeds=s.evaluation_seeds,family=s.family,policy=name) for name,artifact in (("default",None),("random",None),("imitation",output/"imitation"),("ppo",output/"selected"))}
+    comparisons={name:evaluate(config,artifact,seeds=s.evaluation_seeds,family=s.family,policy=name,access_log=split_accesses,split="test",phase="after_selection") for name,artifact in (("default",None),("random",None),("imitation",output/"imitation"),("ppo",output/"selected"))}
     report={"settings":asdict(s),"config":config,"source_config_sha256":hashlib.sha256(json.dumps(config,sort_keys=True).encode()).hexdigest(),
             "decisions":steps,"weights_changed":initial_checksum!=final_checksum,"ppo_weights_changed":ppo_initial_checksum!=final_checksum,
             "optimization_steps":len(losses),"imitation_examples":len(imitation_rows),"ppo_initial_weights_sha256":ppo_initial_checksum,"initial_weights_sha256":initial_checksum,
             "final_weights_sha256":final_checksum,"mean_loss":sum(losses)/max(1,len(losses)),"episode_returns":episode_returns,
-            "validation":validation,"comparisons":comparisons,"artifact":str(output/"selected"),"reload_verified":True}
+            "validation":validation,"comparisons":comparisons,"artifact":str(output/"selected"),"reload_verified":True,"split_accesses":split_accesses}
     (output/"report.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
     with (output/"rollouts.jsonl").open("w") as handle:
         for row in rollout_log:handle.write(json.dumps(row,separators=(",",":"))+"\n")

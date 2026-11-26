@@ -5,12 +5,35 @@ checks, reservations and all commits stay with the authoritative coordinator.
 """
 from __future__ import annotations
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from copy import deepcopy
 from fractions import Fraction
 import json
 import math
 import multiprocessing
+import random
+
+
+def ordered_results(pool, function, tasks, *, completion_order="native", seed=0):
+    """Consume real worker results in any delivery order; publish input order.
+
+    Reversed/shuffled delivery exercises the coordinator's ordering guarantee
+    without altering any model RNG stream or delaying work with artificial CPU.
+    """
+    futures=[pool.submit(function,task) for task in tasks]
+    indices={future:index for index,future in enumerate(futures)}
+    if completion_order=="native":
+        delivery=as_completed(futures)
+    elif completion_order=="reverse":
+        delivery=reversed(futures)
+    elif completion_order in {"seeded_shuffle","shuffle"}:
+        delivery=list(futures);random.Random(seed).shuffle(delivery)
+    else:
+        raise ValueError("Unknown worker completion order")
+    results=[None]*len(futures)
+    for future in delivery:
+        results[indices[future]]=future.result()
+    return results
 
 from .domain import profile, status
 

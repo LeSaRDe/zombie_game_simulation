@@ -4,13 +4,16 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 import json
+import logging
 from pathlib import Path
 import secrets
 from urllib.parse import urlsplit
 
-from .application import RunManager
+from .application import RunManager, RunInitializing
 from .storage import canonical
 from .visualization import events_csv, sampled_metrics, world_svg, replay_animation
+
+LOGGER = logging.getLogger("zombie_sim.server")
 
 
 def create_app(experiments_dir="experiments", assets=None):
@@ -28,11 +31,14 @@ def create_app(experiments_dir="experiments", assets=None):
     @asynccontextmanager
     async def lifespan(app):
         yield
+        await asyncio.to_thread(app.state.exports.close)
         await asyncio.to_thread(manager.close)
 
     app = FastAPI(title="Zombie simulation research workspace", version="0.1.0", lifespan=lifespan)
     app.state.manager = manager
     app.state.session_token = session
+    from .export_jobs import register_export_routes
+    register_export_routes(app, manager)
 
     def local_origin(origin):
         if not origin:
@@ -47,7 +53,13 @@ def create_app(experiments_dir="experiments", assets=None):
             return JSONResponse({"error": "Cross-origin requests are disabled"}, status_code=403)
         if request.method not in {"GET", "HEAD", "OPTIONS"} and request.cookies.get("zombie_session") != session:
             return JSONResponse({"error": "Reload the workspace to establish a local session"}, status_code=403)
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as error:
+            reference = secrets.token_hex(6)
+            LOGGER.exception("API request failed [%s]: %s %s", reference, request.method, request.url.path)
+            response = JSONResponse({"error": f"{type(error).__name__}: {error}",
+                                     "code": "INTERNAL_ERROR", "reference": reference}, status_code=500)
         if request.method == "GET":
             response.set_cookie("zombie_session", session, httponly=True, samesite="strict")
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -55,11 +67,19 @@ def create_app(experiments_dir="experiments", assets=None):
 
     @app.exception_handler(ValueError)
     async def invalid(request, error):
-        return JSONResponse({"error": str(error)}, status_code=422)
+        from .config import ConfigError
+        code = getattr(error, "code", None) or ("INCOMPATIBLE_ROLE" if "incompatible or unknown role" in str(error) else "INVALID_DOMAIN") if isinstance(error, ConfigError) else "INVALID_REQUEST"
+        issues = [{"path": str(error).split(":", 1)[0], "code": code, "message": str(error)}]
+        return JSONResponse({"error": str(error), "code": code, "issues": issues}, status_code=422)
+
+    @app.exception_handler(RunInitializing)
+    async def initializing(request, error):
+        return JSONResponse({"error": str(error), "code": "RUN_INITIALIZING"},
+                            status_code=503, headers={"Retry-After": "1"})
 
     @app.exception_handler(KeyError)
     async def missing(request, error):
-        return JSONResponse({"error": str(error)}, status_code=404)
+        return JSONResponse({"error": str(error.args[0]) if error.args else str(error), "code": "NOT_FOUND"}, status_code=404)
 
     @app.get("/api/config")
     def configurations():
@@ -73,6 +93,7 @@ def create_app(experiments_dir="experiments", assets=None):
                            {"path": "population.humans", "type": "integer", "min": 0, "label": "Humans"},
                            {"path": "population.zombies", "type": "integer", "min": 0, "label": "Zombies"},
                            {"path": "population.infected", "type": "integer", "min": 0, "label": "Initially infected humans"},
+                           {"path": "human_model", "type": "text", "label": "Human decision model"},
                            {"path": "execution.workers", "type": "integer", "min": 1, "label": "Workers"}],
                 "schema_version": "zombie-sim/config-v1"}
 
@@ -86,7 +107,17 @@ def create_app(experiments_dir="experiments", assets=None):
         from .config import resolve_config, initialize_world
         from .visualization import view_bundle
         resolved = resolve_config(body)
-        return {"resolved": resolved, "view": view_bundle(initialize_world(resolved), mode="preview")}
+        return {"resolved": resolved, "view": view_bundle(initialize_world(resolved), mode="preview"), "artifact_id": secrets.token_hex(16)}
+
+    @app.post("/api/config/import")
+    def import_config(body: dict = Body(...)):
+        from .config_io import loads
+        return {"config": loads(body["text"], body.get("format", "json"))}
+
+    @app.post("/api/config/export")
+    def export_config(body: dict = Body(...)):
+        from .config_io import dumps
+        return {"text": dumps(body["config"], body.get("format", "json"))}
 
     @app.get("/api/runs")
     def runs():
@@ -94,7 +125,8 @@ def create_app(experiments_dir="experiments", assets=None):
 
     @app.post("/api/runs")
     def create(body: dict = Body(...)):
-        return manager.create(body["config"], body.get("command_id"), start=body.get("start", False))
+        from .command_recovery import reply
+        return reply(manager,manager.create(body["config"], body.get("command_id"), start=body.get("start", False)))
 
     @app.get("/api/runs/{run_id}/view")
     def view(run_id: str, time: str | None = None, revision: int | None = None, generation: int = 0):
@@ -102,15 +134,18 @@ def create_app(experiments_dir="experiments", assets=None):
 
     @app.post("/api/runs/{run_id}/commands")
     def command(run_id: str, body: dict = Body(...)):
-        return manager.command(run_id, body["operation"], body, wait=False)
+        from .command_recovery import reply
+        return reply(manager,manager.command(run_id, body["operation"], body, wait=False))
 
     @app.get("/api/commands/{command_id}")
     def command_result(command_id: str):
-        return manager.command_result(command_id)
+        from .command_recovery import reply
+        return reply(manager,manager.command_result(command_id))
 
     @app.post("/api/runs/{run_id}/branch")
     def branch(run_id: str, body: dict = Body(...)):
-        return manager.branch(run_id, body)
+        from .command_recovery import reply
+        return reply(manager,manager.branch(run_id, body))
 
     @app.get("/api/runs/{run_id}/events")
     def events(run_id: str, start: int = 0, end: int | None = None, kind: str | None = None,
@@ -141,15 +176,21 @@ def create_app(experiments_dir="experiments", assets=None):
     def save_cohort(run_id: str, body: dict = Body(...)):
         return manager.save_cohort(run_id, body)
 
+    @app.get("/api/runs/{run_id}/timeline")
+    def timeline(run_id: str, revision: int | None = None, agent: str | None = None):
+        return manager.timeline(run_id, revision, agent)
+
     @app.get("/api/runs/{run_id}/observations/{agent_id}")
-    def observation(run_id: str, agent_id: str, revision: int | None = None):
+    def observation(run_id: str, agent_id: str, revision: int | None = None, decision_index: int | None = None):
         history = manager.history(run_id)
         try:
             records = history.events(end=revision, agent_id=agent_id)
             decisions = [record for record in records if record.get("kind") == "decision" or record.get("observation") is not None]
             if not decisions:
                 raise ValueError("No recorded decision observation at this cursor")
-            selected = decisions[-1]
+            if decision_index is not None and not 0 <= decision_index < len(decisions):
+                raise ValueError("Recorded decision index is outside this agent's history")
+            selected = decisions[-1 if decision_index is None else decision_index]
             if selected.get("observation") is None:
                 raise ValueError("This decision records a reconstruction reference; direct observation capture was not enabled")
             return {"perspective": "recorded_observation", "decision": selected.get("id"),
@@ -211,11 +252,17 @@ def create_app(experiments_dir="experiments", assets=None):
                         sequence = -1
                     else:
                         sequence = int(bundle["sequence"])
-                await asyncio.sleep(0.1)
+                else:
+                    # Observe disconnects even when a paused run has no new
+                    # revision, so an idle viewer does not pin server shutdown.
+                    try:
+                        await asyncio.wait_for(websocket.receive_json(), timeout=0.1)
+                    except asyncio.TimeoutError:
+                        pass
         except Exception:
             try:
                 await websocket.close()
-            except RuntimeError:
+            except Exception:
                 pass
 
     assets = Path(assets) if assets else Path(__file__).parent / "static"

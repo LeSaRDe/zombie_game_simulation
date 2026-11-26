@@ -18,7 +18,7 @@ from typing import Any, Callable
 
 from .registry import ACTIONS
 
-MODEL_VERSION = "1.0.0"
+MODEL_VERSION = "1.1.0"
 OBSERVATION_VERSION = "local_v0.1"
 ACTION_NAMES = (
     "move", "wait", "rest", "signal", "melee", "pickup", "drop", "transfer",
@@ -158,7 +158,16 @@ def capabilities(agent: dict) -> set[str]:
 def initialize_memory(agent: dict) -> dict:
     return {"version": MODEL_VERSION, "owner": identifier(agent), "type": agent.get("type"),
             "geometry": {}, "resources": {}, "sightings": {}, "reports": [], "objective": None,
-            "route": [], "recent_failures": [], "last_reports": {}, "visits": {}, "decisions": 0}
+            "route": [], "goal": None, "recent_failures": [], "last_reports": {}, "visits": {}, "decisions": 0}
+
+
+def set_goal(memory,goal):
+    """Set a high-level local-policy goal without introducing entity knowledge."""
+    allowed={"hold_location","reach_location","seek_resource","supply_ally","protect_region","explore_frontier"}
+    if goal is not None and (not isinstance(goal,dict) or goal.get("kind") not in allowed):
+        raise ValueError("Unknown policy goal")
+    result=deepcopy(memory);result["goal"]=deepcopy(goal)
+    return result
 
 
 def update_memory(observation: dict, memory: dict | None, parameters: dict) -> dict:
@@ -263,20 +272,31 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
     danger = max(0., 1-nearest/15)
     allowed = capabilities(a); cooldown = a.get("cooldown_until", a.get("cooldowns", {}))
     result: list[Candidate] = []
+    goal=m.get("goal") or {};goal_kind=goal.get("kind")
+    goal_position=position({"position":goal["position"]}) if "position" in goal else None
+    holding=goal_kind=="hold_location" and now<number(goal.get("until",now)) and goal_position is not None and math.dist(position(a),goal_position)<=.5
 
     def add(action, reason, target=None, parameters=None, **features):
         if action not in allowed or now < number(cooldown.get(action, 0)) or own_stamina < COST[action]:
             return
         intent = {"actor": aid, "action": action, "parameters": parameters or {}}
+        if "resource" in intent["parameters"]:
+            intent["parameters"]["resource_type"]=intent["parameters"].pop("resource")
+        # The same exact rational time convention is used by action admission.
+        if "duration" in intent["parameters"]:
+            intent["parameters"]["duration"]=str(Fraction(str(intent["parameters"]["duration"])))
+        for waypoint in intent["parameters"].get("path",[]):
+            waypoint["offset"]=str(Fraction(str(waypoint["offset"])))
         if target is not None:
             intent["target"] = identifier(target) if isinstance(target, dict) else target
         duration = number(intent["parameters"].get("duration", attr(a,"treatment_duration",DURATION[action]) if action=="treat_infection" else DURATION[action]))
-        fs = {k: max(-1., min(1., number(v))) for k,v in features.items()}
+        fs = {k: max(0., min(1., number(v))) for k,v in features.items()}
         fs.setdefault("travel", duration/8); fs.setdefault("stamina", COST[action]/20)
         score = sum(p["weights"].get(k,0)*v for k,v in fs.items())
         result.append(Candidate(intent, fs, reason, duration, COST[action], score))
 
     def go(goal, reason, action="move", **features):
+        if holding:return
         start = position(a); length,width = bounds(observation)
         goal = (min(length,max(0,goal[0])), min(width,max(0,goal[1])))
         if math.dist(start, goal) < .1:
@@ -314,6 +334,8 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
         add(action,reason,parameters={"duration":duration,"path":pts},**features)
 
     add("wait", "Hold position briefly while observable operations or cooldowns resolve", parameters={"duration":1}, waiting=1 if a.get("stamina",100)>=95 else .1)
+    if goal_position is not None and not holding:
+        go(goal_position,"Approach the requested destination using observed routes",exploration=.8 if goal_kind=="explore_frontier" else 0,ally=.5 if goal_kind in {"hold_location","reach_location"} else 0)
     rest_rate=number(attr(a,"rest_rate",4),4)
     if own_stamina < p["rest_below"] and rest_rate>0:
         add("rest", "Recover stamina before the next costly action",parameters={"duration":min(5,max(1,(100-own_stamina)/rest_rate))},recovery=(100-own_stamina)/70,risk=danger)
@@ -374,6 +396,9 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
         wants={"FOOD":max(.2,(hunger-20)/80) if food<2 else 0,
                "MEDICAL_SUPPLY":(.9 if role=="DOCTOR" else .45) if medicine<2 else 0,
                "MATERIAL":.8 if role=="ENGINEER" and materials<3 else 0}
+        if goal_kind=="seek_resource" and goal.get("resource_type") in wants:
+            resource=goal["resource_type"]
+            if available(a,resource)==0:wants[resource]=max(wants[resource],.9)
         visible_stocks=records(env.get("stockpiles",{}))
         visible_stock_ids={str(identifier(v)) for v in visible_stocks}
         remembered_stocks=[v["entity"] for v in m.get("resources",{}).values() if str(identifier(v["entity"])) not in visible_stock_ids and "biomass" not in v["entity"]]
@@ -422,17 +447,21 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
                 continue
             r=rectangle(b)
             gate=b.get("kind",b.get("type")) in ("Gate","gate") or "mode" in b
-            if gate and b.get("mode")=="CLOSED":
-                add("open_gate","Open an observed doorway for passage",b,barrier=.65,risk=danger)
-            if gate and b.get("mode")=="OPEN" and enemies and r:
-                inside=lambda e:r[0]<=position(e)[0]<=r[2] and r[1]<=position(e)[1]<=r[3]
+            route_blocked=goal_position is not None and not _segment_clear(position(a),goal_position,[b])
+            if gate and b.get("mode")=="CLOSED" and goal_kind!="protect_region":
+                add("open_gate","Open an observed doorway for passage",b,barrier=.65,ally=.5 if route_blocked else 0,risk=danger)
+            if gate and b.get("mode")=="OPEN" and enemies:
+                # Partial doorway surfaces suffice to propose closing it. Known
+                # occupancy is excluded; authoritative admission checks unseen
+                # occupancy/extent without leaking that state into the policy.
+                inside=lambda e:bool(r and r[0]<=position(e)[0]<=r[2] and r[1]<=position(e)[1]<=r[3])
                 occupied=any(inside(v) for v in [a]+neighbors)
-                overlap=any(barrier_active(v) and rectangle(v) and rectangle(v)[0]<r[2] and rectangle(v)[2]>r[0] and rectangle(v)[1]<r[3] and rectangle(v)[3]>r[1] for v in visible_barriers if v is not b)
+                overlap=bool(r and any(barrier_active(v) and rectangle(v) and rectangle(v)[0]<r[2] and rectangle(v)[2]>r[0] and rectangle(v)[1]<r[3] and rectangle(v)[3]>r[1] for v in visible_barriers if v is not b))
                 if not occupied and not overlap:
                     add("close_gate","Close an unoccupied doorway against a visible threat",b,survival=.65,barrier=.6)
             integrity=number(b.get("integrity",100)); maximum=number(b.get("max_integrity",100))
             if materials>=int(attr(a,"repair_material_cost",1)) and integrity<maximum and (gate or integrity>0):
-                add("repair_barrier","Restore a damaged useful defense",b,barrier=(maximum-integrity)/maximum,survival=.15 if enemies else 0)
+                add("repair_barrier","Restore a damaged useful defense",b,barrier=(maximum-integrity)/maximum,survival=.15 if enemies else 0,ally=.5 if goal_kind=="protect_region" else 0)
             if role=="ENGINEER" and materials>=int(attr(a,"build_material_cost",2)) and gate and b.get("mode") in ("OPEN","BREACHED") and r:
                 cx,cy=(r[0]+r[2])/2,(r[1]+r[3])/2; orientation="x" if r[2]-r[0]>=r[3]-r[1] else "y"
                 span=min(8,max(2,(r[2]-r[0]) if orientation=="x" else (r[3]-r[1])))
@@ -444,6 +473,28 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
                 visible=all(0<=u<=length and 0<=v<=width and math.dist(position(a),(u,v))<=number(attr(a,"sense_r",40)) and _segment_clear(position(a),(u,v),[v for v in visible_barriers if v is not b]) for u,v in corners)
                 if not occupied and not intersects and visible and math.dist(position(a),(cx,cy))<=2 and enemies:
                     add("build_barricade","Defend a breached or open entrance outside the planned route",parameters={"center":{"x":cx,"y":cy},"orientation":orientation,"length":span},barrier=1,survival=.6 if b.get("mode")=="BREACHED" else .2)
+        if role=="ENGINEER" and materials>=int(attr(a,"build_material_cost",2)) and enemies and goal_kind=="protect_region":
+            # Opposed observed wall-end faces establish a real gap without
+            # reconstructing any hidden rectangle or consulting global geometry.
+            faces=[(tuple(map(number,s)),tuple(map(number,e))) for barrier in visible_barriers if barrier_active(barrier)
+                   for s,e in barrier.get("visible_segments",[])]
+            proposals=set()
+            for i,(s,e) in enumerate(faces):
+                for t,u in faces[i+1:]:
+                    if s[1]==e[1] and t[1]==u[1] and sorted((s[0],e[0]))==sorted((t[0],u[0])) and abs(s[0]-e[0])==1:
+                        span=abs(s[1]-t[1]);proposals.add(((s[0]+e[0])/2,(s[1]+t[1])/2,"y",span))
+                    if s[0]==e[0] and t[0]==u[0] and sorted((s[1],e[1]))==sorted((t[1],u[1])) and abs(s[1]-e[1])==1:
+                        span=abs(s[0]-t[0]);proposals.add(((s[0]+t[0])/2,(s[1]+e[1])/2,"x",span))
+            for cx,cy,orientation,span in sorted(proposals):
+                if not 2<=span<=8 or math.dist(position(a),(cx,cy))>2:continue
+                footprint=(cx-.5,cy-span/2,cx+.5,cy+span/2) if orientation=="y" else (cx-span/2,cy-.5,cx+span/2,cy+.5)
+                known_entities=[a]+neighbors+records(env.get("stockpiles",{}))+records(env.get("remains",{}))
+                if any(footprint[0]<=position(v)[0]<=footprint[2] and footprint[1]<=position(v)[1]<=footprint[3] for v in known_entities):continue
+                corners=[(footprint[i],footprint[j]) for i in (0,2) for j in (1,3)]
+                width,height=bounds(observation)
+                if not all(0<=x<=width and 0<=y<=height and math.dist(position(a),(x,y))<=number(attr(a,"sense_r",40)) and
+                    _segment_clear(position(a),(math.nextafter(x,position(a)[0]),math.nextafter(y,position(a)[1])),visible_barriers) for x,y in corners):continue
+                add("build_barricade","Close an observed wall gap to protect the requested region",parameters={"center":{"x":cx,"y":cy},"orientation":orientation,"length":span},barrier=1,survival=.3)
     else:
         for enemy in enemies[:4]:
             d=distance(a,enemy); hp=number(enemy.get("life",100)); resistance=number(enemy.get("damage_resistance",0))
@@ -470,8 +521,9 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
         for b in visible_barriers:
             if distance(a,b)<=2 and barrier_active(b) and ("mode" in b or b.get("kind",b.get("type")) in ("Barricade","barricade")):
                 integrity=number(b.get("integrity",100))
-                add("smash","Break a blocking gate or barricade",b,barrier=.75 if integrity<=20 else .4)
-                add("demolish","Use heavy demolition against a durable barrier",b,barrier=.95 if integrity>20 else .4)
+                route_blocked=goal_position is not None and not _segment_clear(position(a),goal_position,[b])
+                add("smash","Break a blocking gate or barricade",b,barrier=.75 if integrity<=20 else .4,ally=.5 if route_blocked else 0)
+                add("demolish","Use heavy demolition against a durable barrier",b,barrier=.95 if integrity>20 else .4,ally=.5 if route_blocked else 0)
         nearby=[b for b in allies if distance(a,b)<=number(attr(a,"rally_radius",30))]
         if enemies and nearby:
             add("rally","Improve attacks by observable allies entering combat",ally=min(1,len(nearby)*.35),damage=.2)
@@ -486,7 +538,7 @@ def generate_candidates(observation: dict, memory: dict | None = None, parameter
                     go(position({"position":loc}),"Investigate a dated signal or noise location",exploration=.8)
     # Local frontier headings are deterministic; memory penalizes repeated cells.
     x,y=position(a)
-    for angle in range(0,360,45):
+    for angle in ([] if holding else range(0,360,45)):
         dx,dy=math.cos(math.radians(angle))*10,math.sin(math.radians(angle))*10
         cell=f"{int((x+dx)//10)},{int((y+dy)//10)}"
         novelty=1/(1+m.get("visits",{}).get(cell,0))
@@ -534,7 +586,8 @@ class UtilityModel:
         m=commit_action_memory(observation,m,chosen.intent,chosen.reason)
         ranked=sorted(candidates,key=lambda c:c.score,reverse=True)
         diagnostics={"model_version":self.version,"chosen_score":chosen.score,"reason":chosen.reason,
-                     "candidate_count":len(candidates),"ranked_candidates":[c.as_dict() for c in ranked]}
+                     "candidate_count":len(candidates),"selected_candidate_index":next(i for i,c in enumerate(ranked) if c is chosen),
+                     "ranked_candidates":[c.as_dict() for c in ranked]}
         return deepcopy(chosen.intent),m,diagnostics
     def decide_batch(self, observations, memories, rngs):
         return [self.decide(o,m,r) for o,m,r in zip(observations,memories,rngs,strict=True)]

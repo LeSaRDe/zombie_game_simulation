@@ -20,6 +20,9 @@ def source_paths():
                                         "baseline-summary.json", "README.md", "COVERAGE.md")]
     paths += [ROOT / "prompts" / name for name in ("zombie_game_plans.md", "task_2_implementation_plan.md",
                                                   "task_2_action_and_validation_matrix.md")]
+    # Pin the reviewed fixture authorship too, including explicit Gate/Shelter
+    # arrangements; a later helper change must not silently alter the catalog.
+    paths += sorted((ROOT / "tests" / "spec").glob("*.py"))
     return sorted(paths)
 
 

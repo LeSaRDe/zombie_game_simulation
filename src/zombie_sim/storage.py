@@ -97,6 +97,40 @@ def stage_patch(state, patch):
     return result
 
 
+def _rollback_patch(undo):
+    for parent,key,present,value in reversed(undo):
+        if present:parent[key]=value
+        else:parent.pop(key,None)
+
+
+def _stage_locked(state,patch):
+    """Stage under the store lock, recording exact undo without copying maps.
+
+    Store read APIs return detached copies. Consequently the private cache can
+    be staged in place while the same lock excludes readers. No version is
+    published until the durable transaction succeeds; any failure restores the
+    old references. This keeps transaction cost proportional to changed records.
+    """
+    undo=[];result=state
+    try:
+        for op in patch:
+            path=op[1]
+            if not path:
+                result=copy.deepcopy(op[2]);continue
+            parent=result
+            for key in path[:-1]:
+                if key not in parent:
+                    undo.append((parent,key,False,None));parent[key]={}
+                parent=parent[key]
+            key=path[-1];undo.append((parent,key,key in parent,parent.get(key)))
+            if op[0]=="remove":parent.pop(key,None)
+            else:parent[key]=copy.deepcopy(op[2])
+        return result,undo
+    except BaseException:
+        _rollback_patch(undo)
+        raise
+
+
 class VersionConflict(RuntimeError):
     """A stale writer cannot commit over a newer published revision."""
 
@@ -130,6 +164,7 @@ class History:
             time_n TEXT NOT NULL, time_d TEXT NOT NULL, seconds REAL NOT NULL,
             patch BLOB NOT NULL, anchor BLOB, checksum TEXT NOT NULL);
           CREATE INDEX IF NOT EXISTS commit_time ON commits(seconds,revision);
+          CREATE INDEX IF NOT EXISTS commit_anchor ON commits(revision) WHERE anchor IS NOT NULL;
           CREATE TABLE IF NOT EXISTS events (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER NOT NULL,
             kind TEXT, actor TEXT, payload BLOB NOT NULL,
@@ -168,6 +203,7 @@ class History:
 
     def append(self, time=0, event=None, delta=None, snapshot=None, transaction_id=None,
                *, records=(), revision=None, in_transaction=False, runtime_delta=None, command_result=None):
+        from .faults import hit
         with self.lock:
             if self.read_only:
                 raise RuntimeError("Cannot append to a read-only history view")
@@ -178,24 +214,42 @@ class History:
             rev = self.revision + 1 if revision is None else int(revision)
             if rev != self.revision + 1:
                 raise VersionConflict(f"Expected revision {self.revision + 1}, got {rev}")
-            state = copy.deepcopy(snapshot) if snapshot is not None else stage_patch(self._state, delta or [])
-            patch = state_diff(self._state, state) if delta is None else delta
             t = exact_time(time)
             last_time = self.connection.execute("SELECT time_n,time_d FROM commits ORDER BY revision DESC LIMIT 1").fetchone()
             if last_time and t < Fraction(int(last_time[0]), int(last_time[1])):
                 raise ValueError("History commit times must be nondecreasing")
-            payload = _pack(patch)
-            anchor = _pack({"anchor_schema": 1, "state": state,
-                            "checksum": hashlib.sha256(canonical(state).encode()).hexdigest()}) if rev == 0 or rev % self.anchor_interval == 0 else None
             rows = list(records)
             if event is not None:
                 rows.append(event)
+            undo=[];runtime_undo=[]
             try:
+                if snapshot is not None:
+                    state=copy.deepcopy(snapshot)
+                elif in_transaction:
+                    # An outer SQLiteStore transaction owns rollback/publication.
+                    state=stage_patch(self._state,delta or [])
+                else:
+                    state,undo=_stage_locked(self._state,delta or [])
+                patch=state_diff(self._state,state) if delta is None else delta
+                payload=_pack(patch)
+                previous_anchor=self.connection.execute("SELECT revision,length(anchor) FROM commits WHERE anchor IS NOT NULL ORDER BY revision DESC LIMIT 1").fetchone()
+                # Keep large histories from rewriting all old occurrences every
+                # 1000 transitions. Every delta remains durable; only redundant
+                # recovery accelerators become less frequent, up to 10000 rows.
+                stride=self.anchor_interval
+                if previous_anchor:
+                    scale=max(1,(previous_anchor[1]+8*1024**2-1)//(8*1024**2))
+                    stride=min(max(self.anchor_interval,10000),self.anchor_interval*scale)
+                write_anchor=previous_anchor is None or rev-previous_anchor[0]>=stride
+                anchor=_pack({"anchor_schema":1,"state":state,
+                              "checksum":hashlib.sha256(canonical(state).encode()).hexdigest()}) if write_anchor else None
+                hit("history_write",revision=rev)
                 if not in_transaction:
                     self.connection.execute("BEGIN IMMEDIATE")
                     existing = self.connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (txid,)).fetchone()
                     if existing:
                         self.connection.rollback()
+                        _rollback_patch(undo)
                         return existing[0]
                     actual = self.revision
                     if rev != actual + 1:
@@ -205,9 +259,10 @@ class History:
                     hashlib.sha256(payload).hexdigest()))
                 runtime_state = self._runtime_state
                 if runtime_delta is not None:
-                    runtime_state = stage_patch(self._runtime_state or {}, runtime_delta)
+                    if in_transaction:runtime_state=stage_patch(self._runtime_state or {},runtime_delta)
+                    else:runtime_state,runtime_undo=_stage_locked(self._runtime_state or {},runtime_delta)
                     runtime_blob = _pack(runtime_delta)
-                    runtime_anchor = _pack({"state": runtime_state, "checksum": hashlib.sha256(canonical(runtime_state).encode()).hexdigest()}) if rev % self.anchor_interval == 0 or self._runtime_state is None else None
+                    runtime_anchor = _pack({"state": runtime_state, "checksum": hashlib.sha256(canonical(runtime_state).encode()).hexdigest()}) if write_anchor or self._runtime_state is None else None
                     self.connection.execute("INSERT INTO runtime_commits VALUES(?,?,?,?)", (rev, runtime_blob, runtime_anchor, hashlib.sha256(runtime_blob).hexdigest()))
                 if command_result is not None:
                     self._write_control(command_result, command_result.get("control", {}), rev)
@@ -224,10 +279,14 @@ class History:
                     self.connection.executemany("INSERT OR IGNORE INTO participants VALUES(?,?)",
                                                 [(x, cursor.lastrowid) for x in ids])
                 if not in_transaction:
+                    hit("before_history_commit",revision=rev)
                     self.connection.commit()
+                    hit("after_history_commit_before_publish",revision=rev)
             except BaseException:
                 if not in_transaction:
                     self.connection.rollback()
+                _rollback_patch(runtime_undo)
+                _rollback_patch(undo)
                 raise
             self._state = state
             self._runtime_state = runtime_state
@@ -367,6 +426,8 @@ class History:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, path)
+        from .faults import hit
+        hit("after_checkpoint_rename_before_register",revision=self.revision,path=str(path))
         directory_fd = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory_fd)
@@ -448,12 +509,16 @@ class MemoryStore:
                     return row[0]
             if expected_version is not None and int(expected_version) != self.version:
                 raise VersionConflict(f"Expected version {expected_version}, current version is {self.version}")
-            staged = stage_patch(self._state, delta)
+            staged,undo = _stage_locked(self._state, delta)
             revision = self.version + 1
-            if self.history is not None:
-                revision = self.history.append(staged.get("time", 0), delta=delta, records=records,
-                                               transaction_id=transaction_id, runtime_delta=runtime_delta, command_result=command_result,
-                                               revision=revision)
+            try:
+                if self.history is not None:
+                    revision = self.history.append(staged.get("time", 0), delta=delta, records=records,
+                                                   transaction_id=transaction_id, runtime_delta=runtime_delta, command_result=command_result,
+                                                   revision=revision)
+            except BaseException:
+                _rollback_patch(undo)
+                raise
             self._state, self.version = staged, revision
             if transaction_id:
                 self._transactions[transaction_id] = revision
@@ -550,7 +615,10 @@ class SQLiteStore(MemoryStore):
                 connection.execute("UPDATE live_state SET revision=?,payload=? WHERE singleton=1", (rev, _pack(staged)))
                 connection.execute("DELETE FROM live_entities")
                 self._write_entities(staged)
+                from .faults import hit
+                hit("before_history_commit",revision=rev)
                 connection.commit()
+                hit("after_history_commit_before_publish",revision=rev)
             except BaseException:
                 connection.rollback()
                 self.history._state = old_history
@@ -596,7 +664,10 @@ class SQLiteStore(MemoryStore):
                 # Snapshot payload is an initialization compatibility record.  The
                 # row store and ledger, not this old blob, are authoritative.
                 connection.execute("UPDATE live_state SET revision=? WHERE singleton=1", (revision,))
+                from .faults import hit
+                hit("before_history_commit",revision=revision)
                 connection.commit()
+                hit("after_history_commit_before_publish",revision=revision)
             except BaseException:
                 connection.rollback()
                 self.history._state = previous

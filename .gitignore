@@ -1,6 +1,6 @@
 */.venv
 */.runtime
-*/__pycache__/
+__pycache__/
 *.class
 *.zip
 tests/results/

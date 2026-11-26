@@ -1,12 +1,12 @@
 # TASK 2 implementation and verification
 
-Implemented on 2026-11-25 from the ontology and the reviewed TASK 2 plan. The
-current instruction in `prompts/zombie_game_plans.md` authorizes implementation
-and prohibits consulting the supplied acceptance suite. No acceptance-suite
-contents were opened, imported, discovered through a test runner, or executed.
-An early repository inventory exposed only the name of its README; this was
-disclosed during implementation. Independent checks below were written directly
-from the specifications and implementation contracts.
+Implemented on 2026-11-25 from the ontology and the reviewed TASK 2 plan.
+The current plan now authorizes testing against the supplied acceptance suite.
+See [the refinement report](TESTING_REFINEMENT.md) for current acceptance results,
+runtime fixes and approved test-fixture corrections. The independent checks and
+original distribution measurements below document the first implementation;
+they are historical evidence, not a claim that the final refined build passed
+the entire acceptance catalog.
 
 ## Architecture
 
@@ -83,12 +83,12 @@ took 0.052 seconds. These are individual measurements, not stable latency bounds
 
 The approved baseline sampler kept all 1,000 agents and strict geometry/separation
 constraints. It records its approximate conditional relocation distribution and
-does not claim exact joint sampling. No full **1,000-agent / 1,800-second** run has
-been validated. The first-five-second rate would linearly project to about three
-hours and 6.9 GB of ledger data; longer runs change interaction density and anchor
-costs, so that extrapolation is not a capacity guarantee. Current in-process
-semantic collections grow with history, making bounded-memory archival an
-important next optimization before large batches.
+does not claim exact joint sampling. At the first implementation milestone, no
+full **1,000-agent / 1,800-second** run had been validated. Its five-second pilot
+was insufficient to establish full-run capacity. The subsequent refinement
+replaced growing decoded history collections with bounded caches over the complete
+ledger. See [TESTING_REFINEMENT.md](TESTING_REFINEMENT.md) for current full-run
+evidence, storage measurements, and remaining checkpoint costs.
 
 ## Reproduce independent verification
 
@@ -128,8 +128,10 @@ families. Other effects remain correct serial coordinator work; no universal
 speedup is claimed. SQLite supports a local single writer per run. The GUI is a
 local research workspace, with portable HTML animation export rather than an
 encoded video renderer. Sustained frame rate, 10,000-agent rendering, Firefox
-coverage and the full-duration baseline remain unverified performance targets.
+coverage and the full-duration baseline were unverified at this first milestone.
+Current acceptance results are recorded in
+[TESTING_REFINEMENT.md](TESTING_REFINEMENT.md).
 
-Passing these independent checks does not establish that the untouched acceptance
-suite passes. That suite remains available for a separate validation stage under
-the user's instruction.
+Passing these independent checks does not establish that the full acceptance
+suite passes. The subsequent acceptance stage uses the supplied suite and retains
+its per-tier reports under `tests/results`.

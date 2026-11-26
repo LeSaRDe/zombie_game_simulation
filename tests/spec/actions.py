@@ -8,6 +8,7 @@ from copy import deepcopy
 from decimal import Decimal
 
 from .dsl import agent, world, intent, submit, advance, snapshot, check, case
+from .enclosures import with_gate_enclosures
 
 
 def _number(path, value):
@@ -580,4 +581,9 @@ def _edge_cases(rows):
 
 def cases():
     rows = _base_cases()
-    return [row["case"] for row in rows] + _shared_rejections(rows) + _edge_cases(rows)
+    result=[row["case"] for row in rows] + _shared_rejections(rows) + _edge_cases(rows)
+    # Complete only the published test input, after variants that replace gates
+    # with permanent obstacles/barricades have been arranged.
+    for item in result:
+        item["request"]["setup"]=with_gate_enclosures(item["request"]["setup"])
+    return result

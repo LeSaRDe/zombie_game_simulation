@@ -25,15 +25,23 @@ This task has been done. The ontology specifications are stored in the folder "o
 
 - The implementation plan has done, in files: "prompts/task_2_implementation_plan.md" and "prompts/task_2_action_and_validation_matrix.md".
 - The test suite has been created, in the folder: "tests".
-- The first implementation is finished. The following folders together with files therein are created: "artifacts", "build", "configs", "diagnostics", "docs", "src", "gui", "implementation_checks", "scripts", and "training".
+- The implementation is finished and tested. The following folders together with files therein are created: "artifacts", "build", "configs", "diagnostics", "docs", "src", "gui", "implementation_checks", "scripts", and "training".
 
-Your current step is to test the current implementation against the test suite. I have given a few dry runs of the current implementation, and I found a few issues stated below. During the testing, you also must address the issues:
-  - The following error message pops up, whenever I create and start a new experiment: "'Unknown run b9a2d901195b41aaa6d895cf8326cb35'".
-  - The following error message pops up during the runtime: "Unexpected token 'I', "Internal S"... is not valid JSON".
-  - The following error message pops up during the runtime: "Stale control generation: refresh generation 2".
-  - I tried to use multiple workers, e.g., 10 and 20 (because my computer supports 24 logical CPU cores), but constantly there are only 4 logical CPU cores staying at high utilization during the runtime, regardless of the number of workers set in the configuration. I want the implementation to fully utilize the CPU resources, and the implementation must be able to choose an appropriate number of workers for different hardware environments. 
-  - I found that the simulation might not fully stop after pressing the "Pause run" button on the GUI interface.
-  - I need a button for terminating the current run without save. 
+Your current step is to fix the following identified issues.
+  - When using GUI, for a run, after pressing "Terminate without save", the run is placed in "SAVED RUNS" of the sidebar to the left anyway. Also, after pressing "Terminate without save", many CPU cores keep running. 
+    - First, you must check whether pressing "Terminate without save" actually terminates the current run. 
+    - Second, you must check whether runs terminated without save are not saved. 
+  - After starting GUI from the launcher "simulate", using the option "9 Open the GUI", the GUI will be pending on a message "Initializing the world… Validating geometry and placing the requested population." for a relatively long time. You must check if this is actually normal.
+  - When I try to start a new simulation via the "New Experiment" button, choose "Small 20 agents", and press "Validate", an error message pops up: "Unexpected end of JSON input".
+  - When using GUI, in the "New Experiment" configuration interface, for every input box, if I keep pressing the "back" key to delete the number, eventually it will show "0", but after that, if I manually input a new number, this "0" will not be replaced by the input numbers, rather it is kept as the first digit of the new number. 
+    - The correct behavior should be: I can completely remove all digits of the default number, and input a new number without "0" as the leading digit.
+  - When using GUI, in the "New Experiment" configuration interface, if I manually input the numbers of Humans and Zombies, the numbers of agents for roles are not automatically updated, which leads to failures of configuration validation.
+    - A better way to implement this is: first, the percentage of agents for each role can be explicitly configured in GUI; second, the number of agents for the role is automatically updated whenever the numbers of Humans and Zombies are changed and/or the percentage for the role is changed; and third, all percentages and the numbers of agents for all roles must be kept consistent. 
+  - When running the simulation using the default configurations, such as "Small 20 agent" and "Ontology baseline 1,000 agents", the "Statistics" view may show no curves, i.e., the view is empty. Be cautious that this issue may be conditioned on some factors unknown to me, because sometimes the view does show curves. In addition, when the "Statistics" view does show curves, the time axis is not updated along with the time elapse. 
+  - I have not seen the "Cohorts", "Events", and "Comparison" views work. I'm not sure if those views actually work.
+    - You must check whether they work correctly. If not, you must fix them. Otherwise, you must explicitly explain how to use them in a user guide.
+  - A comprehensive user guide is needed. The desired user guide must be as friendly as possible.
+  - When using GUI, in the "New Experiment" configuration interface, the "Human decision model" is empty by default, I have no idea what input is expected. You must explicitly explain this.
 
 If addressing any of the above issues or any issues identified during the testing requires to change the problem formulation or the ontology, you must pause and explicitly and clearly explain the issue and your proposal of changes, and you must wait for my approval before continuing. 
 

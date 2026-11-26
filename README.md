@@ -6,9 +6,40 @@ workspace, and a runnable recurrent PPO training example.
 
 The implementation follows `ontology/zombie_game_ontology_v0.1.md`, its formal
 OWL/SHACL package, and the two TASK 2 implementation-plan documents in `prompts/`.
-The separate acceptance suite was not consulted or executed during implementation.
+The supplied acceptance suite is connected to the real engine, application and
+browser through a versioned adapter. Current testing evidence and approved
+fixture corrections are recorded in [the refinement report](docs/TESTING_REFINEMENT.md).
 
 ## Start a simulation
+
+For the easiest way to start and stop simulations on Linux, run:
+
+```bash
+./simulate
+```
+
+The numbered menu can start a small or baseline run, open the GUI, pause, resume,
+save and stop, terminate without another checkpoint, or shut down everything.
+It selects the existing Python environment automatically. Its default workspace
+is `runs/launcher` and its GUI address is `http://127.0.0.1:8767`, separate from a
+manually started workspace. Leaving the menu keeps simulations running; choose
+**Shut down all runs and the web service** to finish.
+
+Direct commands are also available:
+
+```bash
+./simulate start                 # Small simulation and GUI
+./simulate list                  # Show run numbers and IDs
+./simulate stop 1                # Save and stop the listed run
+./simulate resume 1              # Continue a saved or paused run
+./simulate terminate 1           # End an active run without another checkpoint
+./simulate shutdown              # Save active runs, then stop the web service
+./simulate shutdown --terminate  # End active runs without another save, then stop the service
+```
+
+For complete GUI, web-service and terminal startup/shutdown instructions, see the
+[start and stop guide](docs/START_STOP_GUIDE.md), including pause, save, termination
+without an extra checkpoint, service restart and recovery.
 
 Python 3.12 or later is required. The core simulator uses the Python standard
 library. Install optional dependencies for the features you use:
@@ -105,4 +136,4 @@ See [training](docs/TRAINING.md) and [decision models](docs/MODELS.md).
 `implementation_checks/` contains independent checks written from the ontology
 during implementation. It is separate from the supplied acceptance suite. These
 checks and recorded smoke runs are evidence for the exercised paths, not a claim
-that all possible simulations or the untouched acceptance suite have passed.
+that all possible simulations or the full acceptance suite have passed.

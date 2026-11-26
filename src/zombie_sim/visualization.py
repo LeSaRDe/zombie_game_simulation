@@ -120,7 +120,8 @@ def sampled_metrics(history, end=None, interval=1, limit=2000, revision=None):
     last = history.state_at(revision=revision)
     frontier = exact_time(last.get("time", 0))
     duration = frontier if end is None else exact_time(end)
-    if duration < 0 or duration > frontier:
+    committed_time = exact_time(history.state_at().get("time", 0))
+    if duration < 0 or duration > committed_time:
         raise ValueError("Metric time must lie within the committed history")
     interval = exact_time(interval)
     if interval <= 0:

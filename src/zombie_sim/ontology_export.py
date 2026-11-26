@@ -43,6 +43,7 @@ class _Writer:
         self.state_nodes={}
         self.context={}
         self.occurrences={}
+        self.agent_ids={}
     def uri(self,*parts):
         return "<"+self.base+":".join(quote(str(p),safe="") for p in parts)+">"
     def triple(self,s,p,o):
@@ -97,14 +98,10 @@ def _agent_state(writer,agent,state):
     writer.state_nodes[current]=recorded
     world=writer.uri("world"); run=writer.uri("run")
     writer.type(identity,"Agent"); writer.triple(identity,"inRun",run)
-    # Ontology IDs are positive integers. String IDs remain stable runtime IDs, but
-    # cannot be mislabeled as conformant ontology IDs.
-    try:
-        integer_id=int(identifier)
-    except ValueError:
-        raise ValueError(f"Agent ID {identifier!r} is not an ontology integer ID; use positive integer strings for RDF export") from None
-    if integer_id<1:
-        raise ValueError("RDF agent IDs must be positive integers")
+    # RDF uses positive integer IDs. Preserve integer identities and allocate a
+    # stable export-local integer for named runtime identities; the URI retains
+    # the original run namespace and name, including all causal references.
+    integer_id=writer.agent_ids[identifier]
     writer.literal(identity,"agent_id",integer_id)
     writer.literal(identity,"created_at",agent.get("created_at",0),"decimal")
     writer.triple(identity,"hasState",current)
@@ -365,6 +362,16 @@ def export_history(snapshots,events=(),path=None,run_id="run"):
     if not snapshots:
         raise ValueError("RDF history export requires at least one actual snapshot")
     writer=_Writer(run_id);writer.context=snapshots[-1]
+    identifiers=sorted({str(identifier) for snapshot in snapshots for identifier in snapshot["agents"]})
+    used=set()
+    for identifier in identifiers:
+        if identifier.isdigit() and int(identifier)>0 and int(identifier) not in used:
+            writer.agent_ids[identifier]=int(identifier);used.add(int(identifier))
+    next_id=1
+    for identifier in identifiers:
+        if identifier not in writer.agent_ids:
+            while next_id in used:next_id+=1
+            writer.agent_ids[identifier]=next_id;used.add(next_id)
     for snapshot in snapshots:
         writer.latest_episodes.update(deepcopy(snapshot.get("episodes",{})))
         writer.occurrences.update(deepcopy(snapshot.get("occurrences",{})))
