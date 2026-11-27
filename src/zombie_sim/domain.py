@@ -71,14 +71,23 @@ def profile(agent, time=None):
     return result
 
 
-def decision_model_assignment(model_id,version=None,parameters=None):
+def decision_model_assignment(model_id,version=None,parameters=None,*,agent_type=None):
     """Resolve new assignments to their real implementation version.
 
     A bare major version is an explicit compatible-family request. Full pinned
     versions must match exactly; old stored assignments are never rewritten.
     """
     from .policies import create_model
+    if not isinstance(model_id,str) or not model_id:
+        raise ValueError("Decision model ID must be a nonempty string")
     model=create_model(model_id,parameters)
+    applicable=getattr(model,"applicable_types",None)
+    if applicable is None and callable(getattr(model,"manifest",None)):
+        applicable=model.manifest().get("applicable_types")
+    if agent_type is not None and (not isinstance(applicable,(list,tuple,set,frozenset)) or agent_type not in applicable):
+        error=ValueError(f"Model {model_id} is incompatible with biological type {agent_type}; declared applicability is {applicable!r}")
+        error.code="INCOMPATIBLE_MODEL"
+        raise error
     actual=str(model.version)
     if version is not None and str(version) not in {actual,actual.split(".",1)[0]}:
         raise ValueError(f"Model {model_id} version {version} unavailable; installed version is {actual}")
@@ -104,10 +113,10 @@ def make_agent(identifier, kind="Human", role=None, **overrides):
         agent.update(spit_charges=ROLES[role]["max_spit_charges"],reserved_charges=0,next_charge_at=None)
     agent.update(deepcopy(overrides))
     if "model_assignment" not in overrides:
-        agent["model_assignment"]=decision_model_assignment(kind+"DefaultModel")
+        agent["model_assignment"]=decision_model_assignment(kind+"DefaultModel",agent_type=kind)
     elif isinstance(agent["model_assignment"],dict) and agent["model_assignment"].get("model_id"):
         assignment=agent["model_assignment"]
-        agent["model_assignment"]={**assignment,**decision_model_assignment(assignment["model_id"],assignment.get("version"),assignment.get("parameters"))}
+        agent["model_assignment"]={**assignment,**decision_model_assignment(assignment["model_id"],assignment.get("version"),assignment.get("parameters"),agent_type=kind)}
     if kind == "Human":
         agent["inventory"] = {r:agent["inventory"].get(r,0) for r in RESOURCES}
         agent["reserved"] = {r:agent["reserved"].get(r,0) for r in RESOURCES}

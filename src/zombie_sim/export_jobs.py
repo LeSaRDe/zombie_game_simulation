@@ -129,10 +129,68 @@ def animation_html(frames,provenance):
 <script id="replay-data" type="application/json">'''+data+'''</script><script>const data=JSON.parse(document.getElementById('replay-data').textContent);let i=0,timer;const slider=document.getElementById('cursor');slider.max=data.frames.length-1;function show(){const f=data.frames[i];document.getElementById('frame').innerHTML=f.svg;document.getElementById('time').textContent='Time '+f.time+' s · revision '+f.revision;slider.value=i;}slider.oninput=()=>{i=Number(slider.value);show();};document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;}else timer=setInterval(()=>{i=(i+1)%data.frames.length;show();},250);document.getElementById('play').textContent=timer?'Pause':'Play';};document.getElementById('provenance').textContent=JSON.stringify(data.provenance,null,2);show();</script></html>''').encode()
 
 
+def prepare_export(manager,run_id,request):
+    format=request.get('format','scene_png')
+    if format not in FORMATS:raise ValueError('Unknown export format')
+    history=manager.history(run_id)
+    try:
+        revision=history.revision;latest=history.state_at(revision=revision);frontier=exact_time(latest['time'])
+        selected=exact_time(request.get('time',frontier));interval=request.get('interval',['0',str(frontier)])
+        if not isinstance(interval,list) or len(interval)!=2:raise ValueError('Export interval requires start and end')
+        start,end=map(exact_time,interval);spacing=exact_time(request.get('sample_interval','1'))
+        if not 0<=start<=end<=frontier or not 0<=selected<=frontier:raise ValueError('Export times must lie within committed history')
+        if spacing<=0 or (end-start)/spacing>2000:raise ValueError('Use a positive sample interval with at most 2001 frames')
+        scene=project_state(history.state_at(time=selected,revision=revision),selected)
+        scene=view_bundle(scene)['state']
+        cohort=request.get('cohort','all')
+        definition=None
+        if cohort!='all':
+            summaries=manager.cohorts(run_id,scene)
+            definition=next((deepcopy(row['definition']) for row in summaries if cohort in {row['definition'].get('id'),row['definition'].get('name')}),None)
+            if definition is None:raise ValueError('Unknown saved cohort')
+            members=set(cohort_members(scene,definition));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
+        provenance={'schema':'zombie-sim/export-v1','run_id':run_id,'revision':str(scene['revision']),'source_frontier_revision':str(revision),
+                    'time':str(selected),'interval':[str(start),str(end)],'sample_interval':str(spacing),'cohort':cohort,'format':format}
+        if definition is not None:provenance['cohort_definition']=definition
+        return provenance,scene,str(history.path)
+    finally:history.close()
+
+def render_export(provenance, source_scene, history_path, format):
+    from .storage import History
+    rows=[];frames=[]
+    history=History(history_path,read_only=True)
+    try:
+        t,end=map(exact_time,provenance['interval']);spacing=exact_time(provenance['sample_interval'])
+        while t<=end:
+            scene=project_state(history.state_at(time=t,revision=int(provenance['source_frontier_revision'])),t)
+            if provenance.get('cohort_definition'):
+                members=set(cohort_members(scene,provenance['cohort_definition']));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
+            rows.append({'time':str(t),**populations(scene)})
+            if format=='replay_animation':frames.append({'time':str(t),'revision':str(scene['revision']),'svg':world_svg(scene,900)})
+            t+=spacing
+    finally:history.close()
+    if format=='scene_png':payload=scene_png(source_scene,provenance)
+    elif format=='chart_png':payload=chart_png(rows,provenance)
+    elif format=='chart_svg':payload=chart_svg(rows,provenance)
+    elif format=='table_csv':
+        stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows);payload=stream.getvalue().encode()
+    elif format=='table_parquet':
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+        table=pa.Table.from_pylist(rows).replace_schema_metadata({b'zombie_provenance':canonical(provenance).encode()})
+        output=pa.BufferOutputStream();pq.write_table(table,output,compression='zstd');payload=output.getvalue().to_pybytes()
+    else:payload=animation_html(frames,provenance)
+    sidecar={'provenance':provenance,'source_scene':source_scene,'artifact_sha256':hashlib.sha256(payload).hexdigest(),
+             'bytes':len(payload),'sample_count':len(rows),'format':format}
+    return payload,sidecar
+
+
 class ExportJobs:
     def __init__(self,manager):
         self.manager=manager;self.directory=manager.root/'exports';self.directory.mkdir(exist_ok=True)
         self.lock=threading.RLock();self.pool=ThreadPoolExecutor(max_workers=2,thread_name_prefix='simulation-export')
+        from .read_tasks import ReadPool
+        self.readers=ReadPool(manager.root,size=2,name='exports');self.closing=False
         self.jobs={};self.gates={}
     def arm_pause(self,run_id):
         with self.lock:self.gates[run_id]=threading.Event()
@@ -141,76 +199,33 @@ class ExportJobs:
             gate=self.gates.pop(run_id,None)
             if gate:gate.set()
     def create(self,run_id,request):
-        format=request.get('format','scene_png')
-        if format not in FORMATS:raise ValueError('Unknown export format')
-        history=self.manager.history(run_id)
-        try:
-            revision=history.revision;latest=history.state_at(revision=revision);frontier=exact_time(latest['time'])
-            selected=exact_time(request.get('time',frontier));interval=request.get('interval',['0',str(frontier)])
-            if not isinstance(interval,list) or len(interval)!=2:raise ValueError('Export interval requires start and end')
-            start,end=map(exact_time,interval);spacing=exact_time(request.get('sample_interval','1'))
-            if not 0<=start<=end<=frontier or not 0<=selected<=frontier:raise ValueError('Export times must lie within committed history')
-            if spacing<=0 or (end-start)/spacing>2000:raise ValueError('Use a positive sample interval with at most 2001 frames')
-            scene=project_state(history.state_at(time=selected,revision=revision),selected)
-            scene=view_bundle(scene)['state']
-            cohort=request.get('cohort','all')
-            definition=None
-            if cohort!='all':
-                summaries=self.manager.cohorts(run_id,scene)
-                definition=next((deepcopy(row['definition']) for row in summaries if cohort in {row['definition'].get('id'),row['definition'].get('name')}),None)
-                if definition is None:raise ValueError('Unknown saved cohort')
-                members=set(cohort_members(scene,definition));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
-            provenance={'schema':'zombie-sim/export-v1','run_id':run_id,'revision':str(scene['revision']),'source_frontier_revision':str(revision),
-                        'time':str(selected),'interval':[str(start),str(end)],'sample_interval':str(spacing),'cohort':cohort,'format':format}
-            if definition is not None:provenance['cohort_definition']=definition
-            identifier=uuid.uuid4().hex;job={'id':identifier,'run_id':run_id,'status':'PENDING','active_tasks':1,'format':format,
-                'provenance':provenance,'source_scene':scene,'history_path':str(history.path),'cancel':threading.Event(),
-                'artifact':self.directory/(identifier+'.'+FORMATS[format][0]),'sidecar':self.directory/(identifier+'.provenance.json')}
-        finally:history.close()
+        if self.closing:raise ValueError('Service is draining; new exports are disabled')
+        provenance,scene,history_path=self.readers.call('prepare_export',run_id,request)
+        format=provenance['format'];identifier=uuid.uuid4().hex
+        job={'id':identifier,'run_id':run_id,'status':'PENDING','active_tasks':1,'format':format,
+             'provenance':provenance,'source_scene':scene,'history_path':history_path,'cancel':threading.Event(),
+             'artifact':self.directory/(identifier+'.'+FORMATS[format][0]),'sidecar':self.directory/(identifier+'.provenance.json')}
         with self.lock:
+            if self.closing:raise ValueError('Service is draining; new exports are disabled')
             self.jobs[identifier]=job;job['future']=self.pool.submit(self._execute,job)
         return self.get(identifier)
     def _execute(self,job):
-        from .storage import History
-        cancelled=lambda:job['cancel'].is_set()
+        from .application import ViewCancelled
         def check():
-            if cancelled():raise CancelledExport()
+            if job['cancel'].is_set():raise CancelledExport()
         try:
             with self.lock:job['status']='RUNNING';gate=self.gates.get(job['run_id'])
             if gate:
                 while not gate.wait(.05):check()
-            check();provenance=job['provenance'];rows=[];frames=[]
-            history=History(job['history_path'],read_only=True)
-            try:
-                t,end=map(exact_time,provenance['interval']);spacing=exact_time(provenance['sample_interval'])
-                while t<=end:
-                    check();scene=project_state(history.state_at(time=t,revision=int(provenance['source_frontier_revision'])),t)
-                    if provenance.get('cohort_definition'):
-                        members=set(cohort_members(scene,provenance['cohort_definition']));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
-                    rows.append({'time':str(t),**populations(scene)})
-                    if job['format']=='replay_animation':frames.append({'time':str(t),'revision':str(scene['revision']),'svg':world_svg(scene,900)})
-                    t+=spacing
-            finally:history.close()
-            check();format=job['format']
-            if format=='scene_png':payload=scene_png(job['source_scene'],provenance)
-            elif format=='chart_png':payload=chart_png(rows,provenance)
-            elif format=='chart_svg':payload=chart_svg(rows,provenance)
-            elif format=='table_csv':
-                stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows);payload=stream.getvalue().encode()
-            elif format=='table_parquet':
-                import pyarrow as pa
-                import pyarrow.parquet as pq
-                table=pa.Table.from_pylist(rows).replace_schema_metadata({b'zombie_provenance':canonical(provenance).encode()})
-                output=pa.BufferOutputStream();pq.write_table(table,output,compression='zstd');payload=output.getvalue().to_pybytes()
-            else:payload=animation_html(frames,provenance)
-            check();sidecar={'provenance':provenance,'source_scene':job['source_scene'],'artifact_sha256':hashlib.sha256(payload).hexdigest(),
-                            'bytes':len(payload),'sample_count':len(rows),'format':format}
+            check()
+            payload,sidecar=self.readers.call('render_export',job['provenance'],job['source_scene'],job['history_path'],job['format'],cancel_event=job['cancel'])
+            check()
             artifact_temp=job['artifact'].with_suffix('.partial');sidecar_temp=job['sidecar'].with_suffix('.partial.json')
             artifact_temp.write_bytes(payload);sidecar_temp.write_text(canonical(sidecar));check()
             artifact_temp.replace(job['artifact']);sidecar_temp.replace(job['sidecar'])
             with self.lock:
                 check();job['status']='COMPLETED';job['bytes']=len(payload)
-        except CancelledExport:
+        except (CancelledExport,ViewCancelled):
             with self.lock:job['status']='CANCELLED'
         except Exception as error:
             with self.lock:job['status']='FAILED';job['error']=str(error)
@@ -237,9 +252,21 @@ class ExportJobs:
             job=self.jobs[identifier]
             if job['status']!='COMPLETED':raise ValueError('Export is not complete')
             return job['sidecar' if sidecar else 'artifact']
+    def start_draining(self):
+        with self.lock:
+            self.closing=True
+            for job in self.jobs.values():
+                if job['active_tasks'] and job['status'] not in {'COMPLETED','CANCELLED','FAILED'}:
+                    job['cancel'].set();job['status']='CANCELLING'
+            for gate in self.gates.values():gate.set()
+        self.readers.start_draining()
     def close(self):
-        for identifier in list(self.jobs):self.cancel(identifier)
+        self.start_draining()
         self.pool.shutdown(wait=True,cancel_futures=False)
+        self.readers.close()
+    def status(self):
+        with self.lock:
+            return {'active':sum(job['active_tasks'] for job in self.jobs.values()),'readers':self.readers.status()}
 
 
 def register_export_routes(app,manager):

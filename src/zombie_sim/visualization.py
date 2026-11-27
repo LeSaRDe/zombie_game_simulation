@@ -7,12 +7,9 @@ import io
 import math
 from collections import Counter
 from pathlib import Path
-import threading
 from .storage import History, exact_time, canonical
 
 VERSION = "zombie-sim/view-v1"
-_metric_cache = {}
-_metric_lock = threading.RLock()
 
 
 def entities(state, name):
@@ -82,12 +79,15 @@ def view_bundle(state, *, run_id=None, mode="live", sequence=0, frontier=None, g
             "metrics": {"populations": populations(state), "resources": resources(state)}}
 
 
-def cohort_members(state, definition):
+def cohort_members(state, definition, *, check_cancelled=None):
+    check = check_cancelled or (lambda: None)
+    check()
     if definition.get("mode") == "fixed":
         return [str(x) for x in definition.get("members", [])]
     predicate = definition.get("predicate", {})
     result = []
     for agent in entities(state, "agents"):
+        check()
         from .domain import status
         current = dict(agent, status=status(agent))
         assignment = agent.get("model_assignment") or {}
@@ -104,48 +104,28 @@ def cohort_members(state, definition):
     return result
 
 
-def cohort_summary(state, definition):
-    membership = cohort_members(state, definition)
-    selected = [agent for agent in entities(state, "agents") if str(agent["id"]) in set(membership)]
+def cohort_summary(state, definition, *, check_cancelled=None):
+    check = check_cancelled or (lambda: None)
+    membership = cohort_members(state, definition, check_cancelled=check)
+    identities = set(membership)
+    selected = []
+    for agent in entities(state, "agents"):
+        check()
+        if str(agent["id"]) in identities:
+            selected.append(agent)
+    denominator = len(selected)
     return {"definition": definition, "members": membership, "denominator": len(membership),
-            "present": len(selected), "populations": populations({"agents": selected}),
-            "mean_life": sum(a.get("life", 0) for a in selected) / max(1, len(selected)),
-            "mean_stamina": sum(a.get("stamina", 0) for a in selected) / max(1, len(selected)),
+            "present": denominator, "populations": populations({"agents": selected}),
+            "mean_life": sum(a.get("life", 0) for a in selected) / denominator if denominator else None,
+            "mean_stamina": sum(a.get("stamina", 0) for a in selected) / denominator if denominator else None,
+            "mean_life_denominator": denominator, "mean_stamina_denominator": denominator,
             "resources": resources({"agents": selected}), "measurement_version": VERSION,
-            "survival_definition": "Human survival ends at conversion or death; identity survival ends at death. Living members are right-censored at the displayed time."}
+            "survival_definition": "Human survival applies to members who entered as Human and ends at conversion or death; identity survival ends at death. Eligible members without an event are right-censored at the displayed time."}
 
 
-def sampled_metrics(history, end=None, interval=1, limit=2000, revision=None):
-    revision = history.revision if revision is None else int(revision)
-    last = history.state_at(revision=revision)
-    frontier = exact_time(last.get("time", 0))
-    duration = frontier if end is None else exact_time(end)
-    committed_time = exact_time(history.state_at().get("time", 0))
-    if duration < 0 or duration > committed_time:
-        raise ValueError("Metric time must lie within the committed history")
-    interval = exact_time(interval)
-    if interval <= 0:
-        raise ValueError("Metric sample interval must be positive")
-    spacing = max(interval, duration / max(1, limit))
-    cache_key = (str(history.path) if history.path else id(history.connection), str(spacing))
-    with _metric_lock:
-        entry = _metric_cache.setdefault(cache_key, {"samples": [], "revision": -1, "frontier": 0})
-        cache = entry["samples"]
-        if entry["revision"] != revision:
-            boundary = min(frontier, exact_time(entry["frontier"]))
-            cache[:] = [sample for sample in cache if exact_time(sample["time"]) < boundary]
-            entry.update(revision=revision, frontier=str(frontier))
-        t = spacing * len(cache)
-        while t <= duration:
-            state = project_state(history.state_at(time=t, revision=revision), t)
-            cache.append({"time": str(t), "seconds": float(t), "revision": str(state.get("revision", 0)),
-                          **populations(state), "resources": resources(state)})
-            t += spacing
-        samples = [s for s in cache if exact_time(s["time"]) <= duration]
-        if len(_metric_cache) > 64:
-            _metric_cache.pop(next(iter(_metric_cache)))
-    return {"definition": "Living healthy/infected humans, living zombies and cumulative dead identities; remains excluded.",
-            "sample_interval": str(spacing), "version": VERSION, "samples": samples}
+def sampled_metrics(history, end=None, interval=1, limit=2000, revision=None, *, check_cancelled=None):
+    from .metrics import sampled_metrics as collect
+    return collect(history, end, interval, limit, revision, check_cancelled=check_cancelled)
 
 
 def events_csv(records):

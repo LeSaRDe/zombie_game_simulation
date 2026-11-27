@@ -73,6 +73,7 @@ async function benchmark(page,m,log){
  const file=path.join(directory,'benchmark-config.json');fs.writeFileSync(file,JSON.stringify(config));
  await page.getByTestId('config-edit-new').first().click();
  await page.getByText('Advanced configuration · JSON',{exact:true}).click();
+ await page.waitForFunction(()=>{const input=document.querySelector('[data-testid="config-import"]');return input&&!input.matches(':disabled');});
  await page.getByRole('dialog').locator('input[type=file]').setInputFiles(file);
  await page.waitForFunction(n=>window.__zombieInspection?.configuration?.draft?.agents?.length===n,count);
  await page.getByTestId('config-launch').click();

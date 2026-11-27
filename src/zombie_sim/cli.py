@@ -16,6 +16,7 @@ import uuid
 
 from .storage import History, canonical, exact_time
 from .visualization import events_csv, populations, project_state, resources, sampled_metrics, world_svg
+from .interrupts import deferred_sigint
 
 
 def _print(value):
@@ -84,48 +85,144 @@ def _run_lease(directory):
             fcntl.flock(lease.fileno(), fcntl.LOCK_UN)
 
 
+def _finish_headless(simulation, directory, manifest, status, *, started=None, save=True, register=False):
+    """Publish the durable frontier even on save failure, then always release resources."""
+    from .application import _atomic_json, _journal
+    try:
+        try:
+            if save:
+                simulation.checkpoint(directory / "checkpoint.json")
+        except BaseException as error:
+            status = "failed"
+            manifest["error"] = str(error)
+            raise
+        finally:
+            # A failure may leave speculative coordinator state. Report only
+            # the ledger boundary, without rolling back or inventing a save.
+            state = simulation.history.state_at()
+            if status != "failed":
+                manifest.pop("error", None)
+            manifest.update(status=status, time=str(state["time"]), revision=simulation.history.revision,
+                            execution=simulation.execution_diagnostics(),
+                            populations=populations(state), resources=resources(state))
+            if started is not None:
+                manifest["elapsed_wall_seconds"] = time.monotonic() - started
+            _atomic_json(directory / "manifest.json", manifest)
+            manager_path = directory.parent.parent / "manager.sqlite" if directory.parent.name == "runs" else directory / "manager.sqlite"
+            if (register and directory.parent.name == "runs") or manager_path.exists():
+                manager = _journal(manager_path)
+                try:
+                    frontier = canonical({"time": manifest["time"], "revision": str(manifest["revision"]), "status": status})
+                    with manager:
+                        if register:
+                            manager.execute("INSERT OR REPLACE INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)", (
+                                manifest["run_id"], str(directory.absolute()), canonical(manifest["config"]), status, frontier))
+                        else:
+                            manager.execute("UPDATE runs SET status=?,frontier=? WHERE id=?", (status, frontier, manifest["run_id"]))
+                finally:
+                    manager.close()
+    finally:
+        simulation.close()
+    return manifest
+
+
 def _headless_run(config, output, workers=None, backend=None, until=None):
     from .engine import Simulation
-    directory = Path(output)
-    directory.mkdir(parents=True, exist_ok=True)
-    if (directory / "run.sqlite").exists():
-        raise ValueError(f"Run history already exists in {directory}; use resume or a fresh output directory")
-    identity = directory.name if len(directory.name) == 32 and all(c in "0123456789abcdef" for c in directory.name) else uuid.uuid4().hex
-    simulation = Simulation(config, history_path=str(directory / "run.sqlite"), workers=workers, backend=backend, run_id=identity)
-    run_id = simulation.state.get("run_id", directory.name)
-    manifest = {"run_id": run_id, "config": simulation.config, "created": time.time(), "status": "running"}
-    (directory / "manifest.json").write_text(canonical(manifest))
-    started = time.monotonic()
-    status = "completed"
-    try:
-        simulation.advance_until(until if until is not None else simulation.config["horizon"], return_snapshot=False)
-        if simulation.time < simulation.horizon and str(getattr(simulation, "termination_reason", "")).upper() not in {"NO_LIVING_AGENTS", "EXTINCTION", "NO_LIVING"}:
-            status = "interrupted"
-    except KeyboardInterrupt:
-        status = "interrupted"
-    except BaseException:
-        status = "failed"
-        raise
-    finally:
-        simulation.checkpoint(directory / "checkpoint.json")
-        state = simulation.snapshot()
-        manifest.update(status=status, time=str(simulation.time), revision=simulation.revision,
-                        elapsed_wall_seconds=time.monotonic() - started,
-                        execution=simulation.execution_diagnostics(),
-                        populations=populations(state), resources=resources(state))
-        (directory / "manifest.json").write_text(canonical(manifest))
-        simulation.close()
-        if directory.parent.name == "runs":
-            from .application import _journal
-            manager = _journal(directory.parent.parent / "manager.sqlite")
-            try:
-                with manager:
-                    manager.execute("INSERT OR REPLACE INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)", (
-                        run_id, str(directory.absolute()), canonical(manifest["config"]), status,
-                        canonical({"time": manifest["time"], "revision": str(manifest["revision"]), "status": status, "generation": 0, "pacing": 0})))
-            finally:
-                manager.close()
-    return manifest
+    from .application import _atomic_json
+    with deferred_sigint() as interrupted:
+        directory = Path(output)
+        directory.mkdir(parents=True, exist_ok=True)
+        if (directory / "run.sqlite").exists():
+            raise ValueError(f"Run history already exists in {directory}; use resume or a fresh output directory")
+        identity = directory.name if len(directory.name) == 32 and all(c in "0123456789abcdef" for c in directory.name) else uuid.uuid4().hex
+        simulation = Simulation(config, history_path=str(directory / "run.sqlite"), workers=workers, backend=backend, run_id=identity)
+        manifest = {"run_id": simulation.state.get("run_id", directory.name), "config": simulation.config,
+                    "created": time.time(), "status": "running"}
+        started = time.monotonic()
+        try:
+            _atomic_json(directory / "manifest.json", manifest)
+            simulation.advance_until(until if until is not None else simulation.config["horizon"],
+                                     return_snapshot=False, should_yield=interrupted)
+        except BaseException as error:
+            manifest["error"] = str(error)
+            _finish_headless(simulation, directory, manifest, "failed", started=started, save=False, register=True)
+            raise
+        status = "completed" if simulation.run_status == "COMPLETED" else "interrupted"
+        return _finish_headless(simulation, directory, manifest, status, started=started, register=True)
+
+
+def _continuation_status(directory, journal, root):
+    """Read terminal decisions under the lease, before opening any writer."""
+    statuses = [journal.get_metadata("control_state", {}).get("status")]
+    for filename, key in (("manifest.json", None), ("worker-checkpoint.json", "control")):
+        path = directory / filename
+        if path.exists():
+            document = json.loads(path.read_text())
+            statuses.append((document.get(key, {}) if key else document).get("status"))
+    candidates = {Path(root) / "manager.sqlite", directory / "manager.sqlite"}
+    if directory.parent.name == "runs":
+        candidates.add(directory.parent.parent / "manager.sqlite")
+    for path in candidates:
+        if not path.exists():
+            continue
+        connection = sqlite3.connect(f"file:{path.absolute()}?mode=ro", uri=True)
+        try:
+            row = connection.execute("SELECT status FROM runs WHERE directory=?", (str(directory.absolute()),)).fetchone()
+            if row:
+                statuses.append(row[0])
+        finally:
+            connection.close()
+    if "terminated" in statuses:
+        raise ValueError("This run is terminated and cannot be resumed; its history remains available for replay or branching.")
+    return "completed" if "completed" in statuses else None
+
+
+def _resume_headless(directory, until, root):
+    from .engine import Simulation
+    from .runtime import restore_revision
+    with _run_lease(directory), deferred_sigint() as interrupted:
+        journal = History(directory / "run.sqlite", read_only=True)
+        try:
+            if _continuation_status(directory, journal, root) == "completed":
+                state = journal.state_at()
+                return {"status": "completed", "time": str(state["time"]), "revision": journal.revision,
+                        "message": "This run is already complete; create a branch for a new experiment."}
+            has_runtime = journal.runtime_at() is not None
+        finally:
+            journal.close()
+        managed = directory / "worker-checkpoint.json"
+        if has_runtime:
+            simulation = restore_revision(Simulation, directory / "run.sqlite", output_history_path=directory / "run.sqlite")
+        elif managed.exists():
+            simulation = Simulation.from_serialized(json.loads(managed.read_text())["engine"], history_path=str(directory / "run.sqlite"))
+        else:
+            simulation = Simulation.restore(directory / "checkpoint.json", history_path=directory / "run.sqlite")
+        manifest = {"run_id": simulation.state["run_id"], "config": simulation.config}
+        try:
+            manifest_path = directory / "manifest.json"
+            if manifest_path.exists():
+                manifest.update(json.loads(manifest_path.read_text()))
+            if simulation.run_status == "COMPLETED":
+                simulation.close()
+                return {"status": "completed", "time": str(simulation.time), "revision": simulation.revision}
+            active = simulation.history.get_metadata("active_control_command")
+            if active and not interrupted():
+                simulation._active_control_command = active
+                operation = active["operation"]
+                if operation == "step":
+                    simulation.step(return_snapshot=False, should_yield=interrupted)
+                elif operation in {"step_timestamp", "advance"}:
+                    simulation.advance_until(active["target"], return_snapshot=False, should_yield=interrupted)
+                elif operation == "intervene":
+                    simulation.intervene(active["request"]["change"], at=active["request"].get("time"), id=active["id"])
+            simulation.advance_until(until or simulation.config["horizon"], return_snapshot=False, should_yield=interrupted)
+        except BaseException as error:
+            manifest["error"] = str(error)
+            _finish_headless(simulation, directory, manifest, "failed", save=False)
+            raise
+        status = "completed" if simulation.run_status == "COMPLETED" else "interrupted"
+        result = _finish_headless(simulation, directory, manifest, status)
+        return {key: result[key] for key in ("status", "time", "revision", "populations")}
 
 
 def _experiment_job(job):
@@ -221,58 +318,8 @@ def main(argv=None):
             finally:
                 history.close()
         elif args.command == "resume":
-            from .engine import Simulation
-            from .runtime import restore_revision
             directory = _directory(args.run, args.experiments_dir)
-            with _run_lease(directory):
-                managed = directory / "worker-checkpoint.json"
-                journal = History(directory / "run.sqlite", read_only=True)
-                try:
-                    has_runtime = journal.runtime_at() is not None
-                finally:
-                    journal.close()
-                if has_runtime:
-                    simulation = restore_revision(Simulation, directory / "run.sqlite", output_history_path=directory / "run.sqlite")
-                elif managed.exists():
-                    payload = json.loads(managed.read_text())["engine"]
-                    simulation = Simulation.from_serialized(payload, history_path=str(directory / "run.sqlite"))
-                else:
-                    simulation = Simulation.restore(directory / "checkpoint.json", history_path=directory / "run.sqlite")
-                try:
-                    if simulation.run_status == "COMPLETED":
-                        _print({"status": "completed", "time": str(simulation.time), "revision": simulation.revision,
-                                "message": "This run is already complete; create a branch for a new experiment."})
-                        return 0
-                    active = simulation.history.get_metadata("active_control_command")
-                    if active:
-                        simulation._active_control_command = active
-                        operation = active["operation"]
-                        if operation == "step":
-                            simulation.step(return_snapshot=False)
-                        elif operation in {"step_timestamp", "advance"}:
-                            simulation.advance_until(active["target"], return_snapshot=False)
-                        elif operation == "intervene":
-                            simulation.intervene(active["request"]["change"], at=active["request"].get("time"), id=active["id"])
-                    simulation.advance_until(args.until or simulation.config["horizon"], return_snapshot=False)
-                    simulation.checkpoint(directory / "checkpoint.json")
-                    final_state = simulation.snapshot()
-                    manifest_path = directory / "manifest.json"
-                    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"run_id": simulation.state["run_id"], "config": simulation.config}
-                    status = "completed" if simulation.run_status == "COMPLETED" else "interrupted"
-                    manifest.update(status=status, time=str(simulation.time), revision=simulation.revision,
-                                    populations=populations(final_state), resources=resources(final_state))
-                    manifest_path.write_text(canonical(manifest))
-                    manager_path = directory.parent.parent / "manager.sqlite" if directory.parent.name == "runs" else directory / "manager.sqlite"
-                    if manager_path.exists():
-                        connection = sqlite3.connect(manager_path)
-                        try:
-                            with connection:
-                                connection.execute("UPDATE runs SET status=?,frontier=? WHERE id=?", (status, canonical({"time": str(simulation.time), "revision": str(simulation.revision), "status": status}), simulation.state["run_id"]))
-                        finally:
-                            connection.close()
-                    _print({"time": str(simulation.time), "revision": simulation.revision, "populations": populations(final_state)})
-                finally:
-                    simulation.close()
+            _print(_resume_headless(directory, args.until, args.experiments_dir))
         elif args.command == "branch":
             from .engine import Simulation
             from .runtime import restore_revision

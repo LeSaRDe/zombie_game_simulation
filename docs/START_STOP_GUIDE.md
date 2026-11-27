@@ -1,13 +1,18 @@
 # Starting and stopping the Zombie Game Simulation
 
+For a first experiment with screenshots, start with the
+[friendly user guide](USER_GUIDE.md). This page is the detailed service,
+launcher and command-line reference.
+
 This guide covers the current Linux checkout at
 `/home/fmeng/workspace/zombie_game_simulation`. You can run a simulation directly
 in a terminal, or start the local web service and control simulations in a browser.
 The browser GUI and HTTP API are served by the same Python service; ordinary use
 does not require a separate frontend server.
 
-**For a clean shutdown, first stop or terminate each simulation, then shut down
-the web service. Closing a browser tab does not stop a simulation.**
+**Use `./simulate shutdown` to save active runs and close the owned service, or
+add `--terminate` to end them without another checkpoint. Closing a browser tab
+does not stop a simulation.**
 
 ## Contents
 
@@ -86,15 +91,30 @@ the same workspace on subsequent calls:
 ./simulate --workspace runs/my-study --port 8770 shutdown
 ```
 
-Full shutdown prevents new starts/resumes while it waits for existing commands,
-stops active runs, verifies worker cleanup and stops only its own service. If it
-cannot finish, it leaves the service available for inspection and a repeated
-`shutdown`; new starts remain blocked until that shutdown completes and the
-service is restarted. There is no forced-kill or delete-history shortcut.
+The launcher's shutdown procedure prevents new starts/resumes and analysis work,
+closes viewers, cancels outstanding readers/exports, reconciles accepted commands,
+saves or terminates active runs and verifies worker cleanup before requesting
+service exit. Browser tabs may remain open. Progress prints on phase changes and
+at least every five seconds while waiting, with elapsed time, outstanding work
+and per-run command references. The shutdown timeout covers the whole operation.
+An incomplete result keeps the service draining and reports the unfinished phase;
+retry with the same mode and, if needed, a larger timeout. Simulation writers are
+never force-killed. Existing history and older checkpoints remain retained.
 
-Commands wait up to 900 seconds by default, including long checkpoints. A timeout
-does not cancel a submitted command. Every submitted request has a printed
-reference and saved payload under the workspace's `.launcher/requests/` folder:
+If shutdown fails before the service begins exiting, the service can remain
+available for inspection and a repeated `shutdown`; new starts remain blocked
+until that shutdown completes and the service is restarted. For a new session
+where you want to observe service exit directly, use the
+[foreground service workflow](#start-the-web-service-and-open-the-gui), followed
+by [explicit run cleanup and Ctrl+C](#shut-down-and-restart-the-web-service).
+Do not start a foreground service against a workspace whose launcher service
+is still running.
+
+Commands wait up to 900 seconds by default, including long checkpoints. Shutdown
+uses one overall budget. A timeout does not cancel a submitted writer command.
+Ordinary run-control requests have a printed reference and saved payload under
+the workspace's `.launcher/requests/` folder; shutdown uses stable per-run command
+IDs reported by its status endpoint and printed with the outcomes:
 
 ```bash
 ./simulate requests
@@ -119,11 +139,11 @@ script; they are not new subcommands of `python -m zombie_sim.cli`.
 | --- | --- | --- |
 | Temporarily halt simulation time | GUI **Pause run** or API `pause` | Yes, with **Continue run**. The worker remains resident. |
 | Save continuation state and release the run worker | GUI **Stop & save** or API `stop` | Yes, after the worker finishes saving and exits. |
-| End a managed run without requesting another checkpoint | GUI **Terminate without save** or API `terminate` | The GUI/API reject further execution of that run. Existing history is retained. |
+| End a managed run without requesting another checkpoint | GUI **Terminate without a new checkpoint** or API `terminate` | The GUI/API reject further execution of that run. Existing history is retained. |
 | Finish a headless command at a chosen simulation time | CLI `run … --until TIME` | Yes if the horizon has not been reached and extinction has not completed the run. |
-| Interrupt a new foreground headless run | Press **Ctrl+C** once during advancement | It attempts to save a checkpoint before exiting. See the interruption details below. |
+| Interrupt a foreground headless run or resume | Press **Ctrl+C** once | Finishes atomic work, saves a committed checkpoint and manifest, then closes workers. See interruption details below. |
 | Close only the viewer | Close the browser tab | The simulation continues if it was running. |
-| Shut down the HTTP service and GUI hosting | Stop all runs first, close the browser connections, then **Ctrl+C** in the service terminal | Restart the service with the same workspace directory to reopen saved runs. |
+| Shut down a foreground HTTP service and GUI hosting | Press **Ctrl+C** in the service terminal | Drains viewers/readers and saves active runs before exit. Terminate runs first if you want no new checkpoint. |
 
 “Without save” means **without an additional checkpoint requested by termination**.
 It does not disable the durable history, remove earlier checkpoints, delete files,
@@ -181,6 +201,15 @@ python -m zombie_sim.cli gui \
 Wait for the startup message, then open [http://127.0.0.1:8765](http://127.0.0.1:8765).
 The terminal stays occupied because it owns the web service. Starting the service
 does not itself create a new simulation or start every saved run.
+
+The GUI opens on **Choose a run or create an experiment.** Select an existing
+run to load its recorded history, or choose **New experiment** to create one.
+Opening the home screen does not automatically reconstruct an indexed run.
+**Initializing the world** describes actual run initialization; **Loading
+recorded history** describes a viewer read. Cancel loading or return to **Run
+list** without stopping the simulation. If a read fails, choose **Retry loading**
+or **Return to run list**. Atomic reader work already in progress may finish
+before cancellation takes effect.
 
 The `--experiments-dir` directory is the persistent workspace. Reuse **the same
 absolute directory** on subsequent starts to see the same experiments. A
@@ -259,20 +288,23 @@ alone saves a continuation checkpoint without stopping execution.
 
 ### Terminate without an extra save
 
-Select **Terminate without save** for the selected run. Wait for an applied
-acknowledgement and `terminated` status, then allow worker cleanup to finish.
+Select **Terminate without a new checkpoint** for the selected run. The GUI
+first shows **Termination requested**, then **Stopping / cleanup** after
+acknowledgement. Wait for **terminated** and the **Worker cleanup complete**
+notice before treating the worker resources as released.
 There is no need to use **Stop & save** first if the intention is specifically
 to avoid an additional checkpoint.
 
 The GUI/API will not continue a terminated run. Its existing history remains
-available for inspection and export; termination is not deletion. To run the
+available under **Terminated history** for inspection and export; termination
+is not deletion. Live updates end after the final frame. To run the
 scenario again from the beginning, use **Edit as new run** or **New experiment**
 to create a new identity.
 
-**Current CLI limitation:** `resume` does not independently enforce the GUI's
-`terminated` marker. Use CLI resume only for deliberately stopped or interrupted
-runs, not to reopen a terminated run. The termination restriction is currently
-enforced by the managed GUI/API control path.
+Direct CLI `resume` also enforces durable termination before restoring state,
+under the run's worker lease. A terminated run remains available for replay and
+export but cannot resume in place. Stopped or interrupted histories remain
+resumable when otherwise valid.
 
 ### Understand acknowledgement and delays
 
@@ -293,22 +325,18 @@ browser does not stop the worker.
 
 For a normal complete shutdown:
 
-1. Check every run in the sidebar, including runs other than the selected one.
-   If a run is `initializing`, wait until its controls become available or
-   initialization reports a failure before proceeding with shutdown.
-2. For each running or paused run, choose **Stop & save** if you want to resume it,
-   or **Terminate without save** if you want to end it without another checkpoint.
-3. Wait for the corresponding applied outcomes and for final saving/worker exit.
-   A paused run still owns a worker; pausing alone is not complete shutdown.
-4. Close browser tabs connected to this service so idle WebSocket connections do
-   not keep service shutdown waiting.
-5. In the terminal running `gui`, press **Ctrl+C once**. Wait for service shutdown
-   and the return of the shell prompt.
+1. Terminate any runs for which you do **not** want another checkpoint, then wait
+   for their applied outcomes. Other active runs will be saved by shutdown.
+2. In the terminal running `gui`, press **Ctrl+C once**. Browser tabs may stay open.
+3. Wait for the service process to exit and the shell prompt to return.
 
-The service attempts to stop and save workers it owns during graceful shutdown,
-but do not rely on Ctrl+C alone as confirmation that every run was saved. Shutdown
-waits are bounded in the manager, and a foreground interrupt can also reach child
-processes. Explicitly stopping the runs first gives you their individual results.
+The foreground service uses the same drain coordinator as the launcher. Accepted
+commands and initialization settle before worker cleanup is considered complete.
+Status remains available at `GET /api/shutdown`, including phase, elapsed time,
+outstanding readers/exports/commands and per-run outcomes. The default shutdown
+budget is 900 seconds; if incomplete, the service stays available for status and
+another Ctrl+C retries the same mode. Repeated signals do not authorize killing
+a simulation writer. “Shutting down” alone is not completion.
 
 Restart with the same `gui --experiments-dir … --port …` command, then reopen the
 browser. Resume a saved run with **Continue run**. Rebuilding frontend assets or
@@ -456,13 +484,19 @@ press **Ctrl+C once** and wait:
 
 | Command being interrupted | Current behavior |
 | --- | --- |
-| `run` during advancement | Catches the interrupt, marks the invocation interrupted, then attempts a checkpoint and manifest update before closing. |
-| `resume` during advancement | Closes the simulation but does not guarantee an additional checkpoint or refreshed manifest on this interrupt path. Already committed journal history remains the recovery source. |
-| Initialization or checkpoint writing | Interruptions here do not have the same clean-save guarantee. A second interrupt can interrupt cleanup. |
+| `run` during advancement | Requests a stop at the next committed boundary, then saves its checkpoint/manifest and closes workers. |
+| `resume` during advancement | Uses the same boundary-safe saving and cleanup path as `run`. |
+| Initialization or checkpoint writing | Records the interrupt and finishes that operation before exiting safely; repeated Ctrl+C does not cut through saving or cleanup. |
+
+Wait for the final output and shell prompt. Large initializations and checkpoints
+can take time; an interrupt is a stop request, not an immediate exit. Storage or
+validation failures are reported as errors, not successful saves. Preserve the
+run directory and output when diagnosing such an error.
 
 To request an interrupt from another terminal, send `kill -INT PID` to a
 **verified headless coordinator PID**. This targets that process; terminal Ctrl+C
-can also reach foreground policy workers. Do not target an arbitrary policy
+also reaches the process group, whose policy workers defer to the coordinator.
+Do not target an arbitrary policy
 worker. For a genuine pause with a later Continue button, or controlled
 termination without another checkpoint, use a GUI/API-managed run instead of a
 direct headless invocation.
@@ -580,7 +614,10 @@ curl --fail-with-body --silent --show-error --cookie "$SIM_COOKIE_JAR" \
 
 Repeat the last GET while pending. An applied result includes the effective
 time/revision and `run_status`. For stopping, look for `stopped`; for termination,
-look for `terminated`. Allow worker cleanup afterward just as with the GUI.
+look for `terminated`. Then query `/api/runs` and check the selected run's
+`resource_status`: `cleanup_complete` must be `true` and `worker_active` must be
+`false` before treating cleanup as complete. An applied receipt alone does not
+prove process exit.
 
 If submission or polling loses its response, query the **same command ID** or
 repeat the **same POST to the same service URL and run ID with the same saved
@@ -639,7 +676,7 @@ complete. If recovery rejects a damaged bundle, preserve the original files and
 the error rather than replacing history with an older file.
 
 Force-killing a process is an emergency operating-system action, not **Terminate
-without save**: it does not provide the application acknowledgement or mark the
+without a new checkpoint**: it does not provide the application acknowledgement or mark the
 run intentionally terminated, and it can leave subprocesses or incomplete
 checkpoint files. Prefer managed control and graceful shutdown. If a process
 cannot be stopped normally, identify the exact coordinator and descendants,
@@ -657,12 +694,13 @@ commands such as `pkill python`.
 | Existing runs are missing | Check the absolute `--experiments-dir`; a different directory is a different workspace. |
 | Run stays initializing | Check service errors and placement settings. Dense exact sampling can be slow; do not launch duplicates to retry a pending creation. |
 | Pause/terminate stays pending | Wait for current atomic work or a synchronous checkpoint; check the command result and service log. Browser disconnection does not cancel the request. |
-| Run is paused but processes remain | This is expected. Use **Stop & save** or **Terminate without save** to release the worker. |
+| Run is paused but processes remain | This is expected. Use **Stop & save** or **Terminate without a new checkpoint** to release the worker. |
 | Stale control generation | Refresh controls, especially after another tab/client acted. Retry uncertain requests with their original ID/body. |
 | API says to establish a local session | Perform a fresh GET to obtain the service cookie, especially after a service restart. |
 | CLI says there is an active coordinator | Stop/save the GUI-managed run and wait for exit before CLI resume. |
 | Saved run is already complete | Create a new run, or use supported historical branching for a separate experiment; resume does not extend the original horizon. |
 | GUI looks unchanged after code edits | Rebuild changed frontend assets when needed, restart the Python service, and reload the browser. |
+| Shutdown reports incomplete | Inspect the reported phase and `.launcher/service.log`. Retry the same save/terminate mode, increasing `--timeout` if needed. Writer work and histories remain retained; do not start another service on the same workspace. |
 
 ### Rebuild the GUI only when needed
 

@@ -1,9 +1,12 @@
 """Portable JSON/TOML scenario exchange shared by CLI and the workspace."""
 import json
 import tomllib
+from .config import ConfigError
+from .role_allocation import validate_role_allocation
 
 
 def dumps(config, format="json"):
+    validate_role_allocation(config, ConfigError)
     if format == "json": return json.dumps(config, indent=2, allow_nan=False)
     if format != "toml": raise ValueError("Configuration format must be JSON or TOML")
     def value(item):
@@ -17,6 +20,8 @@ def dumps(config, format="json"):
 
 
 def loads(text,format="json"):
-    if format == "json": return json.loads(text)
-    if format == "toml": return tomllib.loads(text)
-    raise ValueError("Configuration format must be JSON or TOML")
+    if format == "json": config = json.loads(text)
+    elif format == "toml": config = tomllib.loads(text)
+    else: raise ValueError("Configuration format must be JSON or TOML")
+    validate_role_allocation(config, ConfigError)
+    return config

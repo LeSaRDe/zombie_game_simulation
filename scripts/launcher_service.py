@@ -168,65 +168,32 @@ def main(argv=None):
         with workspace_service_lock(args.workspace, instance=args.instance, port=args.port):
             check_existing_workers(args.workspace)
             app = create_app(str(args.workspace))
-            mutation_condition = asyncio.Condition()
-            gate = {"draining": False, "active": 0}
-
-            @app.middleware("http")
-            async def guard_mutations(request, call_next):
-                if request.method in {"GET", "HEAD", "OPTIONS"} or request.url.path == "/api/launcher/drain":
-                    return await call_next(request)
-
-                # Read only the stop/terminate payload needed by the gate. The
-                # cached request body remains available to the ordinary handler.
-                terminal_control = False
-                if request.method == "POST" and re.fullmatch(r"/api/runs/[^/]+/commands", request.url.path):
-                    try:
-                        body = await request.json()
-                        terminal_control = isinstance(body, dict) and body.get("operation") in {"stop", "terminate"}
-                    except (ValueError, UnicodeError):
-                        pass
-
-                async with mutation_condition:
-                    if gate["draining"] and not terminal_control:
-                        return JSONResponse(
-                            {"code": "LAUNCHER_DRAINING", "error":
-                             "This workspace is shutting down. New runs and resume commands "
-                             "are disabled. Finish shutdown (or retry it), then restart the service."},
-                            status_code=503,
-                        )
-                    gate["active"] += 1
-                try:
-                    return await call_next(request)
-                finally:
-                    async with mutation_condition:
-                        gate["active"] -= 1
-                        mutation_condition.notify_all()
-
             @app.get("/api/launcher")
-            def launcher_identity():
-                return {
-                    "schema": SCHEMA,
-                    "workspace": str(args.workspace),
-                    "instance": args.instance,
-                    "pid": os.getpid(),
-                    "draining": gate["draining"],
-                }
+            async def launcher_identity():
+                return {"schema":SCHEMA,"workspace":str(args.workspace),"instance":args.instance,
+                        "pid":os.getpid(),"draining":app.state.shutdown.draining,
+                        "shutdown":app.state.shutdown.status()}
+
+            def verify_instance(body):
+                if body.get("instance") != args.instance:
+                    raise HTTPException(409,"Launcher instance changed; reconnect before shutdown.")
 
             @app.post("/api/launcher/drain")
             async def drain(body: dict = Body(...)):
-                # The existing application middleware checks the same local
-                # session cookie as other mutation endpoints. Instance matching
-                # prevents a stale launcher from draining a replacement service.
-                if body.get("instance") != args.instance:
-                    raise HTTPException(409, "Launcher instance changed; reconnect before shutdown.")
-                async with mutation_condition:
-                    gate["draining"] = True
-                    await mutation_condition.wait_for(lambda: gate["active"] == 0)
-                return launcher_identity()
+                verify_instance(body)
+                app.state.shutdown.start(body.get("mode","save"),body.get("timeout",900))
+                return await launcher_identity()
+
+            @app.post("/api/launcher/exit")
+            async def exit_service(body: dict = Body(...)):
+                verify_instance(body)
+                app.state.shutdown.request_exit()
+                return {"status":"exiting","instance":args.instance}
 
             print(f"Simulation workspace: {args.workspace}", flush=True)
             print(f"GUI: http://127.0.0.1:{args.port}", flush=True)
-            uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
+            from zombie_sim.server import run_service
+            run_service(app, host="127.0.0.1", port=args.port, log_level="info")
         return 0
     except ImportError as error:
         print(

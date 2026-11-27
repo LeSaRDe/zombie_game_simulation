@@ -157,7 +157,8 @@ class Check:
                 or Path(live.get("workspace", "")).resolve() != self.workspace.resolve()):
             raise RuntimeError("Refusing cleanup of an unrecognized service")
         try:
-            self.cli("shutdown", "--terminate", timeout=70)
+            mode = live.get("shutdown", {}).get("mode")
+            self.cli("shutdown", *(("--terminate",) if mode != "save" else ()), timeout=70)
         except Exception:
             # Cleanup can still succeed if the launcher path itself is what the
             # test exposed as defective. Use only the verified disposable API.
@@ -172,7 +173,8 @@ class Check:
             until(self.no_leases, timeout=30, description="cleanup worker release")
             # Recheck instance ownership immediately before signalling.
             current = self.api.call("/api/launcher")
-            assert current == live
+            assert {key: current[key] for key in ("schema", "workspace", "instance", "pid")} == {
+                key: live[key] for key in ("schema", "workspace", "instance", "pid")}
             os.kill(current["pid"], signal.SIGTERM)
             until(lambda: not self.api.available(), timeout=15, description="cleanup service exit")
 
@@ -292,7 +294,7 @@ def main():
         # Once shutdown fencing begins, a browser racing the stop sweep cannot
         # introduce a fresh run or resume one behind that sweep.
         before_drain_runs = len(check.api.call("/api/runs"))
-        before_drain_commands = read_rows(check.workspace, "SELECT COUNT(*) AS n FROM commands")[0]["n"]
+        before_drain_commands = {row["id"] for row in read_rows(check.workspace, "SELECT id FROM commands")}
         drained = check.api.call("/api/launcher/drain", {"instance": first_service["instance"]})
         assert drained["draining"] is True
         assert check.api.call("/api/launcher")["draining"] is True
@@ -307,11 +309,14 @@ def main():
                 check.api.call(path, body)
             except HTTPError as error:
                 assert error.code == 503, error
-                assert json.load(error)["code"] == "LAUNCHER_DRAINING"
+                assert json.load(error)["code"] == "SERVICE_DRAINING"
             else:
                 raise AssertionError(f"Draining service accepted mutation {path}")
         assert len(check.api.call("/api/runs")) == before_drain_runs
-        assert read_rows(check.workspace, "SELECT COUNT(*) AS n FROM commands")[0]["n"] == before_drain_commands
+        after_drain_commands = {row["id"] for row in read_rows(check.workspace, "SELECT id FROM commands")}
+        assert before_drain_commands <= after_drain_commands
+        assert all(identifier.startswith("shutdown:") for identifier in after_drain_commands - before_drain_commands)
+        assert not ({body["command_id"] for _, body in prohibited} & after_drain_commands)
         results["shutdown_drain_fences_new_run_and_resume_mutations"] = "PASS"
         check.cli("shutdown")
         assert not check.api.available()

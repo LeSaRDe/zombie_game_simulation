@@ -353,8 +353,10 @@ class History:
         row = self.connection.execute("SELECT payload FROM control_commands WHERE command_id=? AND status IN ('applied','rejected')", (command_id,)).fetchone()
         return _unpack(row[0]) if row else None
 
-    def state_at(self, time=None, revision=None):
+    def state_at(self, time=None, revision=None, *, check_cancelled=None):
         with self.lock:
+            if check_cancelled:
+                check_cancelled()
             frontier = self.revision if revision is None else int(revision)
             if time is not None:
                 requested = exact_time(time)
@@ -366,6 +368,8 @@ class History:
             start, state = -1, {}
             if anchor:
                 start, envelope = anchor[0], _unpack(anchor[1])
+                if check_cancelled:
+                    check_cancelled()
                 if envelope.get("anchor_schema") == 1:
                     state = envelope["state"]
                     if hashlib.sha256(canonical(state).encode()).hexdigest() != envelope["checksum"]:
@@ -374,15 +378,21 @@ class History:
                     # Initial development ledgers had bare anchors. Verify them
                     # against their checked patch chain rather than trust them.
                     for payload, checksum in self.connection.execute("SELECT patch,checksum FROM commits WHERE revision<=? ORDER BY revision", (start,)):
+                        if check_cancelled:
+                            check_cancelled()
                         if hashlib.sha256(payload).hexdigest() != checksum:
                             raise ValueError("History checksum mismatch; replay halted")
                         state = apply_patch(state, _unpack(payload))
                     if state != envelope:
                         raise ValueError("Legacy anchor disagrees with the durable patch chain")
             for _, payload, checksum in self.connection.execute("SELECT revision,patch,checksum FROM commits WHERE revision>? AND revision<=? ORDER BY revision", (start, frontier)):
+                if check_cancelled:
+                    check_cancelled()
                 if hashlib.sha256(payload).hexdigest() != checksum:
                     raise ValueError("History checksum mismatch; replay halted")
                 state = apply_patch(state, _unpack(payload))
+            if check_cancelled:
+                check_cancelled()
             return state
 
     def events(self, start=0, end=None, kind=None, agent_id=None, limit=None, latest=False):

@@ -5,7 +5,6 @@ acceptance-suite code or fixtures are imported by this implementation.
 """
 from __future__ import annotations
 
-from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from fractions import Fraction
 import hashlib
@@ -26,6 +25,7 @@ from .geometry import point_blocked, segment_clear, distance_to
 from .storage import MemoryStore, SQLiteStore, History
 from .actions import ActionSystemMixin
 from .runtime import materialize_snapshot
+from .interrupts import BoundaryProcessPool as ProcessPoolExecutor, ignore_worker_sigint
 
 
 def clock(value):
@@ -563,7 +563,7 @@ class Simulation(ActionSystemMixin):
         execution=self.config.get("execution",{})
         if self.workers > 1 and len(controllers) >= execution.get("parallel_min_agents",32):
             if self._pool is None:
-                self._pool = ProcessPoolExecutor(self.workers,mp_context=multiprocessing.get_context("spawn"))
+                self._pool = ProcessPoolExecutor(self.workers,mp_context=multiprocessing.get_context("spawn"),initializer=ignore_worker_sigint)
             tasks=self._observation_tasks(controllers)
             from .parallel import ordered_results
             chunks=ordered_results(self._pool,_observe_policy_chunk,tasks,
@@ -667,7 +667,7 @@ class Simulation(ActionSystemMixin):
                           "episode":deepcopy(self.state["episodes"].get(a.get("infection_episode"))),"time":stamp(self.time)})
         use_workers=self.workers if len(tasks)>=8 else 1
         if use_workers>1 and self._pool is None:
-            self._pool=ProcessPoolExecutor(use_workers,mp_context=multiprocessing.get_context("spawn"))
+            self._pool=ProcessPoolExecutor(use_workers,mp_context=multiprocessing.get_context("spawn"),initializer=ignore_worker_sigint)
         for result in materialize_agents(tasks,workers=use_workers,pool=self._pool if use_workers>1 else None):
             self.state["agents"][result["id"]]=result["agent"]
             self._mark("agents",result["id"])
@@ -691,7 +691,7 @@ class Simulation(ActionSystemMixin):
             entries.append({"access":completion_access(occurrence),"task":task})
         effect_workers=self.workers if len(entries)>1 else 1
         if effect_workers>1 and self._pool is None:
-            self._pool=ProcessPoolExecutor(effect_workers,mp_context=multiprocessing.get_context("spawn"))
+            self._pool=ProcessPoolExecutor(effect_workers,mp_context=multiprocessing.get_context("spawn"),initializer=ignore_worker_sigint)
         self._prepared_effects,statistics=prepare_effect_groups(entries,workers=effect_workers,pool=self._pool if effect_workers>1 else None)
         if not hasattr(self,"parallel_effect_stats"):
             self.parallel_effect_stats={}
@@ -904,6 +904,8 @@ class Simulation(ActionSystemMixin):
                                      "retired_model":old_model,"retired_memory":old_memory,"remains":rid})
 
     def _convert(self,a):
+        from .domain import decision_model_assignment
+        assignment=decision_model_assignment(self.config.get("zombie_model","ZombieDefaultModel"),agent_type="Zombie")
         before=deepcopy(a)
         eid=a["infection_episode"]
         active=self.occurrences.get(a.get("active_action"))
@@ -916,10 +918,9 @@ class Simulation(ActionSystemMixin):
         for key in ("hunger","inventory","reserved","carry_capacity","starvation_started_at",
                     "next_starvation_damage_at","_starvation_due_at","type_profile","role_profile","profile"):
             a.pop(key,None)
-        from .domain import decision_model_assignment
         a.update(type="Zombie",status="ACTIVE",role=None,effects={},cooldowns={},active_action=None,
                  profile={},type_profile=deepcopy(self.config.get("profiles",{}).get("Zombie",{})),
-                 model_assignment=decision_model_assignment("ZombieDefaultModel"))
+                 model_assignment=assignment)
         a["_generation"]+=1
         a["_hunger_generation"]=a.get("_hunger_generation",0)+1
         if active:
@@ -1055,11 +1056,18 @@ class Simulation(ActionSystemMixin):
         when=self.time if at is None else clock(at)
         if when<self.time:
             raise ValueError("Interventions cannot alter committed history")
-        iid=id or self._id("intervention")
-        if iid in self.state["interventions"]:
+        iid=id
+        if iid is not None and iid in self.state["interventions"]:
             if self.state["interventions"][iid]["change"]!=change:
                 raise ValueError("Intervention identity already names a different command")
             return deepcopy(self.state["interventions"][iid])
+        if change.get("kind")=="replace_model":
+            from .domain import decision_model_assignment
+            agent=self.state["agents"][str(change["agent"])]
+            if agent["life"]==0:
+                raise ValueError("Dead identities cannot receive active assignments")
+            decision_model_assignment(change["model_id"],change.get("model_version"),agent_type=agent["type"])
+        iid=iid or self._id("intervention")
         item={"id":iid,"at":stamp(when),"change":deepcopy(change),"status":"PENDING"}
         self.state["interventions"][iid]=item
         self._mark("interventions",iid)
@@ -1133,7 +1141,7 @@ class Simulation(ActionSystemMixin):
                         self._drop(a,dropped)
                 else:
                     from .domain import decision_model_assignment
-                    assignment=decision_model_assignment(change["model_id"],change.get("model_version"))
+                    assignment=decision_model_assignment(change["model_id"],change.get("model_version"),agent_type=a["type"])
                     policy=change.get("memory_policy")
                     if policy not in {"reset","preserve"}:
                         raise ValueError("Model replacement requires reset or preserve memory policy")

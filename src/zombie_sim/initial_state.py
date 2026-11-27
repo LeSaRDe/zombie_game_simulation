@@ -79,6 +79,9 @@ def initialize_explicit_world(config):
             if role is not None or raw.get("active_action") or raw.get("effects") or raw.get("cooldowns") or raw.get("model_assignment"):
                 _fail("INVALID_TYPE_STATUS",path,"dead state has active role, model, action, effect or cooldown")
             raw["model_assignment"]=None
+        model=config.get("human_model" if kind=="Human" else "zombie_model")
+        if life>0 and "model_assignment" not in raw and model is not None:
+            raw["model_assignment"]={"model_id":model}
         agent=make_agent(identifier,kind,role,**raw)
         agent["type_profile"]=deepcopy(config["profiles"].get(kind,{}))
         agent["role_profile"]=deepcopy(config["profiles"].get(role,{}))

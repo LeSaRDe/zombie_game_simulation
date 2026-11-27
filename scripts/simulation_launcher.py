@@ -136,6 +136,13 @@ class Launcher:
                     and '--instance' in identity['argv']
                     and record.get('instance') in identity['argv'])
 
+    @staticmethod
+    def port_is_open(port):
+        import socket
+        with socket.socket() as probe:
+            probe.settimeout(.25)
+            return probe.connect_ex(('127.0.0.1',int(port))) == 0
+
     def verify_service(self, record):
         api = API(int(record['port']))
         info = api.request('/api/launcher', timeout=3)
@@ -437,50 +444,57 @@ class Launcher:
                     say('Could not open a browser automatically; use the address above.')
 
     def shutdown(self, *, terminate=False):
+        started=time.monotonic();deadline=started+self.timeout
+        mode='terminate' if terminate else 'save'
+        # A repeated command after verified exit is already complete. Never
+        # connect to or signal a replacement/unrelated process on that port.
+        if self.record_path.exists():
+            previous=read_json(self.record_path)
+            if previous.get('workspace')==str(self.workspace) and not self.owns_process(previous):
+                if not self.port_is_open(previous.get('port',self.port)) and not self.leases():
+                    say(f'All runs and the web service are already stopped. History is kept in {self.workspace}')
+                    return
         self.connect()
-        operation = 'terminate' if terminate else 'stop'
-        say('Ending active runs in this launcher workspace ' +
+        say('Ending active runs in this launcher workspace '+
             ('without requesting new checkpoints.' if terminate else 'and saving resumable runs.'))
-        self.api.request('/api/launcher/drain', {'instance': self.record['instance']})
-        # Earlier HTTP handlers can have queued commands. Reconcile those before
-        # deciding a saved run is inactive, so a queued resume cannot be missed.
-        database = self.workspace / 'manager.sqlite'
-        with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True, timeout=5)) as db:
-            pending = [row[0] for row in db.execute(
-                "SELECT id FROM commands WHERE status='pending' AND operation NOT IN ('create','branch') ORDER BY created,id")]
-        for command_id in pending:
-            try:
-                self.wait_result(command_id)
-            except CommandRejected:
-                pass
-        for row in self.rows():
-            if row['status'] not in TERMINAL | {'stopped', 'failed'}:
-                self.control(operation, row['id'], shutting_down=True)
-            else:
-                self.wait_worker(row['id'], allow_failed=True)
-        if self.leases():
-            raise LauncherError('Worker leases remain. Service shutdown was cancelled; inspect the run status/log.')
-        # Refresh identity at the last possible moment; never signal a foreign service.
+        def remaining():
+            left=deadline-time.monotonic()
+            if left<=0:
+                raise LauncherError(f'Shutdown is incomplete after {self.timeout:g} seconds. The service remains draining; no writer was force-killed. '
+                                    f'Retry the same shutdown command ({mode} mode). See {self.record["log"]}')
+            return left
+        self.api.request('/api/launcher/drain',{'instance':self.record['instance'],'mode':mode,'timeout':remaining()},timeout=min(5,remaining()))
+        last_phase=None;last_report=0;state={}
+        while True:
+            state=self.api.request('/api/launcher',timeout=min(5,remaining()))
+            if state.get('instance')!=self.record['instance'] or state.get('pid')!=self.record['pid']:
+                raise LauncherError('Service identity changed during shutdown. Nothing else was signalled.')
+            progress=state['shutdown'];phase=progress['phase'];now=time.monotonic()
+            if phase!=last_phase or now-last_report>=4:
+                say(f'Shutdown: {phase.replace("_"," ")} — {now-started:.1f}s elapsed; '
+                    f'{progress["active_mutations"]} accepted requests, {progress["readers"]["active"]} readers, '
+                    f'{progress["exports"]["active"]} exports, {progress["viewers"]} viewers.')
+                last_phase=phase;last_report=now
+            if phase=='incomplete':raise LauncherError(progress['error']+f' See {self.record["log"]}')
+            if progress['complete']:break
+            time.sleep(min(.2,remaining()))
+        for run_id,outcome in progress['runs'].items():
+            say(f'Run {run_id}: {outcome.get("run_status",outcome["status"])}; worker cleanup complete; '
+                f'request {outcome.get("command_id") or "already inactive"}.')
+        # Check both the API instance and exact Linux process identity at the
+        # last possible moment. The request can only exit that verified service.
         self.verify_service(self.record)
-        pid = self.record['pid']
-        pidfd = os.pidfd_open(pid) if hasattr(os, 'pidfd_open') else None
-        try:
-            if not self.owns_process(self.record):
-                raise LauncherError('Service process identity changed. Nothing was signalled.')
-            if pidfd is not None and hasattr(signal, 'pidfd_send_signal'):
-                signal.pidfd_send_signal(pidfd, signal.SIGTERM)
-            else:
-                os.kill(pid, signal.SIGTERM)
-        finally:
-            if pidfd is not None:
-                os.close(pidfd)
-        say('Stopping the web service. Close its browser tabs if shutdown is waiting…')
-        deadline = time.monotonic() + self.timeout
+        if not self.owns_process(self.record):raise LauncherError('Service identity changed; exit was not requested.')
+        self.api.request('/api/launcher/exit',{'instance':self.record['instance']},timeout=min(5,remaining()))
+        say('Shutdown: waiting for service exit; viewers were closed by the service.')
         while self.owns_process(self.record):
-            if time.monotonic() >= deadline:
-                raise LauncherError('The service is still shutting down. It has not been force-killed. '
-                                    f"See {self.record['log']}")
-            time.sleep(.25)
+            now=time.monotonic()
+            if now-last_report>=4:
+                say(f'Shutdown: waiting for service exit — {now-started:.1f}s elapsed.')
+                last_report=now
+            time.sleep(min(.2,remaining()))
+        if self.leases():raise LauncherError('Service exited but worker leases remain. Shutdown is incomplete; inspect the service log.')
+        if self.port_is_open(self.record['port']):raise LauncherError('The service process exited but the port is occupied. No unrelated process was signalled.')
         say(f'All runs and the web service are stopped. History is kept in {self.workspace}')
 
 

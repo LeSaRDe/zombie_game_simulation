@@ -7,9 +7,10 @@ import json
 import logging
 from pathlib import Path
 import secrets
+import threading
 from urllib.parse import urlsplit
 
-from .application import RunManager, RunInitializing
+from .application import RunManager, RunInitializing, ViewCancelled, TERMINAL_STATES
 from .storage import canonical
 from .visualization import events_csv, sampled_metrics, world_svg, replay_animation
 
@@ -26,12 +27,20 @@ def create_app(experiments_dir="experiments", assets=None):
     # FastAPI resolves annotation names in module globals.
     globals().update(Request=Request, WebSocket=WebSocket)
     manager = RunManager(experiments_dir)
+    from .read_tasks import ReadPool
+    readers = ReadPool(manager.root)
     session = secrets.token_urlsafe(32)
 
     @asynccontextmanager
     async def lifespan(app):
         yield
+        if app.state.shutdown.phase != "ready":
+            app.state.shutdown.start(app.state.shutdown.mode or "save", 900)
+            await app.state.shutdown.task
+            if app.state.shutdown.phase != "ready":
+                raise RuntimeError(app.state.shutdown.error)
         await asyncio.to_thread(app.state.exports.close)
+        await asyncio.to_thread(readers.close)
         await asyncio.to_thread(manager.close)
 
     app = FastAPI(title="Zombie simulation research workspace", version="0.1.0", lifespan=lifespan)
@@ -39,6 +48,10 @@ def create_app(experiments_dir="experiments", assets=None):
     app.state.session_token = session
     from .export_jobs import register_export_routes
     register_export_routes(app, manager)
+    from .service_shutdown import ShutdownCoordinator
+    shutdown = ShutdownCoordinator(manager, readers, app.state.exports)
+    app.state.shutdown = shutdown
+    app.state.readers = readers
 
     def local_origin(origin):
         if not origin:
@@ -53,6 +66,16 @@ def create_app(experiments_dir="experiments", assets=None):
             return JSONResponse({"error": "Cross-origin requests are disabled"}, status_code=403)
         if request.method not in {"GET", "HEAD", "OPTIONS"} and request.cookies.get("zombie_session") != session:
             return JSONResponse({"error": "Reload the workspace to establish a local session"}, status_code=403)
+        safe_status = request.method == "GET" and (request.url.path in {"/api/runs", "/api/launcher", "/api/shutdown"} or request.url.path.startswith("/api/commands/"))
+        shutdown_control = request.url.path in {"/api/shutdown", "/api/shutdown/exit", "/api/launcher/drain", "/api/launcher/exit"}
+        terminal_control = False
+        if request.method == "POST" and request.url.path.endswith("/commands"):
+            try:terminal_control = (await request.json()).get("operation") in {"stop", "terminate"}
+            except (ValueError, AttributeError):pass
+        if shutdown.draining and request.url.path.startswith("/api/") and not (safe_status or shutdown_control or (terminal_control and shutdown.controls_open)):
+            return JSONResponse({"code":"SERVICE_DRAINING","error":"Workspace shutdown is in progress. Inspect shutdown status or retry shutdown; new simulation and analysis work is disabled."},status_code=503)
+        mutation = request.method not in {"GET", "HEAD", "OPTIONS"} and not shutdown_control
+        if mutation:shutdown.active_mutations += 1
         try:
             response = await call_next(request)
         except Exception as error:
@@ -60,6 +83,8 @@ def create_app(experiments_dir="experiments", assets=None):
             LOGGER.exception("API request failed [%s]: %s %s", reference, request.method, request.url.path)
             response = JSONResponse({"error": f"{type(error).__name__}: {error}",
                                      "code": "INTERNAL_ERROR", "reference": reference}, status_code=500)
+        finally:
+            if mutation:shutdown.active_mutations -= 1
         if request.method == "GET":
             response.set_cookie("zombie_session", session, httponly=True, samesite="strict")
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -72,6 +97,10 @@ def create_app(experiments_dir="experiments", assets=None):
         issues = [{"path": str(error).split(":", 1)[0], "code": code, "message": str(error)}]
         return JSONResponse({"error": str(error), "code": code, "issues": issues}, status_code=422)
 
+    @app.exception_handler(ViewCancelled)
+    async def cancelled_reader(request, error):
+        return JSONResponse({"error":str(error),"code":"READER_CANCELLED"},status_code=499)
+
     @app.exception_handler(RunInitializing)
     async def initializing(request, error):
         return JSONResponse({"error": str(error), "code": "RUN_INITIALIZING"},
@@ -81,9 +110,40 @@ def create_app(experiments_dir="experiments", assets=None):
     async def missing(request, error):
         return JSONResponse({"error": str(error.args[0]) if error.args else str(error), "code": "NOT_FOUND"}, status_code=404)
 
+    @app.get("/api/shutdown")
+    async def shutdown_status():return shutdown.status()
+
+    @app.post("/api/shutdown")
+    async def begin_shutdown(body: dict = Body(...)):
+        return shutdown.start(body.get("mode","save"),body.get("timeout",900))
+
+    @app.post("/api/shutdown/exit")
+    async def exit_service():
+        shutdown.request_exit()
+        return {"status":"exiting"}
+
+    async def read_request(request, operation, *args, **kwargs):
+        cancelled = threading.Event()
+        work = asyncio.create_task(asyncio.to_thread(readers.call, operation, *args, cancel_event=cancelled, **kwargs))
+        async def watch_disconnect():
+            while True:
+                if (await request.receive())["type"] == "http.disconnect":
+                    cancelled.set(); return
+        disconnected = asyncio.create_task(watch_disconnect())
+        try:return await asyncio.shield(work)
+        except ViewCancelled:return Response(status_code=499)
+        except asyncio.CancelledError:
+            cancelled.set()
+            work.add_done_callback(lambda task: None if task.cancelled() else task.exception())
+            raise
+        finally:
+            cancelled.set();disconnected.cancel()
+            await asyncio.gather(disconnected,return_exceptions=True)
+
     @app.get("/api/config")
     def configurations():
         from .config import DEFAULTS, baseline_config
+        from .model_catalog import model_catalog
         return {"presets": {"small": DEFAULTS, "baseline": baseline_config()},
                 "fields": [{"path": "seed", "type": "integer", "min": 0, "label": "Random seed"},
                            {"path": "horizon", "type": "number", "min": 0.001, "unit": "seconds", "label": "Run horizon"},
@@ -94,7 +154,9 @@ def create_app(experiments_dir="experiments", assets=None):
                            {"path": "population.zombies", "type": "integer", "min": 0, "label": "Zombies"},
                            {"path": "population.infected", "type": "integer", "min": 0, "label": "Initially infected humans"},
                            {"path": "human_model", "type": "text", "label": "Human decision model"},
+                           {"path": "zombie_model", "type": "text", "label": "Zombie decision model"},
                            {"path": "execution.workers", "type": "integer", "min": 1, "label": "Workers"}],
+                "models": model_catalog(),
                 "schema_version": "zombie-sim/config-v1"}
 
     @app.post("/api/config/validate")
@@ -104,10 +166,7 @@ def create_app(experiments_dir="experiments", assets=None):
 
     @app.post("/api/config/preview")
     def preview(body: dict = Body(...)):
-        from .config import resolve_config, initialize_world
-        from .visualization import view_bundle
-        resolved = resolve_config(body)
-        return {"resolved": resolved, "view": view_bundle(initialize_world(resolved), mode="preview"), "artifact_id": secrets.token_hex(16)}
+        return readers.call("preview",body)
 
     @app.post("/api/config/import")
     def import_config(body: dict = Body(...)):
@@ -126,11 +185,23 @@ def create_app(experiments_dir="experiments", assets=None):
     @app.post("/api/runs")
     def create(body: dict = Body(...)):
         from .command_recovery import reply
-        return reply(manager,manager.create(body["config"], body.get("command_id"), start=body.get("start", False)))
+        wait_for_initialization = body.get("wait_for_initialization", True)
+        if not isinstance(wait_for_initialization, bool):
+            raise ValueError("wait_for_initialization must be a boolean")
+        receipt = manager.create(body["config"], body.get("command_id"), start=body.get("start", False))
+        if wait_for_initialization:
+            return reply(manager, receipt)
+        # The GUI can show genuine initialization immediately after identity
+        # reservation. This transport acknowledgement neither finalizes nor
+        # rewrites the durable creation receipt's initial time/revision.
+        run = manager._row(receipt["run_id"])
+        return JSONResponse({"status": "accepted", "command_id": receipt["command_id"],
+                             "run_id": receipt["run_id"], "generation": run["generation"],
+                             "run_status": run["status"]}, status_code=202)
 
     @app.get("/api/runs/{run_id}/view")
-    def view(run_id: str, time: str | None = None, revision: int | None = None, generation: int = 0):
-        return manager.snapshot(run_id, time, revision, generation)
+    async def view(request: Request, run_id: str, time: str | None = None, revision: int | None = None, generation: int = 0):
+        return await read_request(request,"snapshot",run_id,time,revision,generation)
 
     @app.post("/api/runs/{run_id}/commands")
     def command(run_id: str, body: dict = Body(...)):
@@ -148,115 +219,92 @@ def create_app(experiments_dir="experiments", assets=None):
         return reply(manager,manager.branch(run_id, body))
 
     @app.get("/api/runs/{run_id}/events")
-    def events(run_id: str, start: int = 0, end: int | None = None, kind: str | None = None,
-               agent_id: str | None = None, limit: int = 1000, latest: bool = True):
-        history = manager.history(run_id)
-        try:
-            return history.events(start, end, kind, agent_id, max(1, min(limit, 5000)), latest=latest)
-        finally:
-            history.close()
+    async def events(request: Request, run_id: str, start: int = 0, end: int | None = None, kind: str | None = None,
+                     agent_id: str | None = None, limit: int = 1000, latest: bool = True):
+        return await read_request(request,"events",run_id,start,end,kind,agent_id,max(1,min(limit,5000)),latest=latest)
 
     @app.get("/api/runs/{run_id}/metrics")
-    def metrics(run_id: str, end: str | None = None, interval: str = "1", revision: int | None = None):
-        history = manager.history(run_id)
-        try:
-            frontier = history.revision if revision is None else revision
-            result = sampled_metrics(history, end, interval, revision=frontier)
-            result["event_counts"] = dict(history.connection.execute("SELECT kind,COUNT(*) FROM events WHERE revision<=? GROUP BY kind", (frontier,)))
-            result["revision"] = str(frontier)
-            return result
-        finally:
-            history.close()
+    async def metrics(request: Request, run_id: str, end: str | None = None, interval: str = "1", revision: int | None = None):
+        return await read_request(request,"metrics",run_id,end,interval,revision=revision)
 
     @app.get("/api/runs/{run_id}/cohorts")
-    def cohorts(run_id: str, revision: int | None = None):
-        return manager.cohorts(run_id, manager.snapshot(run_id, revision=revision)["state"])
+    async def cohorts(request: Request, run_id: str, revision: int | None = None,
+                      time: str | None = None, with_cursor: bool = False):
+        result = await read_request(request,"cohort_view",run_id,time,revision)
+        return result if with_cursor or isinstance(result,Response) else result["cohorts"]
 
     @app.post("/api/runs/{run_id}/cohorts")
     def save_cohort(run_id: str, body: dict = Body(...)):
         return manager.save_cohort(run_id, body)
 
+    @app.post("/api/comparison")
+    async def comparison(request: Request, body: dict = Body(...)):
+        return await read_request(request,"comparison",body.get("sources"))
+
     @app.get("/api/runs/{run_id}/timeline")
-    def timeline(run_id: str, revision: int | None = None, agent: str | None = None):
-        return manager.timeline(run_id, revision, agent)
+    async def timeline(request: Request, run_id: str, revision: int | None = None, agent: str | None = None,
+                       time: str | None = None, limit: int = 500,
+                       before_sequence: str | None = None, after_sequence: str | None = None):
+        return await read_request(request,"timeline",run_id,revision,agent,time=time,limit=limit,
+                                  before_sequence=before_sequence,after_sequence=after_sequence)
 
     @app.get("/api/runs/{run_id}/observations/{agent_id}")
-    def observation(run_id: str, agent_id: str, revision: int | None = None, decision_index: int | None = None):
-        history = manager.history(run_id)
-        try:
-            records = history.events(end=revision, agent_id=agent_id)
-            decisions = [record for record in records if record.get("kind") == "decision" or record.get("observation") is not None]
-            if not decisions:
-                raise ValueError("No recorded decision observation at this cursor")
-            if decision_index is not None and not 0 <= decision_index < len(decisions):
-                raise ValueError("Recorded decision index is outside this agent's history")
-            selected = decisions[-1 if decision_index is None else decision_index]
-            if selected.get("observation") is None:
-                raise ValueError("This decision records a reconstruction reference; direct observation capture was not enabled")
-            return {"perspective": "recorded_observation", "decision": selected.get("id"),
-                    "time": selected.get("time"), "revision": selected.get("ledger_revision"), "observation": selected["observation"]}
-        finally:
-            history.close()
+    async def observation(request: Request, run_id: str, agent_id: str, revision: int | None = None, decision_index: int | None = None):
+        return await read_request(request,"observation",run_id,agent_id,revision,decision_index)
 
     @app.get("/api/runs/{run_id}/export")
-    def export(run_id: str, format: str = "json", time: str | None = None, revision: int | None = None, start: str = "0", end: str | None = None):
-        view = manager.snapshot(run_id, time, revision)
-        if format == "svg":
-            return Response(world_svg(view["state"]), media_type="image/svg+xml", headers={"Content-Disposition": f'attachment; filename="{run_id}-{view["revision"]}.svg"'})
-        if format == "csv":
-            history = manager.history(run_id)
-            try:
-                return Response(events_csv(history.events(end=revision)), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="{run_id}-events.csv"'})
-            finally:
-                history.close()
-        if format == "animation":
-            history = manager.history(run_id)
-            try:
-                return Response(replay_animation(history, start, end or time, run_id=run_id), media_type="text/html", headers={"Content-Disposition": f'attachment; filename="{run_id}-replay.html"'})
-            finally:
-                history.close()
-        if format == "parquet":
-            try:
-                import pyarrow as pa
-                import pyarrow.parquet as pq
-            except ImportError as error:
-                raise ValueError("Parquet exports require the analysis extra (pyarrow)") from error
-            history = manager.history(run_id)
-            try:
-                records = history.events(end=revision)
-                table = pa.Table.from_pylist([{"revision": str(r.get("ledger_revision")), "sequence": str(r.get("ledger_sequence")), "time": str(r.get("time", "0")), "kind": str(r.get("kind", "event")), "payload_json": canonical(r)} for r in records])
-                buffer = pa.BufferOutputStream()
-                pq.write_table(table, buffer, compression="zstd")
-                return Response(buffer.getvalue().to_pybytes(), media_type="application/octet-stream", headers={"Content-Disposition": f'attachment; filename="{run_id}-events.parquet"'})
-            finally:
-                history.close()
-        if format != "json":
-            raise ValueError("HTTP view exports support json, csv, svg, parquet and animation")
-        return Response(canonical(view), media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{run_id}-{view["revision"]}.json"'})
+    async def export(request: Request, run_id: str, format: str = "json", time: str | None = None, revision: int | None = None, start: str = "0", end: str | None = None):
+        result = await read_request(request,"legacy_export",run_id,format,time,revision,start,end)
+        if isinstance(result,Response):return result
+        payload,media_type,filename=result
+        return Response(payload,media_type=media_type,headers={"Content-Disposition":f'attachment; filename="{filename}"'})
 
     @app.websocket("/api/runs/{run_id}/stream")
     async def stream(websocket: WebSocket, run_id: str):
         if not local_origin(websocket.headers.get("origin")) or websocket.cookies.get("zombie_session") != session:
             await websocket.close(code=1008); return
+        if shutdown.draining:
+            await websocket.close(code=1001); return
         await websocket.accept()
-        sequence = -1
+        shutdown.sockets.add(websocket)
+        cancelled = threading.Event()
+        acknowledged_head = None
         try:
-            while True:
-                bundle = await asyncio.to_thread(manager.snapshot, run_id)
-                if int(bundle["sequence"]) != sequence:
+            while not shutdown.draining:
+                # Revision and control checks do not reconstruct the world. A
+                # paused reader must not replay a large ledger on every poll.
+                head = await asyncio.to_thread(manager.read_head, run_id)
+                head_key = canonical(head)
+                if head_key != acknowledged_head:
+                    bundle = await asyncio.to_thread(readers.call, "snapshot", run_id, cancel_event=cancelled)
+                    control = bundle.get("control", {})
+                    if control.get("status") in TERMINAL_STATES:
+                        # Termination may overtake a slow reconstruction. Its
+                        # fresh control receipt must not label an older scene
+                        # as the final boundary and close the stream early.
+                        final_head = await asyncio.to_thread(manager.read_head, run_id)
+                        if (str(final_head["revision"]) != bundle["committed_frontier"]
+                                or final_head["status"] != control["status"]
+                                or int(final_head["generation"]) != int(control["generation"])):
+                            continue
+                        head_key = canonical(final_head)
                     await websocket.send_json(bundle)
                     # Exactly one outstanding complete snapshot. Slow subscribers
                     # consume no growing buffer and resynchronize on reconnect.
                     reply = await asyncio.wait_for(websocket.receive_json(), timeout=10)
-                    if str(reply.get("ack")) != bundle["sequence"]:
-                        sequence = -1
-                    else:
-                        sequence = int(bundle["sequence"])
+                    if str(reply.get("ack")) == bundle["sequence"]:
+                        acknowledged_head = head_key
+                        if control.get("status") in TERMINAL_STATES:
+                            # The retained scene remains available through view
+                            # queries. Cleanup progress is lightweight /runs
+                            # metadata, not a reason to keep replaying history.
+                            await websocket.close(code=1000)
+                            return
                 else:
                     # Observe disconnects even when a paused run has no new
                     # revision, so an idle viewer does not pin server shutdown.
                     try:
-                        await asyncio.wait_for(websocket.receive_json(), timeout=0.1)
+                        await asyncio.wait_for(websocket.receive_json(), timeout=0.25)
                     except asyncio.TimeoutError:
                         pass
         except Exception:
@@ -264,6 +312,10 @@ def create_app(experiments_dir="experiments", assets=None):
                 await websocket.close()
             except Exception:
                 pass
+
+        finally:
+            cancelled.set()
+            shutdown.sockets.discard(websocket)
 
     assets = Path(assets) if assets else Path(__file__).parent / "static"
     if not assets.exists():
@@ -287,4 +339,34 @@ def serve(experiments_dir="experiments", host="127.0.0.1", port=8765):
         raise RuntimeError("Install the GUI extra: pip install 'zombie-sim[gui]'") from error
     if host not in {"127.0.0.1", "localhost", "::1"}:
         raise ValueError("This release supports loopback hosting only")
-    uvicorn.run(create_app(experiments_dir), host=host, port=port)
+    run_service(create_app(experiments_dir), host=host, port=port)
+
+
+def run_service(app, **options):
+    """Keep the listener/status alive while safe drain precedes Uvicorn exit."""
+    import uvicorn
+    class DrainingServer(uvicorn.Server):
+        def handle_exit(self, sig, frame):
+            # Repeated signals are retries, never permission to kill a writer.
+            coordinator=app.state.shutdown
+            coordinator.start(coordinator.mode or "save",900)
+            if not getattr(self,"drain_waiter",None) or self.drain_waiter.done():
+                async def finish():
+                    last_phase=None;last_report=0
+                    import time
+                    while True:
+                        state=coordinator.status();now=time.monotonic()
+                        if state['phase']!=last_phase or now-last_report>=4:
+                            print(f"Shutdown: {state['phase'].replace('_',' ')} — {state['elapsed_seconds']:.1f}s; "
+                                  f"{state['active_mutations']} accepted requests, {state['readers']['active']} readers, "
+                                  f"{state['exports']['active']} exports, {state['viewers']} viewers.",flush=True)
+                            last_phase=state['phase'];last_report=now
+                        if coordinator.task.done():break
+                        await asyncio.sleep(.2)
+                    await coordinator.task
+                    if coordinator.phase=="ready":self.should_exit=True
+                    else:LOGGER.error("%s Status remains available at /api/shutdown",coordinator.error)
+                self.drain_waiter=asyncio.create_task(finish())
+    server=DrainingServer(uvicorn.Config(app,timeout_graceful_shutdown=5,**options))
+    app.state.shutdown.exit_callback=lambda:setattr(server,'should_exit',True)
+    server.run()

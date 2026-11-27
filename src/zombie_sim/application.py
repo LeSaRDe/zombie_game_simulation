@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+from collections import OrderedDict
+from contextlib import contextmanager
 import hashlib
 import json
 import math
@@ -22,7 +24,41 @@ class RunInitializing(ValueError):
     """A known run exists but has not published its first complete revision."""
 
 
+class ViewCancelled(Exception):
+    """A disconnected viewer no longer needs its private read request."""
+
+
+def _check_view_cancelled(cancel_event):
+    if cancel_event is not None and cancel_event.is_set():
+        raise ViewCancelled("History loading was cancelled")
+
+
+@contextmanager
+def _view_lock(lock, cancel_event):
+    """Allow an obsolete viewer to leave a reconstruction queue promptly."""
+    _check_view_cancelled(cancel_event)
+    if cancel_event is None:
+        lock.acquire()
+    else:
+        while not lock.acquire(timeout=0.05):
+            _check_view_cancelled(cancel_event)
+    try:
+        _check_view_cancelled(cancel_event)
+        yield
+    finally:
+        lock.release()
+
+
 TERMINAL_STATES = {"stopped", "completed", "failed", "terminated"}
+
+
+class _HeadReader:
+    """A metadata connection and its active readers, never a reconstructed state."""
+    def __init__(self):
+        self.history = None
+        self.lock = threading.Lock()
+        self.users = 0
+        self.cached = False
 
 
 def _same_command_request(left, right):
@@ -334,12 +370,39 @@ def _run_worker(root, run_id):
 
 
 class RunManager:
-    def __init__(self, root="experiments"):
+    def __init__(self, root="experiments", *, read_only=False):
         self.root = Path(root).absolute()
-        self.root.mkdir(parents=True, exist_ok=True)
-        self.connection = _journal(self.root / "manager.sqlite")
+        self.read_only = read_only
+        if read_only:
+            self.connection = sqlite3.connect((self.root / "manager.sqlite").as_uri() + "?mode=ro",
+                                              uri=True, timeout=30, check_same_thread=False)
+            self.connection.row_factory = sqlite3.Row
+        else:
+            self.root.mkdir(parents=True, exist_ok=True)
+            self.connection = _journal(self.root / "manager.sqlite")
         self.lock = threading.RLock()
         self.processes = {}
+        # Keep only compact scene projections. Locks are striped by run so
+        # simultaneous viewers share a reconstruction without holding the
+        # journal/control lock during replay or copying a scene.
+        self._snapshot_cache = OrderedDict()
+        self._snapshot_cache_capacity = 8
+        self._snapshot_cache_lock = threading.Lock()
+        self._snapshot_build_locks = tuple(threading.Lock() for _ in range(64))
+        self._snapshot_builds = 0
+        self._snapshot_hits = 0
+        # Keep SQLite's WAL index attached between metadata polls. Opening and
+        # closing the last reader can otherwise rescan a large retained WAL on
+        # every unchanged head query, even without reconstructing any state.
+        self._head_readers = OrderedDict()
+        self._head_reader_capacity = 8
+        self._head_reader_lock = threading.Lock()
+        self._head_all_readers = set()
+        self._head_readers_closed = False
+        self._head_opened = 0
+        self._head_closed = 0
+        if read_only:
+            return
         candidates = [self.root]
         run_directory = self.root / "runs"
         if run_directory.is_dir():
@@ -356,30 +419,98 @@ class RunManager:
                 continue
             history = History(directory / "run.sqlite", read_only=True)
             try:
-                state = history.state_at()
+                # Registration needs only the committed cursor and durable
+                # control metadata. Scene and runtime checksums remain checked
+                # by their normal replay/restore paths when a run is opened.
+                revision, committed_time = self._ledger_head(history)
+                control = history.get_metadata("control_state", {}) or {}
             finally:
                 history.close()
             status = manifest.get("status", "interrupted")
+            if control.get("status") == "terminated" or status not in TERMINAL_STATES:
+                status = control.get("status", status)
             if status not in TERMINAL_STATES:
                 status = "interrupted"
-            frontier = {"time": str(state.get("time", 0)), "revision": str(state.get("revision", 0)), "generation": 0, "status": status, "pacing": 0}
+            generation = int(control.get("generation", 0))
+            frontier = {"time": committed_time, "revision": str(revision), "generation": generation, "status": status, "pacing": 0}
             with self.connection:
-                self.connection.execute("INSERT INTO runs(id,directory,config,status,frontier,parent) VALUES(?,?,?,?,?,?)", (identity, str(directory), canonical(manifest["config"]), status, canonical(frontier), canonical(manifest.get("parent")) if manifest.get("parent") else None))
+                self.connection.execute("INSERT INTO runs(id,directory,config,status,generation,frontier,parent) VALUES(?,?,?,?,?,?,?)", (identity, str(directory), canonical(manifest["config"]), status, generation, canonical(frontier), canonical(manifest.get("parent")) if manifest.get("parent") else None))
 
     def list_runs(self):
         with self.lock:
             rows = self.connection.execute("SELECT * FROM runs ORDER BY rowid DESC").fetchall()
-            result = []
-            for row in rows:
-                item = dict(row)
-                item["config"] = json.loads(item["config"])
-                item["frontier"] = json.loads(item["frontier"])
+        result = []
+        for row in rows:
+            item = dict(row)
+            item["config"] = json.loads(item["config"])
+            item["frontier"] = json.loads(item["frontier"])
+            with self.lock:
                 process = self.processes.get(item["id"])
-                if process is not None and not process.is_alive() and item["status"] in {"running", "paused", "initializing"}:
-                    item["status"] = "interrupted"
-                    item["error"] = "Worker exited. Resume from the saved boundary."
-                result.append(item)
-            return result
+            if process is not None and not process.is_alive() and item["status"] in {"running", "paused", "initializing"}:
+                item["status"] = "interrupted"
+                item["error"] = "Worker exited. Resume from the saved boundary."
+            item["resource_status"] = self._resource_status(item)
+            result.append(item)
+        return result
+
+    def _resource_status(self, run):
+        """Observe cleanup independently of the durable command receipt.
+
+        A normal worker releases its database lease only after closing the
+        simulation (including its process pool), then releases its file lock.
+        Owned process liveness also covers the small gap before process exit.
+        A leftover lease is deliberately inconclusive: a PID can be stale or
+        reused, and neither signaling nor deleting that lease is a read action.
+        """
+        with self.lock:
+            process = self.processes.get(run["id"])
+            lease = self.connection.execute("SELECT pid FROM worker_leases WHERE run_id=?", (run["id"],)).fetchone()
+            requested = self.connection.execute(
+                "SELECT 1 FROM commands WHERE run_id=? AND operation='terminate' AND status='pending' LIMIT 1",
+                (run["id"],)).fetchone() is not None
+        process_active = process is not None and process.is_alive()
+        lock_active, lock_verified = ((False, False) if process_active
+                                      else self._worker_lock_status(run["directory"]))
+        worker_active = bool(process_active or lock_active)
+        inactive = run["status"] in TERMINAL_STATES or run["status"] == "interrupted"
+        cleanup_complete = bool(inactive and not worker_active and lease is None and lock_verified)
+        if inactive:
+            phase = "stopped" if cleanup_complete else "stopping"
+        elif requested:
+            phase = "termination_requested"
+        else:
+            phase = run["status"]
+        return {"phase": phase, "cleanup_complete": cleanup_complete, "worker_active": worker_active}
+
+    @staticmethod
+    def _worker_lock_status(directory):
+        """Inspect Linux flock ownership without briefly taking a worker lock.
+
+        Acquiring and releasing a probe lock can race a coordinator's startup
+        LOCK_NB and make it exit. /proc/locks exposes the same inode read-only.
+        As with process handles, this observes workers in this PID namespace;
+        the journal lease remains required evidence of normal pool cleanup.
+        """
+        try:
+            identity = (Path(directory) / "worker.lock").stat()
+        except FileNotFoundError:
+            return False, True  # Imported histories can have no worker lock.
+        except OSError:
+            return False, False
+        try:
+            expected = (os.major(identity.st_dev), os.minor(identity.st_dev), identity.st_ino)
+            for line in Path("/proc/locks").read_text().splitlines():
+                fields = line.split()
+                if "FLOCK" not in fields:
+                    continue
+                device = fields[fields.index("FLOCK") + 4].split(":")
+                actual = (int(device[0], 16), int(device[1], 16), int(device[2]))
+                if actual == expected:
+                    return True, True
+            return False, True
+        except (OSError, AttributeError, ValueError, IndexError):
+            # Unavailable or unreadable ownership is never proof of cleanup.
+            return False, False
 
     def _row(self, run_id):
         # All uses of the shared journal connection participate in one lock,
@@ -391,6 +522,7 @@ class RunManager:
         return row
 
     def launch_worker(self, run_id):
+        self._require_writable()
         if self._row(run_id)["status"] == "terminated":
             raise ValueError("Terminated runs cannot be resumed; create a new experiment")
         old = self.processes.get(run_id)
@@ -413,6 +545,7 @@ class RunManager:
         self.processes[run_id] = process
 
     def create(self, config, command_id=None, *, start=False, parent=None):
+        self._require_writable()
         from .config import resolve_config
         resolved = resolve_config(config)
         if hasattr(resolved, "to_dict"):
@@ -455,6 +588,7 @@ class RunManager:
             return response
 
     def command(self, run_id, operation, request=None, *, wait=True):
+        self._require_writable()
         request = dict(request or {})
         command_id = request.setdefault("command_id", str(uuid.uuid4()))
         with self.lock:
@@ -502,6 +636,8 @@ class RunManager:
                 except (ValueError, sqlite3.OperationalError):
                     durable = None
                 if durable:
+                    if self.read_only:
+                        return durable
                     with self.connection:
                         self.connection.execute("UPDATE commands SET status=?,response=? WHERE id=?", (durable["status"], canonical(durable), command_id))
                         # The semantic/control ACK can become durable before
@@ -542,51 +678,240 @@ class RunManager:
                 raise RunInitializing("Run initialization is still creating its history") from error
             raise
 
-    def snapshot(self, run_id, time=None, revision=None, generation=0):
+    @staticmethod
+    def _ledger_head(history):
+        row = history.connection.execute(
+            "SELECT revision,time_n,time_d FROM commits ORDER BY revision DESC LIMIT 1").fetchone()
+        if row is None:
+            raise RunInitializing("Run initialization has not published a complete revision yet")
+        return int(row[0]), str(exact_time({"n": row[1], "d": row[2]}))
+
+    def _close_head_reader(self, reader):
+        with reader.lock:
+            if reader.history is not None:
+                reader.history.close()
+                reader.history = None
+                with self._head_reader_lock:
+                    self._head_closed += 1
+            with self._head_reader_lock:
+                self._head_all_readers.discard(reader)
+
+    @contextmanager
+    def _head_reader(self, run_id):
+        retired = None
+        with self._head_reader_lock:
+            if self._head_readers_closed:
+                raise RuntimeError("Run manager is closed")
+            reader = self._head_readers.get(run_id)
+            if reader is None:
+                if len(self._head_readers) >= self._head_reader_capacity:
+                    idle = next((identity for identity, item in self._head_readers.items() if not item.users), None)
+                    if idle is not None:
+                        retired = self._head_readers.pop(idle)
+                        retired.cached = False
+                reader = _HeadReader()
+                self._head_all_readers.add(reader)
+                if len(self._head_readers) < self._head_reader_capacity:
+                    reader.cached = True
+                    self._head_readers[run_id] = reader
+                # If all cached readers are busy, this request owns a temporary
+                # reader instead of growing the cache or closing an active one.
+            if reader.cached:
+                self._head_readers.move_to_end(run_id)
+            reader.users += 1
+        if retired is not None:
+            self._close_head_reader(retired)
+        try:
+            yield reader
+        finally:
+            with self._head_reader_lock:
+                reader.users -= 1
+                release = not reader.cached and not reader.users
+            if release:
+                self._close_head_reader(reader)
+
+    def _open_head_reader(self, run_id, reader):
+        # Callers hold this reader's lock. Connections execute only completed
+        # metadata SELECTs: no BEGIN and no open cursor survives the query.
+        if self._head_readers_closed:
+            raise RuntimeError("Run manager is closed")
+        if reader.history is None:
+            reader.history = self.history(run_id)
+            with self._head_reader_lock:
+                self._head_opened += 1
+        return reader.history
+
+    def head_diagnostics(self):
+        with self._head_reader_lock:
+            return {"entries": len(self._head_readers), "capacity": self._head_reader_capacity,
+                    "opened": self._head_opened, "closed": self._head_closed,
+                    "active_connections": self._head_opened - self._head_closed}
+
+    def _read_control(self, run_id, history):
+        run = dict(self._row(run_id))
+        control = {"status": run["status"], "generation": run["generation"],
+                   "pacing": json.loads(run["frontier"]).get("pacing", 1)}
+        durable = history.get_metadata("control_state", {}) or {}
+        # The ledger receipt may precede manager publication while a command
+        # performs optional checkpoint work. It remains an ACK, not cleanup.
+        if int(durable.get("generation", -1)) > control["generation"]:
+            control.update({key: durable[key] for key in ("status", "generation", "pacing") if key in durable})
+            run.update(status=control["status"], generation=control["generation"])
+        control["resource_status"] = self._resource_status(run)
+        return control
+
+    def read_head(self, run_id):
+        """Read a committed version and control state without replaying history."""
+        with self._head_reader(run_id) as reader, reader.lock:
+            history = self._open_head_reader(run_id, reader)
+            revision, committed_time = self._ledger_head(history)
+            control = self._read_control(run_id, history)
+            return {"run_id": run_id, "revision": str(revision), "time": committed_time,
+                    "generation": int(control["generation"]), "status": control["status"],
+                    "resource_status": control["resource_status"]}
+
+    def snapshot_diagnostics(self):
+        """Local counters for verifying reader reuse; no simulation semantics."""
+        with self._snapshot_cache_lock:
+            return {"builds": self._snapshot_builds, "hits": self._snapshot_hits,
+                    "entries": len(self._snapshot_cache), "capacity": self._snapshot_cache_capacity}
+
+    def snapshot(self, run_id, time=None, revision=None, generation=0, *, cancel_event=None):
+        # Terminal HTTP-only viewers need the same persistent metadata reader
+        # as streams. Pin its lifetime, not its lock or a read transaction,
+        # while the separate projection connection reconstructs the scene.
+        _check_view_cancelled(cancel_event)
+        with self._head_reader(run_id) as reader:
+            with _view_lock(reader.lock, cancel_event):
+                self._open_head_reader(run_id, reader)
+            _check_view_cancelled(cancel_event)
+            return self._snapshot(run_id, time, revision, generation, cancel_event=cancel_event)
+
+    def _snapshot(self, run_id, time=None, revision=None, generation=0, *, cancel_event=None):
         history = self.history(run_id)
         try:
-            frontier = history.revision
-            if revision is not None and not 0 <= int(revision) <= frontier:
+            _check_view_cancelled(cancel_event)
+            if cancel_event is not None:
+                # Only this request's private connection may be interrupted.
+                # Cached metadata readers and other viewers remain unaffected.
+                history.connection.set_progress_handler(lambda: int(cancel_event.is_set()), 1000)
+            frontier, committed_time = self._ledger_head(history)
+            selected_revision = frontier if revision is None else int(revision)
+            if not 0 <= selected_revision <= frontier:
                 raise ValueError(f"Revision must lie between 0 and committed frontier {frontier}")
-            if time is not None:
-                latest = history.state_at()
-                if not 0 <= exact_time(time) <= exact_time(latest.get("time", 0)):
-                    raise ValueError("Replay time must lie within the committed history")
-            state = project_state(history.state_at(time, frontier if revision is None else revision), time)
-            bundle = view_bundle(state, run_id=run_id, mode="replay" if time is not None or revision is not None else "live",
-                                 sequence=frontier, frontier=frontier, generation=generation)
-            run = self._row(run_id)
-            bundle["control"] = {"status": run["status"], "generation": run["generation"],
-                                 "pacing": json.loads(run["frontier"]).get("pacing", 1)}
+            selected_time = None if time is None else str(exact_time(time))
+            if time is not None and not 0 <= exact_time(time) <= exact_time(committed_time):
+                raise ValueError("Replay time must lie within the committed history")
+            mode = "replay" if time is not None or revision is not None else "live"
+            key = (run_id, selected_revision, selected_time, mode)
+            build_lock = self._snapshot_build_locks[hash(run_id) % len(self._snapshot_build_locks)]
+            with _view_lock(build_lock, cancel_event):
+                with self._snapshot_cache_lock:
+                    cached = self._snapshot_cache.get(key)
+                    if cached is not None:
+                        self._snapshot_cache.move_to_end(key)
+                        self._snapshot_hits += 1
+                if cached is None:
+                    check = lambda: _check_view_cancelled(cancel_event)
+                    state = (history.state_at(selected_time, selected_revision) if cancel_event is None
+                             else history.state_at(selected_time, selected_revision, check_cancelled=check))
+                    check()
+                    # Decode, projection and copying are atomic stages. Check
+                    # between them instead of claiming arbitrary interruption.
+                    state = project_state(state, selected_time)
+                    check()
+                    cached = view_bundle(state, run_id=run_id, mode=mode,
+                                         sequence=frontier, frontier=frontier)
+                    check()
+                    with self._snapshot_cache_lock:
+                        self._snapshot_cache[key] = cached
+                        self._snapshot_builds += 1
+                        while len(self._snapshot_cache) > self._snapshot_cache_capacity:
+                            self._snapshot_cache.popitem(last=False)
+            # Cache-owned objects never escape. Request/control fields are
+            # refreshed even when replaying an unchanged, older revision.
+            _check_view_cancelled(cancel_event)
+            bundle = copy.deepcopy(cached)
+            _check_view_cancelled(cancel_event)
+            bundle.update(sequence=str(frontier), committed_frontier=str(frontier), query_generation=str(generation))
+            bundle["control"] = self._read_control(run_id, history)
+            _check_view_cancelled(cancel_event)
             return bundle
+        except sqlite3.OperationalError:
+            _check_view_cancelled(cancel_event)
+            raise
         finally:
             history.close()
 
     def save_cohort(self, run_id, definition):
+        self._require_writable()
         definition = copy.deepcopy(definition)
-        if definition.get("mode") not in {"fixed", "dynamic"}:
+        name = definition.get("name")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Cohort name must contain text")
+        definition["name"] = name.strip()
+        if not isinstance(definition.get("mode"), str) or definition["mode"] not in {"fixed", "dynamic"}:
             raise ValueError("Cohort mode must be fixed or dynamic")
         predicate = definition.get("predicate", {})
+        if not isinstance(predicate, dict):
+            raise ValueError("Cohort filters must be an object")
         unknown = set(predicate) - {"type", "role", "status", "model_assignment", "region"}
         if unknown:
             raise ValueError(f"Unknown cohort predicates: {', '.join(sorted(unknown))}")
+        from .registry import ROLES
+        choices = {"type": {"", "Human", "Zombie"}, "status": {"", "HEALTHY", "INFECTED", "ACTIVE", "DEAD"},
+                   "role": {"", None, *ROLES}}
+        for field, allowed in choices.items():
+            if field in predicate and (not isinstance(predicate[field], str) and predicate[field] is not None
+                                       or predicate[field] not in allowed):
+                raise ValueError(f"Invalid cohort {field} filter")
+        if "model_assignment" in predicate and not isinstance(predicate["model_assignment"], str):
+            raise ValueError("Cohort model filter must be a model ID string")
+        if "include_dead" in definition and not isinstance(definition["include_dead"], bool):
+            raise ValueError("Include dead identities must be true or false")
         region = predicate.get("region")
         if region is not None and (not isinstance(region, list) or len(region) != 4
                 or not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in region)
                 or not region[0] <= region[2] or not region[1] <= region[3]):
             raise ValueError("Cohort region must be [xmin, ymin, xmax, ymax] with finite ordered bounds")
-        state = self.snapshot(run_id, revision=definition.get("reference_revision"))["state"]
+        revision = definition.get("reference_revision")
+        if revision is not None and (isinstance(revision, bool) or not isinstance(revision, (str, int))
+                                     or not str(revision).isdigit()):
+            raise ValueError("Cohort reference revision must be a nonnegative integer")
+        reference_time = definition.get("reference_time")
+        if reference_time is not None:
+            try:
+                reference_time = str(exact_time(reference_time))
+            except (ValueError, TypeError, ZeroDivisionError, OverflowError):
+                raise ValueError("Cohort reference time must be a finite simulation time") from None
+        state = self.snapshot(run_id, time=reference_time, revision=revision)["state"]
+        if revision is not None and int(revision) != int(state.get("revision", 0)):
+            raise ValueError("Cohort reference time and revision must identify the same selected state")
         if definition.get("mode") == "fixed" and "members" not in definition:
             dynamic = dict(definition, mode="dynamic")
             definition["members"] = cohort_members(state, dynamic)
+        elif definition.get("mode") == "fixed":
+            members = definition["members"]
+            if not isinstance(members, list) or any(isinstance(x, bool) or not isinstance(x, (str, int)) for x in members):
+                raise ValueError("Fixed cohort members must be a list of agent IDs")
+            members = [str(x) for x in members]
+            if len(set(members)) != len(members) or any(x not in state["agents"] for x in members):
+                raise ValueError("Fixed cohort members must be distinct IDs present at the reference cursor")
+            definition["members"] = members
+        if "id" in definition and (not isinstance(definition["id"], str) or not definition["id"].strip()):
+            raise ValueError("Cohort ID must contain text")
         definition.setdefault("id", uuid.uuid4().hex)
-        definition.setdefault("reference_revision", str(state.get("revision", 0)))
+        definition.setdefault("predicate", {})
+        definition.setdefault("include_dead", True)
+        definition["reference_revision"] = str(state.get("revision", 0))
+        definition["reference_time"] = str(state.get("time", 0))
         with self.lock, self.connection:
             self.connection.execute("INSERT OR REPLACE INTO views VALUES(?,?,?)", (run_id, definition["id"], canonical(definition)))
         return definition
 
     def branch(self, run_id, request):
         """Stage a complete child before publishing its durable reserved identity."""
+        self._require_writable()
         from .engine import Simulation
         from .runtime import restore_revision, branch as branch_engine, serialize, checkpoint, close
         command_id = request.get("command_id") or str(uuid.uuid4())
@@ -681,15 +1006,67 @@ class RunManager:
             self.launch_worker(child_id)
             return response
 
-    def cohorts(self, run_id, state=None):
+    def cohort_view(self, run_id, time=None, revision=None, *, cancel_event=None):
+        """A read-only cohort result explicitly bound to the projected cursor."""
+        bundle = self.snapshot(run_id, time=time, revision=revision, cancel_event=cancel_event)
+        result = self.cohorts(run_id, bundle["state"], cancel_event=cancel_event)
+        _check_view_cancelled(cancel_event)
+        return {"run_id": run_id, "cursor": {"time": bundle["time"], "revision": bundle["revision"]},
+                "cohorts": result}
+
+    def cohorts(self, run_id, state=None, *, cancel_event=None):
+        check = lambda: _check_view_cancelled(cancel_event)
+        check()
         if state is None:
-            state = self.snapshot(run_id)["state"]
-        with self.lock:
+            state = self.snapshot(run_id, cancel_event=cancel_event)["state"]
+        with _view_lock(self.lock, cancel_event):
             definitions = [json.loads(row[0]) for row in self.connection.execute("SELECT definition FROM views WHERE run_id=?", (run_id,))]
+        for definition in definitions:
+            definition.setdefault("name", "Unnamed cohort")
+            definition.setdefault("predicate", {})
+            definition.setdefault("include_dead", True)
+        if not definitions:
+            return []
+        # The displayed state's run ID/lineage selects the actual run entry.
+        # A child starts at its branch boundary; inherited-prefix replay still
+        # belongs to the historical source run, including nested branches.
+        history = self.history(run_id)
+        try:
+            if cancel_event is not None:
+                history.connection.set_progress_handler(lambda: int(cancel_event.is_set()), 1000)
+            from .cohort_survival import run_entry
+            entry = run_entry(history,state,check_cancelled=check)
+        except sqlite3.OperationalError:
+            check()
+            raise
+        finally:
+            history.close()
+        # Enrich legacy labels without rewriting any saved definition. Their
+        # original membership was selected at the recorded revision boundary.
+        legacy = [definition for definition in definitions if "reference_time" not in definition]
+        if legacy:
+            history = self.history(run_id)
+            try:
+                if cancel_event is not None:
+                    history.connection.set_progress_handler(lambda: int(cancel_event.is_set()), 1000)
+                times = {}
+                for definition in legacy:
+                    check()
+                    reference = definition["reference_revision"]
+                    if reference not in times:
+                        row = history.connection.execute("SELECT time_n,time_d FROM commits WHERE revision=?", (reference,)).fetchone()
+                        times[reference] = str(exact_time({"n": row[0], "d": row[1]})) if row else None
+                    definition["reference_time"] = times[reference]
+            except sqlite3.OperationalError:
+                check()
+                raise
+            finally:
+                history.close()
         result = []
         episodes = state.get("episodes", {})
         for definition in definitions:
-            summary = cohort_summary(state, definition)
+            check()
+            summary = cohort_summary(state, definition, check_cancelled=check)
             members = set(summary["members"])
             reference = int(definition["reference_revision"])
             selected = [episode for episode in episodes.values() if str(episode.get("agent_id", episode.get("agent"))) in members]
@@ -698,13 +1075,15 @@ class RunManager:
                            conversions=sum(episode.get("outcome") == "CONVERTED" for episode in selected),
                            new_incidence=sum(int(episode.get("onset_revision", 0)) > reference for episode in selected))
             agents = [state["agents"][identity] for identity in members if identity in state["agents"]]
-            summary["human_survival"] = {"events": sum(agent.get("type") == "Zombie" or agent.get("status") == "DEAD" for agent in agents)}
-            summary["identity_survival"] = {"events": sum(agent.get("status") == "DEAD" for agent in agents)}
+            from .cohort_survival import survival_counts
+            summary.update(survival_counts(agents, entry, missing=len(members) - len(agents), check_cancelled=check))
             result.append(summary)
+        check()
         return result
 
     def restart_checkpoint(self, run_id, name):
         """Restart the current committed boundary from a named exact checkpoint."""
+        self._require_writable()
         row = self._row(run_id)
         if row["status"] != "paused":
             raise ValueError("Pause the run before restarting from a checkpoint")
@@ -730,30 +1109,62 @@ class RunManager:
         self.launch_worker(run_id)
         return {"run_id": run_id, "checkpoint": str(path)}
 
-    def timeline(self, run_id, revision=None, agent=None):
-        """Recorded causal events with transaction-exact before/after cursors."""
+    def comparison(self, sources, *, cancel_event=None):
+        """Compare captured run frontiers without changing their execution."""
+        from .comparison import compare_histories
+        check = lambda: _check_view_cancelled(cancel_event)
+
+        def open_history(run_id):
+            check()
+            history = self.history(run_id)
+            try:
+                if cancel_event is not None:
+                    history.connection.set_progress_handler(lambda: int(cancel_event.is_set()), 1000)
+                check()
+                return history
+            except BaseException:
+                history.close()
+                raise
+
+        return compare_histories(sources, open_history, check_cancelled=check)
+
+    def timeline(self, run_id, revision=None, agent=None, *, time=None, limit=500,
+                 before_sequence=None, after_sequence=None, cancel_event=None):
+        """Read-only event pages, pinned to an exact source cursor."""
+        from .timeline import event_page
         history = self.history(run_id)
+        check = lambda: _check_view_cancelled(cancel_event)
         try:
-            frontier = history.revision if revision is None else int(revision)
-            state = history.state_at(revision=frontier)
-            occurrences = state.get("occurrences", {})
-            records = history.events(end=frontier, limit=5000)
-            if agent is not None:
-                relevant = {identity for identity, item in occurrences.items() if str(agent) in {str(item.get("actor")), str(item.get("target"))}}
-                records = [event for event in records if str(agent) in {str(event.get(key)) for key in ("actor", "target", "agent", "agent_id", "target_id")} or event.get("occurrence", event.get("action_id")) in relevant]
-            return {"records": [dict(record, type=str(record.get("kind", "event")).upper(),
-                                     revision_before=str(max(0, int(record["ledger_revision"]) - 1)),
-                                     revision_after=str(record["ledger_revision"])) for record in records],
-                    "occurrences": occurrences}
+            check()
+            if cancel_event is not None:
+                history.connection.set_progress_handler(lambda: int(cancel_event.is_set()), 1000)
+            return event_page(history, run_id, revision, agent, time=time, limit=limit,
+                              before_sequence=before_sequence, after_sequence=after_sequence,
+                              check_cancelled=check)
+        except sqlite3.OperationalError:
+            check()
+            raise
         finally:
             history.close()
+
+    def _require_writable(self):
+        if self.read_only:
+            raise ValueError("Read-only run managers cannot modify experiments")
 
     def close(self):
         # Explicit server shutdown saves managed runs. A browser disconnect does
         # not call this method and cannot stop a run.
-        for run_id, process in self.processes.items():
+        for run_id, process in (() if self.read_only else self.processes.items()):
             if process.is_alive():
                 if self._row(run_id)["status"] not in TERMINAL_STATES:
                     self.command(run_id, "stop", wait=True)
                 process.join(timeout=10)
+        with self._head_reader_lock:
+            self._head_readers_closed = True
+            readers = list(self._head_all_readers)
+            self._head_readers.clear()
+            for reader in readers:
+                reader.cached = False
+        for reader in readers:
+            self._close_head_reader(reader)
         self.connection.close()

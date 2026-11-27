@@ -33,6 +33,70 @@ visit counts, and report cadence. Memory is reset when its owner/type changes.
 The engine retires active memory on death and starts fresh zombie memory on conversion.
 Models share immutable parameter values and learned weights, never private memories.
 
+## Choose a model in the GUI
+
+New experiments have separate **Human decision model** and **Zombie decision
+model** selectors. Each shows a friendly name, requested ID and installed
+version. Details identify the canonical registered model and whether the value
+is inherited. Merely opening or validating an untouched preset does not insert
+its omitted default keys. Imported aliases retain their spelling until edited.
+
+The lists use the registry's declared applicability to show relevant choices.
+**Random observable candidates** is `randomLegal/v1`, available for both types.
+The engine still validates its chosen action. A role selects capabilities; a
+model chooses actions using local observations and private memory.
+
+**Advanced registered model or artifact** accepts a registry name or
+`ppo:<artifact-directory>`. Registration, files and dependencies must be
+available in the service/worker environment. Unknown IDs, explicit empty values,
+unavailable artifacts and missing dependencies produce validation feedback;
+the editor preserves the supplied value instead of replacing it with a default.
+The metadata list does not instantiate models or load trained weights.
+
+Explicit agent records retain their own `model_assignment`, including parameters
+and requested version. The population controls explain that those assignments
+are edited in Advanced JSON. A model setting overridden inside `semantic` is
+also edited there. Configuration exports contain settings and references; they
+do not bundle plugin source or learned weights.
+
+## Publish friendly plugin metadata
+
+The original `zombie_sim.policies.register_model(name, factory)` remains
+supported. Its registrations without metadata are available through the advanced
+ID field. To advertise a plugin as a selectable choice, use the optional
+declarative wrapper:
+
+```python
+from zombie_sim.model_catalog import register_model
+
+register_model("myPolicy/v1", MyModel, metadata={
+    "model_id": "myPolicy/v1",
+    "label": "My local policy",
+    "version": "1.0.0",
+    "applicable_types": ["Human"],
+    "description": "Choose actions using this experiment's local policy.",
+})
+```
+
+Here `MyModel` is your existing factory accepting the parameter mapping. Its
+declared metadata must accurately describe its implementation and manifest.
+Register each alias with the same factory and metadata to group them as one
+choice. `replace=True` retains the existing replacement option. A replacement
+without metadata loses its old description; if the legacy registry replaces a
+factory independently, the catalog stops advertising that stale declaration.
+Conflicting declarations for one canonical identity remain advanced-only.
+
+`model_catalog()` returns detached descriptions, aliases, registered names and
+default IDs. It never calls factories to infer metadata. Keeping this catalog
+separate from the policy implementation also preserves existing default-policy
+source hashes used by saved checkpoint pins. Server validation checks declared
+Human/Zombie applicability for defaults, per-agent assignments, imported states
+and model interventions, including a recheck when a scheduled intervention takes
+effect. Conversion assigns the scenario's selected Zombie model with fresh private
+memory. Existing histories and their recorded assignments are not rewritten.
+
+## Default utility policy
+
 The utility policies construct feasible-looking candidates and sum normalized
 features times versioned weights. Features express survival, infection urgency,
 expected damage/recovery, resource and ally value, exposure, travel/stamina cost,

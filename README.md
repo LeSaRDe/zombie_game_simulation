@@ -12,7 +12,15 @@ fixture corrections are recorded in [the refinement report](docs/TESTING_REFINEM
 
 ## Start a simulation
 
-For the easiest way to start and stop simulations on Linux, run:
+Start with the [friendly user guide](docs/USER_GUIDE.md): a screenshot walkthrough,
+settings, all five views, saving, termination, service shutdown and terminal
+commands. For the guided **Small · 20 agents** example, open the GUI with:
+
+```bash
+./simulate gui
+```
+
+For the numbered launcher menu on Linux, run:
 
 ```bash
 ./simulate
@@ -22,13 +30,15 @@ The numbered menu can start a small or baseline run, open the GUI, pause, resume
 save and stop, terminate without another checkpoint, or shut down everything.
 It selects the existing Python environment automatically. Its default workspace
 is `runs/launcher` and its GUI address is `http://127.0.0.1:8767`, separate from a
-manually started workspace. Leaving the menu keeps simulations running; choose
-**Shut down all runs and the web service** to finish.
+manually started workspace. Leaving the menu keeps simulations running. Shutdown
+prints progress while saving or terminating active runs, cancelling analysis work
+and verifying worker/service exit. See the
+[shutdown and retry instructions](docs/USER_GUIDE.md#close-everything-and-return-later).
 
 Direct commands are also available:
 
 ```bash
-./simulate start                 # Small simulation and GUI
+./simulate start                 # configs/small.toml: 24 agents, plus GUI
 ./simulate list                  # Show run numbers and IDs
 ./simulate stop 1                # Save and stop the listed run
 ./simulate resume 1              # Continue a saved or paused run
@@ -62,8 +72,8 @@ the process pool without changing the semantic scenario fingerprint.
 
 `configs/baseline.toml` imports the ontology's 1,000-agent, 1,800-second scenario.
 Its constrained relocation placement approximation was explicitly approved on
-2026-11-25. Every run records the sampler, approval, attempts, acceptance and
-constraint checks. This sampler does not claim the exact conditioned joint
+2026-11-25. Every run records the sampler, approval and placement statistics; successful
+initialization enforces the spacing and geometry checks. This sampler does not claim the exact conditioned joint
 distribution. Exact joint rejection remains available as `placement.sampler =
 "exact"`; no initialization mode silently reduces population or relaxes geometry.
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
-from .storage import canonical
+from .storage import canonical, exact_time
 
 
 def reply(manager,response):
@@ -22,9 +22,22 @@ def reply(manager,response):
         history=manager.history(response["run_id"])
         try:
             with manager.lock:
-                command=manager.connection.execute("SELECT operation FROM commands WHERE id=?",(response["command_id"],)).fetchone()
-            selected=history.state_at(revision=0 if command and command["operation"]=="create" else None)
-            response.update(revision=str(selected["revision"]),time=str(selected["time"]))
+                command=manager.connection.execute("SELECT operation,response FROM commands WHERE id=?",(response["command_id"],)).fetchone()
+            stored=json.loads(command["response"]) if command and command["response"] else {}
+            if command and command["operation"]=="create":
+                revision=0
+            else:
+                # Branch reservations publish their effective boundary before
+                # launching the child. Prefer that pin to a later live frontier.
+                revision=stored.get("revision",json.loads(row["frontier"]).get("revision"))
+            if revision is None:
+                selected=history.connection.execute("SELECT revision,time_n,time_d FROM commits ORDER BY revision DESC LIMIT 1").fetchone()
+            else:
+                selected=history.connection.execute("SELECT revision,time_n,time_d FROM commits WHERE revision=?",(int(revision),)).fetchone()
+            if selected is None:raise ValueError("Command boundary is not present in committed history")
+            # A receipt needs a committed cursor, not world reconstruction.
+            # Scene/runtime reads retain their ordinary integrity validation.
+            response.update(revision=str(selected[0]),time=str(exact_time({"n":selected[1],"d":selected[2]})))
         finally:history.close()
         with manager.lock,manager.connection:
             manager.connection.execute("UPDATE commands SET response=? WHERE id=?",(canonical(response),response["command_id"]))

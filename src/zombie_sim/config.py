@@ -20,6 +20,7 @@ class PlacementError(ConfigError):
 
 DEFAULTS = {
     "scenario": "small_v0.1", "seed": 20261106, "horizon": 1800.0,
+    "role_assignment_order": "canonical_v2",
     "incubation_duration": 300.0, "allow_intraspecies_combat": False,
     "world": {"length": 100.0, "width": 100.0, "boundary_policy": "CLOSED"},
     "population": {"humans": 16, "zombies": 4, "infected": 0, "human_roles": {}, "zombie_roles": {}},
@@ -116,15 +117,24 @@ def _validate_profile(values,path):
 
 
 def validate_config(config):
-    from .policies import create_model
-    for field in ("human_model", "zombie_model"):
-        if field in config:
-            try:
-                create_model(str(config[field]))
-            except (ValueError, OSError) as error:
-                failure = ConfigError(f"{field}: {error}")
-                failure.code = "MODEL_UNAVAILABLE"
-                raise failure from error
+    from .domain import decision_model_assignment
+    def validate_model(field,assignment,kind):
+        try:
+            decision_model_assignment(assignment["model_id"],assignment.get("version"),assignment.get("parameters"),agent_type=kind)
+        except (ValueError, OSError, ImportError, KeyError, TypeError) as error:
+            help_text = (" Install the model's required dependencies in the service's Python environment."
+                         if isinstance(error, ImportError) else "")
+            failure = ConfigError(f"{field}: {error}{help_text}")
+            failure.code = getattr(error,"code","MODEL_UNAVAILABLE")
+            raise failure from error
+    for field,kind in (("human_model","Human"),("zombie_model","Zombie")):
+        validate_model(field,{"model_id":config.get(field,kind+"DefaultModel")},kind)
+    for index,agent in enumerate(config.get("agents",[])):
+        assignment=agent.get("model_assignment")
+        if assignment is not None:
+            validate_model(f"agents[{index}].model_assignment",assignment,agent.get("type","Human"))
+    if config.get("role_assignment_order") not in {"canonical_v2","legacy_insertion_v1"}:
+        raise ConfigError("role_assignment_order must be canonical_v2 or legacy_insertion_v1")
     for key in ("length","width"):
         _number(config["world"][key],f"world.{key}",positive=True)
     if config["world"].get("boundary_policy","CLOSED")!="CLOSED":
@@ -144,6 +154,8 @@ def validate_config(config):
             _number(count,f"population.{key}.{role}",minimum=0,integer=True)
         if sum(pop[key].values())>total:
             raise ConfigError(f"population.{key}: role allocations exceed {kind} count")
+    from .role_allocation import validate_role_allocation
+    validate_role_allocation(config, ConfigError)
     placement=config["placement"]
     if placement["sampler"] not in ("exact","relocation"):
         raise ConfigError("placement.sampler must be exact or relocation")
@@ -269,6 +281,11 @@ def resolve_config(config=None):
             for index,child in enumerate(value):finite_tree(child,f"{path}[{index}]")
     finite_tree(config)
     values=deepcopy(config)
+    # Frozen pre-v2 configurations carry a fingerprint but no ordering marker.
+    # Reinitializing one retains its historical shuffle input; exact restores
+    # bypass configuration resolution entirely and keep their stored state.
+    if "fingerprint" in values and "role_assignment_order" not in values:
+        values["role_assignment_order"]="legacy_insertion_v1"
     values.pop("fingerprint",None); values.pop("provenance",None)
     semantic=values.pop("semantic",None)
     if semantic is not None:
@@ -305,6 +322,7 @@ def resolve_config(config=None):
     # distinct initial condition. Integer-domain validation ran before this.
     result.update(semantic_config(result))
     result["provenance"]=provenance()
+    result["provenance"]["role_assignment_order"]=result["role_assignment_order"]
     result["fingerprint"]=hashlib.sha256(json.dumps(semantic_config(result),sort_keys=True,separators=(",",":"),allow_nan=False).encode()).hexdigest()
     return result
 
@@ -401,12 +419,18 @@ def initialize_world(config=None):
             for resource in spec.get("inventory",{}):
                 if resource not in RESOURCES:
                     raise ConfigError(f"agents.{identifier}.inventory.{resource}: invalid portable resource")
+            model=config.get("human_model" if kind=="Human" else "zombie_model")
+            if "model_assignment" not in spec and model is not None:
+                spec["model_assignment"]={"model_id":model}
             agent=make_agent(identifier,kind,role,**spec)
             agents.append(agent)
         sampling={"sampler":"explicit_coordinates","approximate":False,"proposals":0}
     else:
         for kind,count_key,roles_key in (("Human","humans","human_roles"),("Zombie","zombies","zombie_roles")):
-            roles=[role for role,count in config["population"][roles_key].items() for _ in range(count)]
+            allocations=config["population"][roles_key].items()
+            if config["role_assignment_order"]=="canonical_v2":
+                allocations=sorted(allocations)
+            roles=[role for role,count in allocations for _ in range(count)]
             roles += [None]*(config["population"][count_key]-len(roles)); rng.shuffle(roles)
             for role in roles:
                 assignment = config.get("human_model" if kind == "Human" else "zombie_model")
