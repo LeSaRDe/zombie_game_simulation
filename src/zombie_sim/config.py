@@ -116,6 +116,50 @@ def _validate_profile(values,path):
             raise ConfigError(f"{path}.{key}: ontology v0.1 fixes the cap at 100")
 
 
+def _validate_initial_positions(agents, config, *, check_separation=True):
+    """Check deterministic initial coordinates without sampling or creating agents.
+
+    Omitted x/y values use make_agent's existing zero defaults. These initial
+    placement rules deliberately do not apply to imported historical states,
+    whose living agents may already have approached one another or a shelter.
+    """
+    def invalid(path, message):
+        error=ConfigError(f"{path}: {message}")
+        error.code="INVALID_GEOMETRY"
+        raise error
+
+    positions=[]
+    for index, original in enumerate(agents):
+        agent={"id":str(index+1),"type":"Human","x":0.,"y":0.,**original}
+        path=f"agents.{agent['id']}"
+        for coordinate, dimension in (("x","length"),("y","width")):
+            value=agent[coordinate]; limit=config["world"][dimension]
+            _number(value,path+"."+coordinate)
+            if not 0<=value<=limit:
+                invalid(path+"."+coordinate,f"coordinate {value} m is outside world.{dimension} bounds [0, {limit}] m")
+        for barrier in config["barriers"]:
+            if point_blocked(agent,[barrier]):
+                invalid(path,f"initial position ({agent['x']}, {agent['y']}) is on or inside blocking barrier {barrier['id']}")
+        if agent["type"]=="Zombie":
+            for shelter in config["shelters"]:
+                if contains(shelter["interior"],agent,strict=True):
+                    invalid(path,f"initial Zombie position ({agent['x']}, {agent['y']}) is inside shelter {shelter['id']}; initial Zombies must be outside shelter interiors")
+        positions.append(agent)
+    if not check_separation or max(config["placement"]["minimum_separation"],config["placement"]["cross_type_separation"])<=0:
+        return
+    for index,a in enumerate(positions):
+        for b in positions[index+1:]:
+            field="cross_type_separation" if a["type"]!=b["type"] else "minimum_separation"
+            minimum=config["placement"][field]
+            if minimum<=0:
+                continue
+            actual=distance_to(a,b)
+            if actual<minimum:
+                invalid(f"agents.{a['id']} and agents.{b['id']}",
+                        f"initial separation is {actual:.17g} m, below placement.{field} = {minimum} m; "
+                        "adjust the positions or explicitly configure a different separation")
+
+
 def validate_config(config):
     from .domain import decision_model_assignment
     def validate_model(field,assignment,kind):
@@ -261,6 +305,8 @@ def validate_config(config):
     _number(execution.get("parallel_min_agents",32),"execution.parallel_min_agents",integer=True,positive=True)
     if execution.get("completion_order","native") not in {"native","reverse","seeded_shuffle","shuffle"}:
         raise ConfigError("execution.completion_order must be native, reverse, or seeded_shuffle")
+    if "agents" in config and not config.get("state_import"):
+        _validate_initial_positions(config["agents"],config)
     return config
 
 
@@ -301,10 +347,14 @@ def resolve_config(config=None):
     result=_merge(baseline_config() if baseline else deepcopy(DEFAULTS),values)
     # Explicit agent scenarios derive their population rather than inheriting defaults.
     if "agents" in result:
+        if not isinstance(result["agents"],(list,tuple,dict)):
+            raise ConfigError("agents: expected an array or map of agent objects")
         agents=list(result["agents"].values()) if isinstance(result["agents"],dict) else result["agents"]
         result["agents"]=agents
         counts={"humans":0,"zombies":0,"infected":0,"human_roles":{},"zombie_roles":{}}
-        for agent in agents:
+        for index,agent in enumerate(agents):
+            if not isinstance(agent,dict):
+                raise ConfigError(f"agents[{index}]: expected an agent object")
             kind=agent.get("type","Human")
             if kind not in ("Human","Zombie"):
                 raise ConfigError(f"agents.{agent.get('id','?')}.type: must be Human or Zombie")
@@ -448,12 +498,6 @@ def initialize_world(config=None):
             _number(agent[key],path+"."+key,minimum=0,maximum=100,integer=key=="life")
         if agent["life"]==0:
             raise ConfigError(path+".life: initial agents must be living; deaths are recorded transitions")
-        for key in ("x","y"):
-            _number(agent[key],path+"."+key,minimum=0,maximum=config["world"]["length" if key=="x" else "width"])
-        if point_blocked(agent,config["barriers"]):
-            raise ConfigError(path+": initial position is inside blocking geometry")
-        if agent["type"]=="Zombie" and any(contains(s["interior"],agent,strict=True) for s in config["shelters"]):
-            raise ConfigError(path+": initial zombies are excluded from shelter interiors")
         if agent.get("role") and ROLES[agent["role"]]["type"]!=agent["type"]:
             raise ConfigError(path+".role: incompatible biological type")
         if not agent.get("model_assignment") or not isinstance(agent["model_assignment"],dict) or not agent["model_assignment"].get("model_id"):
@@ -485,12 +529,7 @@ def initialize_world(config=None):
             incubation=str(Fraction(str(config["incubation_duration"])))
             episodes[episode_id]={"id":episode_id,"agent_id":identifier,"source_kind":"INITIAL_CONDITION","source_agent_id":None,"source_event_id":"initialization","onset_at":"0","onset_revision":0,"incubation_duration":incubation,"conversion_due_at":incubation,"outcome":None,"ended_at":None,"end_revision":None}
         agent.pop("infected",None)
-    if "agents" in config and max(config["placement"]["minimum_separation"], config["placement"]["cross_type_separation"]) > 0:
-        for i,a in enumerate(agents):
-            for b in agents[i+1:]:
-                minimum=config["placement"]["cross_type_separation" if a["type"]!=b["type"] else "minimum_separation"]
-                if minimum > 0 and distance_to(a,b)<minimum:
-                    raise ConfigError(f"agents.{a['id']} and agents.{b['id']}: initial separation is below {minimum} m; scenario overrides must explicitly declare alternative distances")
+    _validate_initial_positions(agents,config,check_separation="agents" in config)
     def items(collection):
         return {str(i["id"]):deepcopy(i) for i in config[collection]}
     stockpiles=items("stockpiles")

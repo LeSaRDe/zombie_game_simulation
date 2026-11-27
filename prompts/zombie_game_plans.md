@@ -30,7 +30,8 @@ This task has been done. The ontology specifications are stored in the folder "o
 Your current step is to identify issues and bugs, and then fix them. 
 
 The following issues are what I have identified:
-  - When using GUI, after starting a run, I clicked "Statistics", "Cohort", and "Event", as well as some detailed items in those tabs. I found that the simulation was stopped while I was clicking those items, and the time got back to 0. In the control panel, it was not indicated that the simulation has been terminated. I couldn't identify which click led to this unexpected stop. You must carefully check this issue and fix it.
+  - When using GUI, I was trying to customize the default settings for "Ontology baseline 1,000 agents" by changing the "World length" from 1000 to 200 and changing the "World width" from 1000 to 200. After inputing the new values, I pressed "Validate", and it popped up an error message: "barriers[0]: rectangle must have positive area and lie inside world bounds".
+    - The configuration view should automatically adjust all related settings for a run, unless some custom settings will certainly result in conflicts or invalid settings. You must fix this issue.
 
 Other potential issues that are not listed above may also exist. You must carefully and rigorously identify those potential issues as comprehensively as possible. When you identify an issue, you must report it to me first before continuing.
 

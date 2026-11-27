@@ -33,3 +33,5 @@ button.danger{border-color:#985966;color:#ffd2d8;background:#482b35}button.dange
 .cohort-survival{padding-top:10px;border-top:1px solid #344b57;margin-top:14px}.cohort-survival h4{margin:0 0 8px;font-size:12px;color:#d5e4e9}.cohort-survival small{font-size:10px;line-height:1.5;color:#9bb3bd}
 
 .population-sample-revision{display:block;font-size:10px;line-height:1.5;color:#9bb3bd;white-space:nowrap}
+
+.world-resize-note{padding:12px 14px;margin:0 0 18px;border:1px solid #40574e;border-radius:6px;background:#182d2b}.world-resize-note p{font-size:11px;line-height:1.6;color:#b1c6c8;margin:0}.world-resize-note [role=status]{border-top:1px solid #40574e;padding-top:9px;margin-top:9px}.world-resize-note strong{display:block;color:#d9eebd;font-size:12px;margin-bottom:5px}.world-resize-note [role=status] p{overflow-wrap:anywhere}

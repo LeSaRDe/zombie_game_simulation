@@ -107,6 +107,37 @@ Use **Load saved draft** to restore the last draft saved in this browser. This
 replaces the current editor contents, including role targets. JSON or TOML export
 is the portable way to keep or share a configuration outside this browser.
 
+### Resize a world and its layout
+
+Changing **World length** or **World width** scales the spatial layout on that
+axis. Obstacles, walls, gates, shelter interiors, stockpiles and ordinary explicit
+initial agent positions move together. The editor also adjusts valid custom
+layouts and shows a resize summary; a resized baseline is labelled
+**Customized baseline**. Shrinking both dimensions from 1,000 to 200 m multiplies
+all layout coordinates by 0.2, including the shelter and gate dimensions.
+
+Population and role counts, resource quantities, integrity, model settings,
+speeds, sensing/action ranges and initial separation requirements keep their
+declared values. The smaller world therefore has a greater population density.
+**Validate** checks the resulting configuration and deterministic conflicts in
+explicit initial positions. **Preview placement** additionally checks connectivity
+and generates the population under the unchanged spacing constraints. A sampling
+budget failure is not proof that no placement exists.
+
+Repeated form edits use a saved reference layout to avoid cumulative scaling.
+Save/export includes the concrete resized coordinates and editor provenance;
+reopening that draft does not resize it again. Deliberate geometry edits establish
+a new reference. JSON and TOML inputs are interpreted as written: loading a file
+or editing Advanced JSON does not infer a resize. Subsequent dimension edits in
+the form apply the announced layout adjustment, including effective preset or
+`semantic` values.
+
+Historical/runtime state imports can contain frozen death locations, remains,
+signals and model-private spatial memory. The editor explains that automatic
+resizing is unsupported for these records and keeps the draft intact. Use an
+ordinary new-scenario layout for automatic world resizing. Existing runs remain
+immutable; **Edit as new run** changes only the new experiment's configuration.
+
 ### Decision models in the current editor
 
 A decision model chooses an agent's next action from its local observations and

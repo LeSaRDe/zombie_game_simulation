@@ -129,7 +129,7 @@ To finish the entire session, follow [Close everything](#close-everything-and-re
 | Humans / Zombies | Starting numbers of identities of each type. | `16` / `4` |
 | Initially infected humans | A subset of Humans, not an extra population. It cannot exceed Humans. | `0` |
 | Incubation duration | Simulation time from infection to conversion if cure or death does not intervene. | Keep the preset initially. |
-| World length / width | Map dimensions in metres. Placement still enforces geometry and separation. | Keep the preset initially. |
+| World length / width | Map dimensions in metres. Form edits resize the layout with the world; placement still enforces separation. | Keep the preset initially, or resize and preview. |
 | Worker selection | Budget for policy workers. Automatic considers available resources; a manual limit makes the choice explicit. | One worker for this walkthrough. |
 | Live storage | Memory live state or SQLite live state; **both** retain durable SQLite history. | Memory + durable SQLite history |
 | Placement sampler | Exact joint rejection, or explicitly acknowledged conditional relocation. | Exact for Small; approved relocation for baseline. |
@@ -138,6 +138,31 @@ Worker count is not a speed guarantee. **Run pace** changes the execution's
 wall-clock pacing, while zoom, layers, chart zoom and replay speed change viewing.
 They do not change the scenario's durations or population. New scenario settings
 apply to a new run; **Edit as new run** copies an existing run's frozen configuration.
+
+### Resize the baseline world
+
+1. Select **Ontology baseline · 1,000 agents**.
+2. Enter `200` for **World length** and **World width**. The editor scales the
+   obstacles, shelters, gates and stockpiles together and shows **Customized
+   baseline**, with a summary of the adjustment.
+3. Click **Validate**, then **Preview placement**. Review the new map before
+   choosing **Launch run**.
+
+The population remains 800 Humans and 200 Zombies. Resources, speeds, sensing
+ranges and the 2 m / 15 m initial spacing requirements remain as set. A smaller
+map changes density; it does not shrink every game parameter.
+
+Custom layouts and ordinary explicit initial positions also resize with the
+world. If explicit positions become too close or otherwise invalid, validation
+identifies the conflict so you can correct the draft. Preview still checks whether
+generated placement succeeds. Saved/exported drafts keep the adjusted layout;
+loading them does not scale it a second time. Advanced JSON edits are used as
+written. Historical/runtime state imports require deliberate handling instead
+of automatic resizing; see [the detailed resizing guide](GUI.md#resize-a-world-and-its-layout).
+
+![The resized 200 × 200 baseline, with adjustment feedback and all 1,000 agents in the preview](images/user-guide/10-resized-world.png)
+
+The screenshot uses a short test horizon; keep the duration you want for your run.
 
 ### Set roles as percentages
 

@@ -1,13 +1,16 @@
 # GUI and launcher issue review
 
-**Current review: I25 — apparent stop/time reset while exploring analysis.**
-The latest plan replaces the earlier issue list with this new report and requires
-per-issue review before implementation. Diagnosis and reproductions are complete;
-the [I25 proposal](#i25-analysis-clicks-look-like-a-stopped-or-reset-simulation)
-was explicitly approved: “I approve the I25 proposal. Implement and verify the
-fixes.” I25 is implemented and verified; see the
-[final evidence](../artifacts/issue25-fix/verification.json). The earlier
-I01–I24 approvals and completed work below remain historical records.
+**Current review: I26 — resizing the baseline world leaves its layout outside the bounds.**
+The updated task plan reports the 1,000-agent baseline failing validation after
+world dimensions change from 1,000 × 1,000 m to 200 × 200 m. Diagnosis,
+browser reproduction and isolated feasibility checks are complete. The
+[I26 proposal](#i26-world-resizing-leaves-dependent-layout-coordinates-unchanged)
+was explicitly approved: “I approve the I26 proposal. Implement and verify the
+fixes.” Implementation and verification are complete within the scope below.
+The 200 × 200 workflow passes in Chromium and Firefox, along with 499 supplied
+acceptance cases. I01–I25 approvals, implementations and verification records
+below remain intact; [I25's final evidence](../artifacts/issue25-fix/verification.json)
+is retained.
 
 Review opened on 2026-11-25 against the current step in
 [the task plan](../prompts/zombie_game_plans.md). **Issues I01–I24 are approved for investigation and implementation, with
@@ -53,6 +56,7 @@ below must pass before that issue can be called fixed.
 | I23 | Conversion ignores the scenario's chosen Zombie model | Real conversion uses selected Zombie model and fresh memory on both backends | Covered by blanket approval; completed |
 | I24 | Explicit agents without assignments may ignore scenario model defaults | Both initialization paths/backends preserve explicit assignments and fill missing defaults correctly | Covered by blanket approval; completed |
 | I25 | Analysis detail clicks make historical time zero look like stopped/reset execution | Separate execution/view clocks, explicit history navigation, corrected time editor and truthful status; both browser workflows plus 12 acceptance cases passed | Individually approved; completed within the verification scope below |
+| I26 | Resizing the baseline world leaves dependent layout coordinates unchanged | Coherent resizing, actual 1,000-agent preview/launch, custom/import/save workflows and 499 acceptance cases passed | Individually approved; completed within the verification scope below |
 
 ## I01 Termination and what without save means
 
@@ -2315,3 +2319,290 @@ pre-fix audit. No user simulation was started, stopped or rewritten for verifica
 **Using the fix:** refresh the GUI page to load the rebuilt browser assets.
 The [updated guide](USER_GUIDE.md#pause-save-terminate-or-replay) explains which
 clock to read and how to return from recorded history to live follow.
+
+## I26 World resizing leaves dependent layout coordinates unchanged
+
+**Current status: approved, implemented and verified within the scope below.**
+The [updated task plan](../prompts/zombie_game_plans.md#L33) reports the baseline
+validation failure and requests automatic adjustment of related settings. Its
+review instruction says: **“For each issue, you will wait for my review and
+approval before continuing.”** The user subsequently approved the proposal:
+**“I approve the I26 proposal. Implement and verify the fixes.”** The original
+diagnosis and proposal are retained below, followed by implementation evidence.
+
+### Cause and reproduced behavior
+
+Selecting **Ontology baseline · 1,000 agents** loads a complete map in absolute
+meter coordinates. Changing World length/width currently changes only the world
+bounds. The map's 28 barriers (including four gates), four shelter interiors and
+ten stockpiles retain their original coordinates.
+
+For example, `barriers[0]` is `obstacle1`, whose footprint is
+`[420, 180, 460, 340]`. It cannot fit inside a 200 × 200 world. The backend's
+bounds check therefore correctly returns:
+
+> barriers[0]: rectangle must have positive area and lie inside world bounds
+
+The missing behavior is dependency adjustment in the configuration editor;
+weakening or bypassing the geometry validator would conceal the problem.
+
+The unchanged GUI reproduced this exact message in both
+[Chromium](../artifacts/issue26-review/chromium/verification.json) and
+[Firefox](../artifacts/issue26-review/firefox/verification.json), for length-only,
+width-only and both-dimension changes. Submitted requests had the new dimensions
+and unchanged geometry. No simulation was launched, no execution command was
+issued, and both disposable services exited cleanly.
+
+Relevant code: [baseline construction](../src/zombie_sim/config.py#L63),
+[shared draft commit](../gui/src/main.tsx#L164),
+[geometry validation](../src/zombie_sim/config.py#L175), and
+[placement/connectivity](../src/zombie_sim/config.py#L400).
+
+### Proposed behavior
+
+**Changing world dimensions in the form will resize the spatial layout together.**
+
+1. Apply an independent scale on each axis: `new_x = old_x × new_length / old_length`
+   and `new_y = old_y × new_width / old_width`. Transform complete obstacle,
+   wall and gate footprints, shelter interiors and stockpile coordinates as one
+   operation. Retain entity IDs and shelter/gate/wall relationships. Do not clip,
+   remove or independently relocate objects to make an invalid layout fit.
+2. Apply this to ordinary custom spatial layouts as well as the preset. Explicit
+   initial agent coordinates, when supplied in an ordinary new scenario, follow
+   the same transform and remain subject to validation. Non-spatial custom
+   settings remain intact. A visible note explains that world resizing also
+   resizes custom coordinates, and a concise change summary identifies what moved.
+3. Keep population and role counts, infection counts, inventories, gate integrity,
+   seed, model settings, horizon, speeds, sensing/action ranges and initial
+   separation distances unchanged. They are independent experiment parameters.
+   A smaller world deliberately changes density; do not silently lower the
+   population or spacing to make placement succeed.
+4. Run the existing geometry checks on the adjusted configuration. For explicit
+   initial agent coordinates, also check bounds, blocked positions, shelter
+   restrictions and pairwise spacing during **Validate**, before reporting ready
+   to launch. These deterministic agent checks currently happen only at
+   initialization and must not be deferred after automatically shrinking those
+   positions. Preview and initialization additionally verify connectivity and
+   generated population placement. For definite
+   custom conflicts, identify the relevant object/field or agent pair and the
+   conflicting requirement. Preserve the draft so the user can correct it.
+   An exhausted sampling budget must say no placement was found within the
+   budget; it must not claim mathematical impossibility.
+5. Show that this is a **customized baseline** and save the concrete adjusted
+   configuration. Validate, Preview, Launch, Save and Export must all use the
+   same committed values. Existing runs and their recorded histories are never
+   resized or rewritten.
+
+For the requested 200 × 200 world, the scale is 0.2 on both axes:
+
+| Item | Original | Resized |
+| --- | --- | --- |
+| Obstacle 1 footprint | `[420,180,460,340]` | `[84,36,92,68]` |
+| Shelter 1 interior | `[152,152,248,248]` | `[30.4,30.4,49.6,49.6]` |
+| Exterior stockpile 1 | `(100,500)` | `(20,100)` |
+| Shelter envelope | 100 × 100 m | 20 × 20 m |
+| Gate footprint dimensions | 6 × 2 m | 1.2 × 0.4 m |
+| Population | 800 Humans + 200 Zombies | Unchanged |
+| Initial spacing | 2 m for every pair; 15 m Human–Zombie | Unchanged |
+
+### How the implementation will preserve custom intent
+
+- Integrate one resize operation into the shared GUI draft-commit path. Commit
+  complete valid numeric edits together; empty or unfinished numeric/JSON input
+  must not trigger a partial resize or overwrite the existing draft.
+- Retain a reference layout during repeated edits, preserving identical shared
+  coordinates and avoiding cumulative rounding or double scaling. Changing a
+  preset, importing a configuration, or deliberately editing its geometry
+  establishes the appropriate new reference. Saved/exported drafts retain
+  concrete coordinates and sufficient editor provenance for consistent reopening.
+- Resolve omitted preset geometry and effective `semantic` overrides before
+  adjustment. Write the resized values to the effective configuration, so an
+  old override cannot silently undo the world edit. Handle supported rectangle
+  objects/arrays and agent maps/arrays consistently.
+- Direct Advanced JSON or imported-file values remain explicit instructions;
+  merely parsing, loading or importing them does not trigger an inferred resize.
+  Subsequent World length/width form edits perform the announced resize.
+  General CLI/API configuration resolution must not silently reinterpret files.
+- A historical/runtime state import is a different case from an ordinary initial
+  layout: it can contain frozen death positions, matching remains, signals and
+  model-private spatial memory. Do not partially scale such records. Preserve
+  that input and explain the unsupported automatic transformation, offering the
+  ordinary new-scenario layout workflow. This is a capability boundary, not a
+  claim that its geometry is mathematically impossible.
+
+### Why the proposal addresses this issue
+
+For a valid layout and positive dimensions, consistent axis scaling preserves
+rectangle order, shared boundaries, containment and non-overlap mathematically.
+Moving all connected parts together preserves the shelter assembly and its
+topology. Revalidation catches floating-point degeneracy, malformed custom data
+or other constraints that coordinate scaling alone cannot guarantee.
+
+The proposal has also been checked with the actual initializer, without changing
+application code. Isolated probes transformed the complete baseline map, used
+seed `20261106`, and retained the previously approved relocation sampler,
+population and separation settings:
+
+| World | Geometry / connectivity | Initialized agents | Minimum same-type / cross-type distance |
+| --- | --- | --- | --- |
+| 1,000 × 1,000 m | Pass | 1,000 | 2.0281 / 15.0005 m |
+| 200 × 200 m | Pass | 1,000 | 2.0042 / 15.0593 m |
+| 200 × 1,000 m | Pass | 1,000 | 2.0068 / 15.0013 m |
+| 1,000 × 200 m | Pass | 1,000 | 2.0730 / 15.0093 m |
+
+No agents were inside blocking geometry and no Zombies started inside shelters.
+See [feasibility evidence](../artifacts/issue26-review/feasibility.json) and the
+[reproducible probe](../artifacts/issue26-review/feasibility_probe.py).
+These checks establish that the reported dimensions can work under the existing
+constraints. They are not a guarantee for every seed/custom configuration or
+evidence that the proposed GUI implementation already passes. For example, a
+1 × 1 m world cannot place two agents 2 m apart; that genuine conflict must still
+be rejected.
+
+### Verification required after approval
+
+- Repeat the exact baseline → 200 × 200 → Validate → Preview → Launch workflow
+  in Chromium and Firefox. Confirm 1,000 agents, unchanged roles/resources and
+  strict spacing, readable adjustment feedback and correct initial geometry.
+- Cover length-only/width-only edits, asymmetric worlds, enlargement, repeated
+  resize/restore, sequential field blur, empty/invalid drafts and keyboard use.
+- Cover valid custom layouts, custom resource-only edits, explicit agent
+  positions, conflicting coordinates/spacing, partial presets and semantic
+  overrides. Verify historical/runtime imports are never partially rewritten.
+  Definite explicit-agent conflicts must fail Validate; generated-placement
+  feasibility must remain clearly distinguished from configuration validation.
+- Check Save/Load, copy-as-new, JSON/TOML export/import, preview invalidation and
+  launch payload consistency. Verify direct configuration loading does not
+  silently rescale geometry and unchanged baseline configurations remain intact.
+- Run focused configuration, geometry, numeric editing, Advanced JSON protection
+  and GUI/CLI parity regressions without changing supplied acceptance inputs or
+  assertions. Verify disposal of all test services/runs.
+
+**Ontology.** No ontology or problem-formulation change is proposed.
+[§15.6](../ontology/zombie_game_ontology_v0.1.md#L669) permits world/geometry
+variation and requires changed values to be recorded and revalidated.
+[§3.1](../ontology/zombie_game_ontology_v0.1.md#L122) defines point agents, so the
+smaller valid doorway does not require a new physical-body model. All canonical
+Markdown/formal specifications were reviewed; the
+[ontology review](../artifacts/issue26-review/ontology-review.json) records graph
+integrity, OWL serialization equivalence and independent scaled-layout checks.
+
+**Review boundary.** Only review documentation, independent reproduction scripts
+and isolated evidence were added. The
+[source audit](../artifacts/issue26-review/review-verification.json) verifies
+existing production code, ontology, supplied tests and the user-edited plan are
+unchanged. The reproduction scripts are
+[Python](../implementation_checks/issue26_review_check.py) and
+[browser](../implementation_checks/issue26_review_browser.cjs).
+That review boundary describes the pre-implementation investigation. The work
+below follows the user's subsequent explicit approval.
+
+### Implementation after approval
+
+- Added [worldLayout.ts](../gui/src/worldLayout.ts), a shared form-driven resize
+  operation called by the existing draft commit before Validate, Preview, Launch,
+  Save or Export. All supported barrier/shelter rectangles, stockpile points and
+  ordinary explicit agent positions change together. IDs, references and
+  non-spatial attributes are retained.
+- Resolved effective preset and `semantic` spatial values before resizing.
+  Materialized coordinates take precedence over the original map; unrelated
+  semantic settings survive. Direct JSON/TOML loading and general configuration
+  resolution do not infer a resize.
+- Saved versioned reference geometry under `gui.world_resize`. Decimal-rational
+  axis calculations and stable reference coordinates avoid cumulative drift.
+  Reopening concrete resized data does not apply the transform again; deliberate
+  geometry edits invalidate the old reference. Unsupported, stale or tampered
+  metadata cannot supply a misleading adjustment summary.
+- Added visible resizing guidance, a change summary and **Customized baseline**
+  label. World inputs display effective dimensions, including partial presets
+  and semantic overrides. Preview invalidation and unfinished JSON/numeric-draft
+  protections remain part of the shared editor workflow.
+- Guarded historical/runtime imports, model-private spatial state and ambiguous
+  alternate coordinate representations before any draft mutation. The error
+  explains the unsupported automatic transformation and retains the input.
+- Added a reusable deterministic initial-position check in
+  [config.py](../src/zombie_sim/config.py). Ordinary explicit positions now fail
+  Validate on out-of-bounds coordinates, blocked positions, initial Zombie shelter
+  occupancy or insufficient spacing. Diagnostics identify affected agents,
+  objects and actual/required distances. Initialization reuses these rules;
+  historical state imports retain their separate semantics. Validate does not
+  perform stochastic sampling or promise connectivity/placement success.
+- Updated the [GUI resizing guide](GUI.md#resize-a-world-and-its-layout) and
+  [baseline walkthrough](USER_GUIDE.md#resize-the-baseline-world), and rebuilt
+  the packaged assets.
+
+The implementation preserves the approved 1,000-agent population, role/resource
+totals, 2 m minimum pair spacing and 15 m Human–Zombie spacing. It uses the
+already-approved conditional relocation sampler; no new approximation or
+ontology change was introduced.
+
+### Final verification
+
+The [consolidated verification record](../artifacts/issue26-fix/verification.json)
+passes. The final TypeScript/Vite build was packaged successfully; its served
+JavaScript is `index-CxGhr5tJ.js` and its stylesheet is `index-DRWMcKSA.css`.
+The packaged files match the built files byte for byte.
+
+| Verification | Result and evidence |
+| --- | --- |
+| Supplied core acceptance suite | **489 passed**, no failures, errors or skips; [report](../artifacts/issue26-fix/core-acceptance.json) |
+| Supplied browser acceptance cases | **10 passed**: configuration validation (5), CLI parity (1), preview RNG isolation (1), edit-as-new/model intervention (1), and keyboard accessibility in both engines (2); [reports](../artifacts/issue26-fix/acceptance/) |
+| Independent layout helper | **35 passed**, including asymmetric/repeated scaling, exact restoration, semantic overrides, custom geometry, explicit positions, stale/tampered references and guarded runtime data; [report](../artifacts/issue26-fix/layout-helper.json) |
+| Explicit-position validation | **26 direct and 26 real HTTP checks passed**, including historical-state compatibility and JSON/TOML round trips; [report](../artifacts/issue26-fix/validation.json) |
+| Actual I26 GUI workflows | **29 Chromium / 28 Firefox checks passed**; [Chromium](../artifacts/issue26-fix/chromium/verification.json), [Firefox](../artifacts/issue26-fix/firefox/verification.json) |
+| Numeric editing regressions | Both engines passed 11 workflows, nine fields, 45 blank-field/action combinations and 33 domain cases each; [Chromium](../artifacts/issue26-fix/numeric-chromium/verification.json), [Firefox](../artifacts/issue26-fix/numeric-firefox/verification.json) |
+| Mixed editor and retained GUI regressions | Both engines passed Advanced JSON protection, round trips, default-seed and historical cohort export checks; [Chromium](../artifacts/issue26-fix/mixed-editor-chromium/verification.json), [Firefox](../artifacts/issue26-fix/mixed-editor-firefox/verification.json) |
+
+The **499 supplied acceptance cases** are distinct. The separately recorded five
+`SYS_CONFIG` cases are a subset of the 489 core cases and are not counted again.
+This is targeted coverage, not a rerun of the complete 539-case catalog.
+
+In both browsers, changing the baseline to **200 × 200 m** passed Validate,
+Preview and actual Launch with all **1,000 agents**. Independent checks found
+800 Humans, 200 Zombies, 20 initially infected Humans, unchanged role counts and
+resource totals (600 Food, 280 Medical Supply, 400 Material), valid geometry and
+no initial Zombie shelter occupancy. Minimum same-type separation was
+**2.0041515665 m** and minimum Human–Zombie separation was **15.0593150446 m**,
+above the retained 2 m / 15 m limits. Every initialization field supplied by the
+preview matched the launched revision-zero record for every identity.
+
+These actual executions used seed `20261106`, one worker and a deliberately
+short **0.05 s horizon**, and completed. Tests first confirmed that resizing
+preserved the original independent parameters, then explicitly changed the
+worker/horizon settings to bound execution. This verifies initialization and
+launch, not a full 1,800 s simulation or feasibility for every seed and custom
+world. The strict validator and placement checks still reject genuine conflicts.
+
+Browser coverage also includes length-only/width-only edits, enlargement,
+asymmetric dimensions, repeated restoration, invalid or unfinished input,
+partial presets, semantic overrides, custom resource quantities and geometry,
+explicit-agent spacing conflicts, historical-state protection, saved drafts,
+JSON/TOML export/import, preview invalidation and immutable copy-as-new source
+history. Direct JSON/API changes remain literal and do not trigger inferred
+scaling. Desktop and 390 px views were visually inspected; see the
+[desktop screenshot](../artifacts/issue26-fix/chromium/resized-baseline-preview.png)
+and [narrow screenshot](../artifacts/issue26-fix/chromium/narrow-resize-feedback.png).
+
+Initial independent browser-check attempts compared whole preview records with
+live records containing additional runtime fields. Their failed assertions and
+cleanup evidence are retained. The corrected oracle compares every
+preview-provided field per identity and separately verifies geometry, counts,
+roles, resources and spacing. No application fix or supplied acceptance-test
+change was made to satisfy that harness correction.
+
+The disposable I26, HTTP and mixed-editor services exited with code zero, no
+worker leases and their temporary workspaces removed. Numeric-regression
+services also exited and removed their workspaces. Copy-as-new and regression
+source histories match their before/after audit records. The
+[source audit](../artifacts/issue26-fix/source-verification.json), rechecked after
+all verification, confirms ontology, supplied tests, the user-edited plan,
+launcher scripts, policies and other engine sources remain unchanged from the
+review snapshot. Existing user runs and their audit histories were retained.
+
+**Using the update.** Restart the web service and refresh the GUI to load both
+the validation changes and rebuilt interface. With the friendly launcher,
+`./simulate shutdown` saves active runs and stops its service; `./simulate gui`
+starts it again and opens the GUI. Then follow the
+[200 × 200 walkthrough](USER_GUIDE.md#resize-the-baseline-world). Existing
+configurations change only when you deliberately edit their world dimensions in
+the form.
