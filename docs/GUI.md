@@ -183,7 +183,8 @@ configuration preserves settings, not plugin code or learned weights.
 ## Live inspection
 
 Two readouts above the workspace separate **Simulation** execution from the
-state you are **Viewing**. Each shows its exact time and revision. The Simulation
+state you are **Viewing**. Each shows readable time and its revision, with an
+**Exact time** button for the original timestamp. The Simulation
 readout uses the service's run summaries; Viewing uses the loaded state, which
 may lag behind or deliberately show earlier history. They remain visible in
 every analysis tab. A failed summary request or a request more than five seconds
@@ -198,6 +199,30 @@ Simulation may show Running at 80 seconds while Viewing recorded history shows
 stops it. Returning to live resumes following the latest committed state; it
 does not restart execution. Changing tabs or expanding cohort details does not
 move the viewing cursor.
+
+### Readable and exact times
+
+Time readouts share one display policy. Ordinary times use up to three decimal
+places, without trailing zeros: `2.5 s`, `≈0.333 s` or `≈51 s`. The **≈** marker
+means that only the displayed number was rounded. Positive times below `0.001 s`
+and times at or above `1e9 s` use up to six significant digits in scientific
+notation, such as `1e-8 s`, so a small positive time is never labelled zero.
+Ordinary rounding has at most `0.0005 s` display error.
+
+Choose **Exact time** beside a readout to reveal its original decimal or fraction.
+The button works with keyboard and touch. Selecting a chart, table sample or
+event uses its original time and revision, even when several labels look alike.
+The engine, history, raw record details and machine-readable exports keep exact
+values.
+
+Time controls in Replay, Statistics, Export and intervention dialogs show a
+compact summary. Expand **Edit exact time** to type or paste a value. Opening or
+closing this editor does not alter its value. An untouched Replay or Statistics
+selection uses the displayed state's exact time and revision. Once you type,
+your draft stays fixed while live updates arrive; **Use selected view time**
+restores following. Entering invalid text does not navigate the viewer.
+
+### Inspect the world and analysis panels
 
 The four population cards describe the displayed revision: healthy humans,
 infected humans, living zombies, and dead identities. Remains do not add agents;
@@ -224,7 +249,8 @@ preserves your manual chart view.
 Click a marker or a time in **Accessible population table** to inspect its exact
 time and revision, including separate causal boundaries at the same time. Each
 revision appears beneath its Time value, preserving the five measurement columns. The
-keyboard-accessible **Recorded time to inspect (s)** field follows the selected
+keyboard-accessible **Recorded time to inspect (s)** control opens with **Edit exact
+time**. Its field follows the selected
 view's exact time until you edit it. Click **Inspect recorded time** or press
 Enter: an untouched field selects that exact time and revision. Edited text
 stays fixed as execution advances; **Use selected view time** restores following.
@@ -334,8 +360,8 @@ In **Events**, start with this workflow:
    no events yet; this is a valid empty result.
 2. Read the rows from top to bottom: they are in ascending ledger sequence. Rows
    show simulation time, revision and sequence. A time marked **≈** is rounded
-   to three decimal places for readability; hover over it or select the record
-   to read its exact value. Replay always uses the exact time. Several records
+   for readability using the shared time policy. Select the record and choose
+   **Exact time** to read its original value. Replay always uses the exact time. Several records
    can share a timestamp or transaction without being the same event.
 3. Choose **Older** to inspect earlier records, then **Newer** to move forward.
    Paging pins the source revision, so a running simulation cannot shift the

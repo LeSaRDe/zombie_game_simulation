@@ -1,3 +1,4 @@
+const {openExactEditor}=require('./browser_exact_time.cjs');
 /* Export acceptance actions use the same visible controls and downloads as users. */
 const fs=require('node:fs');const path=require('node:path');
 async function executeExport(page,step){
@@ -6,9 +7,9 @@ async function executeExport(page,step){
     const details=page.locator('[data-testid="export-open"]');
     if(!await details.evaluate(el=>el.parentElement.open))await details.click();
     await page.getByTestId('export-format').selectOption(step.format);
-    if(step.time!==undefined)await page.getByTestId('export-time').fill(String(step.time));
-    if(step.interval){await page.getByTestId('export-interval-start').fill(String(step.interval[0]));await page.getByTestId('export-interval-end').fill(String(step.interval[1]));}
-    if(step.sample_interval!==undefined)await page.getByTestId('export-sample-interval').fill(String(step.sample_interval));
+    if(step.time!==undefined){await openExactEditor(page,'export-time');await page.getByTestId('export-time').fill(String(step.time));}
+    if(step.interval){await openExactEditor(page,'export-interval-start');await openExactEditor(page,'export-interval-end');await page.getByTestId('export-interval-start').fill(String(step.interval[0]));await page.getByTestId('export-interval-end').fill(String(step.interval[1]));}
+    if(step.sample_interval!==undefined){await openExactEditor(page,'export-sample-interval');await page.getByTestId('export-sample-interval').fill(String(step.sample_interval));}
     if(step.cohort)await page.getByTestId('export-cohort').selectOption(step.cohort);
     return await page.evaluate(()=>window.__zombieExportInspection);
   }

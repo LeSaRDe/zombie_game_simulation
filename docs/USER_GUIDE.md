@@ -243,8 +243,16 @@ resolved configuration with your results when comparing runs across versions.
 
 **Time** is elapsed simulation seconds. **Revision** distinguishes committed
 states, including multiple states at the same exact time. Values such as `1/3`
-are exact rational seconds. A readable timestamp marked **≈** is rounded;
-its exact value remains available in the record or detailed table.
+are exact rational seconds. Ordinary timestamps display up to three decimal
+places. **≈51 s** means the displayed value is rounded; **2.5 s** is exact at
+that precision. Very small or large times use scientific notation, such as
+**1e-8 s**, instead of becoming zero or an unwieldy string.
+
+Choose **Exact time** beside a readout to reveal the complete value. Time controls
+show a readable summary; expand **Edit exact time** to enter a decimal or fraction.
+Opening the editor alone does not change the selection. The simulation and saved
+data retain full precision, and chart/table/event clicks still select the original
+time and revision.
 
 The four population counts are Healthy humans, Infected humans, Living zombies,
 and Dead identities. Together they equal the total identity count. Conversion
@@ -291,7 +299,8 @@ Drag to zoom. Manual zoom stays in place while fresh data arrives. The chart's
 is **Reset chart view**. The main viewer's **Return to live** leaves recorded replay.
 Open **Accessible population table** for exact observations. Selecting a sample
 or using **Recorded time to inspect (s)** and **Inspect recorded time** opens
-recorded history. The time field follows your selected view until you edit it,
+recorded history. Expand **Edit exact time** to type a value. The time field
+follows your selected view until you edit it,
 then keeps your exact input while execution advances. Press Enter to inspect,
 or **Use selected view time** to reset it. Switching runs also resets the field.
 Type `0` deliberately to inspect the start; fractions such as `5/2` work too.
@@ -399,7 +408,8 @@ comparison sources. See the [comparison reference](GUI.md#compare-independent-ru
 ### Save a picture or dataset
 
 For a quick picture use **PNG** on the world map or the chart's image control.
-For a recorded-data job, open **Export**, select a format/time or interval,
+For a recorded-data job, open **Export**, select a format/time or interval
+(expand **Edit exact time** to change a time value),
 then **Start export**. Wait for **COMPLETED**, then download both the artifact
 and its provenance. Available formats include world PNG, population chart
 PNG/SVG, population CSV/Parquet and portable HTML replay. Parquet and some
@@ -416,7 +426,7 @@ The two readouts above the tabs answer different questions:
 
 - **Simulation** shows the latest confirmed execution status, time and revision.
 - **Viewing live follow** or **Viewing recorded history** shows the state you
-  are inspecting, with its own exact time and revision.
+  are inspecting, with its own time and revision. **Exact time** reveals the full timestamp.
 
 Clicking an early sample or event can make **Viewing recorded history** show
 `0 s` while **Simulation — Running** continues advancing. The message beside

@@ -1,24 +1,25 @@
 # GUI and launcher issue review
 
-**Current review: I26 — resizing the baseline world leaves its layout outside the bounds.**
-The updated task plan reports the 1,000-agent baseline failing validation after
-world dimensions change from 1,000 × 1,000 m to 200 × 200 m. Diagnosis,
-browser reproduction and isolated feasibility checks are complete. The
-[I26 proposal](#i26-world-resizing-leaves-dependent-layout-coordinates-unchanged)
-was explicitly approved: “I approve the I26 proposal. Implement and verify the
-fixes.” Implementation and verification are complete within the scope below.
-The 200 × 200 workflow passes in Chromium and Firefox, along with 499 supplied
-acceptance cases. I01–I25 approvals, implementations and verification records
-below remain intact; [I25's final evidence](../artifacts/issue25-fix/verification.json)
+**Current review: I27 — GUI times expose long exact fractions instead of readable seconds.**
+The updated task plan reports values such as
+`127500000000000017/2500000000000000` appearing frequently in the GUI.
+The symptom is reproduced in Chromium and Firefox; source and ontology review
+are complete. The [I27 proposal](#i27-gui-times-expose-long-exact-fractions)
+below was approved: “I approve the I27 proposal. Implement and verify the fixes.”
+**Implementation and verification are complete within the scope below.** All 38
+supplied browser cases and the dedicated Chromium/Firefox workflows pass.
+I01–I26 approval, implementation and verification records
+remain below; [I26's final evidence](../artifacts/issue26-fix/verification.json)
 is retained.
 
 Review opened on 2026-11-25 against the current step in
 [the task plan](../prompts/zombie_game_plans.md). **Issues I01–I24 are approved for investigation and implementation, with
 existing audit history retained.** After I11, the user approved I12 and explicitly
 approved all remaining issues. This supersedes the earlier per-issue
-approval pauses recorded below. Newly discovered in-scope issues are reported
-before investigation and covered by the blanket approval; any ontology or
-problem-formulation changes still require separate approval. The task plan, ontology, running
+approval pauses recorded below for that earlier batch. The latest updated plan
+again requires individual review and approval for the newly reported issue.
+Any ontology or problem-formulation changes still require separate approval.
+The task plan, ontology, running
 services and existing simulation records are not changed by this work.
 
 This inventory separates verified source defects, observations from the actual
@@ -57,6 +58,7 @@ below must pass before that issue can be called fixed.
 | I24 | Explicit agents without assignments may ignore scenario model defaults | Both initialization paths/backends preserve explicit assignments and fill missing defaults correctly | Covered by blanket approval; completed |
 | I25 | Analysis detail clicks make historical time zero look like stopped/reset execution | Separate execution/view clocks, explicit history navigation, corrected time editor and truthful status; both browser workflows plus 12 acceptance cases passed | Individually approved; completed within the verification scope below |
 | I26 | Resizing the baseline world leaves dependent layout coordinates unchanged | Coherent resizing, actual 1,000-agent preview/launch, custom/import/save workflows and 499 acceptance cases passed | Individually approved; completed within the verification scope below |
+| I27 | GUI times expose long exact fractions instead of readable seconds | Shared formatting, exact controls and data preservation verified; 38 browser acceptance cases and both-browser regressions passed | Individually approved; completed within the verification scope below |
 
 ## I01 Termination and what without save means
 
@@ -2606,3 +2608,316 @@ starts it again and opens the GUI. Then follow the
 [200 × 200 walkthrough](USER_GUIDE.md#resize-the-baseline-world). Existing
 configurations change only when you deliberately edit their world dimensions in
 the form.
+
+## I27 GUI times expose long exact fractions
+
+**Current status: individually approved, implemented and verified within the scope below.**
+
+**Approval.** The user approved this proposal: “I approve the I27 proposal.
+Implement and verify the fixes.” The original diagnosis and proposal below are
+retained as the pre-implementation review record.
+
+**Reported issue.** The latest [task plan](../prompts/zombie_game_plans.md)
+requires live time values such as `127500000000000017/2500000000000000` to be
+readable and sensibly rounded while retaining useful precision. It also requires
+an explanation and approved proposal before implementation. The diagnosis and
+proposal below record that review; production behavior was unchanged at that stage.
+
+### Cause and observed evidence
+
+The reported fraction is exactly **51.0000000000000068 seconds**. The engine uses
+exact rational time and emits canonical strings through
+[`clock` / `stamp`](../src/zombie_sim/engine.py#L31). This supports precise
+scheduling, history queries and causal revision selection. Geometric durations
+can originate as floating-point calculations and are converted once into the
+recorded clock representation, so long numerators and denominators are expected.
+The reported symptom does not establish a scheduler error.
+
+The GUI lacks a shared time presentation policy:
+
+- [RunViewStatus](../gui/src/RunViewStatus.tsx#L47) renders the execution and
+  displayed-view times directly as strings. Statistics, Cohorts, Comparison,
+  chart hover labels and various notices do the same.
+- [main.tsx](../gui/src/main.tsx#L44) formats selected sidebar and notice values
+  with a generic floating-point, two-decimal helper, also used for non-time data.
+- [EventsPanel](../gui/src/EventsPanel.tsx#L6) separately rounds event-row labels
+  to three decimals with exact integer arithmetic and an approximation marker,
+  but its source/cursor labels still print the raw fraction.
+
+The [formatting audit](../artifacts/issue27-review/formatting-audit.json) records
+29 source locations and eight probes against the existing helpers. Those probes
+also establish two boundary cases within this issue: very small positive times
+can be displayed as zero, and converting large exact integers through JavaScript
+`Number` can change their displayed integer value. Reusing the generic helper
+for every clock would therefore be insufficient.
+
+Both [Chromium](../artifacts/issue27-review/chromium/verification.json) and
+[Firefox](../artifacts/issue27-review/firefox/verification.json) reproduce the
+reported fraction on **14 GUI surfaces**, including both large clocks,
+Statistics source/table labels, Events source/status text, Cohorts and Comparison.
+The [clock screenshot](../artifacts/issue27-review/chromium/raw-live-clocks.png)
+shows the contradiction clearly: the sidebar reads `51 s`, while both main
+clocks print the entire fraction. Existing event rows already render rounded
+labels such as `≈51 s`.
+
+The reproduction used the real engine to advance two isolated runs to the exact
+reported time, then viewed them in live-follow mode while paused. These are
+controlled rendering reproductions, not screenshots of continuous execution.
+Selecting the Statistics endpoint retained the exact fraction and revision
+`70`. Browser navigation issued no execution commands and left configurations,
+command ledgers and recorded histories unchanged. Both disposable services
+exited with code zero, no worker leases and their temporary workspaces removed.
+
+### Proposed behavior
+
+Use one time formatter throughout ordinary GUI readouts, with the following
+explicit policy:
+
+| Exact source value | Proposed visible label | Meaning |
+| --- | --- | --- |
+| `0` | `0 s` | Exactly zero |
+| `5/2` | `2.5 s` | Exactly representable at the displayed precision |
+| `127500000000000017/2500000000000000` | `≈51 s` | Rounded display of the reported value |
+| `1/3` | `≈0.333 s` | Repeating fraction rounded to milliseconds |
+| `0.00000001` | `1e-8 s` | Small positive time remains visibly nonzero |
+| `9007199254740993` | `≈9.0072e15 s` | Compact large time; exact integer remains available |
+
+1. For ordinary values from `0.001` to below `1e9` seconds, use up to **three
+   decimal places**, removing unnecessary trailing zeros. Round to the nearest
+   millisecond, with half ties rounded upward for valid nonnegative clocks.
+2. For smaller positive or very large values, use scientific notation with up to
+   **six significant digits**. Normalize carry at the notation boundaries, so
+   a rounded mantissa does not become an awkward `10e…`. Zero has its own exact
+   representation and is never used as the label for a positive tiny time.
+3. Add `≈` only when the displayed numeric value differs from the exact source.
+   Explain once near the time controls that it means display rounding. Retain
+   revision/sequence context: different instants can legitimately have the same
+   rounded label.
+4. Use exact integer/rational arithmetic to calculate the text. Do not first
+   convert large numerator/denominator strings to `Number`. Handle absent or
+   malformed values with a clear unavailable label rather than inventing zero.
+5. Make the exact source value available through a clearly labelled **Exact
+   time** detail, usable with keyboard and touch. Hover text can supplement it,
+   but must not be the only way to inspect precision.
+
+Ordinary decimal labels have at most **0.0005 s display error**. Scientific
+labels round at the sixth significant digit. These are presentation bounds;
+the stored time and the time used by the engine remain exact.
+
+### Concrete implementation plan
+
+**A. Shared formatting and display.** Introduce a pure time-formatting module
+with a structured result containing the compact label, original exact text and
+whether rounding occurred. Add a reusable display/detail component or equivalent
+shared presentation helpers. Keep generic formatting for life, stamina,
+coordinates and other non-time measurements separate.
+
+**B. Apply it to the complete time-readout inventory.**
+
+| Area | Readouts to update |
+| --- | --- |
+| Execution and viewing | Both status clocks, sidebar/chooser summaries, loading boundaries and operation acknowledgements |
+| Statistics | Metric/resource cursors, stale/error source messages, chart-source caption, sample table and Plotly hover labels |
+| Events | Existing rounded rows, source/paging/status labels and selected-event provenance |
+| Cohorts | Creation reference, saved reference, measurement/export source and survival entry times |
+| Comparison | Common intervals, sample spacing, origin/frontier/source times, sample tables and chart hovers |
+| Research controls | Observation headings, branch/intervention context, command receipts and time-control summaries |
+
+Chart positions still use the existing numeric plotting coordinates; their
+readable ticks and hover text are presentation only. Exact time/revision values
+in `customdata`, row attributes, callbacks and keys remain authoritative.
+Do not key, sort, deduplicate or select records using formatted labels.
+
+**C. Separate readable summaries from exact editing.** For the replay,
+Statistics, export and intervention time controls, show a compact time summary
+and provide an optional, clearly labelled exact editor. Opening the editor
+reveals the original input string; it does not count as an edit. Entering or
+pasting text continues to accept exact decimal/fractional values under the
+existing validation rules. Preserve entered text while the user edits.
+
+An untouched selection submits its original exact time and, where currently
+supported, revision. In particular, preserve I25's Statistics editor behavior.
+Never put `≈` into an editable numeric value, parse the compact label as a
+request, or replace a submitted time merely because focus changed. Export and
+intervention submissions continue to use their exact input strings. This
+proposal includes making these editors discoverable by keyboard, with readable
+summaries in their collapsed state; it does not propose changing command or
+export semantics.
+
+**D. Preserve research data.** The scheduler, simulation state, history,
+checkpoints, API/transport strings, raw record details, CSV/JSON/Parquet data and
+export provenance retain their exact values. Human-readable GUI labels change;
+opening or selecting them must not mutate the run. Exact details can continue
+to show a fraction when it is the authoritative representation.
+
+**E. Document and package.** Update the GUI/user guides to explain the precision
+policy, approximation marker, exact-time access and exact selection behavior.
+Rebuild and verify the packaged GUI assets after implementation.
+
+### Why this addresses the issue
+
+One formatter removes the current raw-string/two-decimal/three-decimal
+inconsistency. Exact arithmetic prevents oversized fractions from overflowing
+or losing significant digits before rounding. Scientific notation prevents tiny
+positive times from masquerading as zero and keeps very large times readable.
+Separating display text from exact input and selection data prevents a cosmetic
+change from selecting the wrong side of an event boundary.
+
+For example, the reported fraction is slightly later than `51`. Showing both as
+`51 s` or `≈51 s` must never merge their observations, change a deadline, or
+substitute revision `69` for revision `70`. The implementation is only complete
+when the regression checks below establish those properties. A proposal alone
+is not a verified fix.
+
+### Verification required after approval
+
+- Test the user example, exact integers/decimals, repeating fractions, zero,
+  tiny positive times, large rational components, ties, notation-boundary carries
+  and absent/invalid inputs. Verify labels and approximation flags against an
+  independent exact-arithmetic oracle.
+- Reproduce the reported workflow in Chromium and Firefox with the final
+  packaged assets, including actively advancing runs as well as paused/live,
+  historical replay, stale/error/loading states and all inventoried readouts.
+  Check desktop and narrow layouts, keyboard access and exact detail disclosure.
+- Use two distinct times that round to the same label and multiple revisions at
+  one time. Verify chart/table/event selections and before/after navigation send
+  the original exact time/revision. Rounded text must never become identity.
+- Cover untouched and edited exact-time controls, opening/closing without
+  changes, partial/invalid input, focus/blur, live refresh and run switching.
+  Check exact request payloads for seek, cohort reference, export and intervention,
+  including retained command retry requests.
+- Compare machine-readable exports and provenance with the exact source data;
+  retain raw inspection data and source-history/configuration/command audits.
+- Run relevant supplied exact-string, linked-cursor, replay isolation,
+  timestamp-step/restart, causal-timeline, keyboard and export acceptance cases,
+  plus I25 editor/view regression checks. Do not change supplied acceptance inputs
+  or assertions to accommodate rounded labels. Where a browser adapter currently
+  reads visible text as an exact value, update its query to the retained exact
+  metadata while preserving the supplied test's input and expected value.
+- Verify build/package parity and clean shutdown of disposable verification
+  services, with no outstanding worker leases or changes to existing user runs.
+
+### Ontology and review boundary
+
+No ontology or problem-formulation change is proposed. Canonical Markdown and
+formal specifications were reviewed. [Ontology §14.1](../ontology/zombie_game_ontology_v0.1.md#L544)
+defines nonnegative elapsed time and exact equal-time precedence while leaving
+storage representation to TASK 2. The [implementation plan](../prompts/task_2_implementation_plan.md#L171)
+requires exact rational clocks with readable seconds and prohibits epsilon
+merging. Its transport/export contracts require exact values and provenance.
+
+The [ontology review](../artifacts/issue27-review/ontology-review.json) records
+successful parsing of the canonical graphs, equivalent OWL serializations and
+all 70 embedded SPARQL queries. It is a semantic review and syntax/integrity
+check, not a full reasoner/SHACL conformance rerun.
+
+Only this review document, independent reproduction scripts and isolated
+evidence were added. The scripts are
+[Python](../implementation_checks/issue27_review_check.py) and
+[browser](../implementation_checks/issue27_review_browser.cjs).
+The [review verification](../artifacts/issue27-review/review-verification.json)
+checks production code/assets, ontology, supplied tests, implementation plans,
+the user-edited task plan and launcher scripts against the start-of-review
+snapshot. That boundary describes the review before approval; implementation
+now proceeds under the user's explicit approval above.
+
+### Implementation after approval
+
+- Added [timeFormat.ts](../gui/src/timeFormat.ts), which parses decimal,
+  scientific and fractional strings and rounds with exact integer arithmetic.
+  It returns the original string separately from the readable label and its
+  approximation flag. Invalid values are unavailable, not silently zero.
+- Added [TimeValue and ExactTimeInput](../gui/src/TimeValue.tsx). Exact-value
+  disclosures work through ordinary buttons; exact editors use native
+  keyboard-accessible disclosures. Their input strings remain authoritative;
+  opening a disclosure does not invoke an edit or submit a rounded value.
+- Applied the shared policy to both clocks, run summaries, Statistics, Events,
+  Cohorts, Comparison, observation/branch context and command receipts. Chart
+  hover labels use an additional formatted field while retaining the original
+  exact time/revision fields for navigation. Event details expose the event's
+  exact time separately from the page's source cursor.
+- Preserved the Statistics editor's I25 behavior. Replay now keeps its edited
+  text separately from the live playback position; live refresh cannot overwrite
+  a draft. An untouched inspection uses the loaded state's exact time/revision.
+  Invalid drafts stay editable without navigating, and run changes reset them.
+- Command-bar notices retain a disclosure of the actual receipt timestamp,
+  independently of the advancing execution clock. Export/intervention controls
+  retain their exact request strings and existing operation semantics.
+- Updated browser-driver selectors to open the new visible disclosures, and
+  changed the I25 independent harness to inspect exact metadata where visible
+  labels are now rounded. Supplied acceptance inputs and expected assertions
+  were retained.
+- Updated [GUI documentation](GUI.md#readable-and-exact-times) and the
+  [user guide](USER_GUIDE.md#read-the-time-and-source-labels), and rebuilt the
+  packaged GUI. No scheduler, storage, API, ontology or machine-readable export
+  implementation changed.
+
+### Final verification
+
+The [consolidated verification record](../artifacts/issue27-fix/verification.json)
+passes. The final TypeScript/Vite build and packaged GUI match byte for byte:
+`index-CBxHCmxL.js` and `index-D-HLrYWX.css`.
+
+| Verification | Result and evidence |
+| --- | --- |
+| Shared formatter against independent arithmetic | **556 passed**: 532 valid strings, 20 invalid inputs and four numeric inputs, checked using Python Decimal/Fraction arithmetic; [report](../artifacts/issue27-fix/formatting.json) |
+| Dedicated I27 browser workflows | **31 checks passed per engine**; [Chromium](../artifacts/issue27-fix/chromium/verification.json), [Firefox](../artifacts/issue27-fix/firefox/verification.json) |
+| I25 time/navigation regressions | **41 steps passed per engine**; [Chromium](../artifacts/issue27-fix/i25-chromium/verification.json), [Firefox](../artifacts/issue27-fix/i25-firefox/verification.json) |
+| Entire supplied browser acceptance tier | **38 distinct cases passed**, including exact strings, linked cursors, replay, timestamp stepping/restart, causal timelines, command recovery, keyboard and exports; [combined report](../artifacts/issue27-fix/acceptance/verification.json) |
+| Actual downloaded data and provenance | Exact CSV, cohort JSON and Comparison CSV values, source fields and provenance checked independently in both engines; [report](../artifacts/issue27-fix/artifact-exactness.json) |
+
+The original browser-tier run passed 37 cases and hit the runner's **60-second
+whole-case limit** in `GUI_PREVIEW_RNG_ISOLATION`. This case performs several real
+1,000-agent initializations. Its unchanged rerun passed in **64.286 seconds**
+with a **120-second limit**. The original report, exception and successful rerun
+are retained, and the case is counted once. No application change or weaker
+assertion was used to resolve the timeout.
+
+The browser checks cover the reported fraction and nearby exact instants with
+the same readable label, multiple causal revisions at one time, chart/table/event
+selection, before/after navigation, live execution, paused/history views,
+retained stale/error sources, keyboard disclosure and 390 px layouts. Untouched
+controls submit the original time/revision; edited fractions and partial drafts
+survive live updates and focus changes. Opening/closing an exact editor does not
+alter its value. An actual intervention retained its exact timestamp and the
+command-bar receipt exposed that same value independently of the live clock.
+
+Desktop and narrow screenshots were inspected:
+[readable clocks](../artifacts/issue27-fix/chromium/readable-live-clocks.png) and
+[narrow controls](../artifacts/issue27-fix/chromium/narrow-readable-times.png).
+The captured primary run is paused; separate checks prove active execution and
+draft preservation while live time advances. Raw record details and explicitly
+opened exact editors intentionally retain full fractional values.
+
+The first independent harness attempts used a nonexistent cohort-export locator
+and began a simulated outage before the prior Statistics source had loaded.
+Those harness errors and their cleanups are retained. The final runs correct
+those fixture assumptions and verify the actual loaded-source behavior; no
+production change was made for either harness correction.
+
+The I27 and I25 disposable services all exited with code zero, completed
+shutdown, released worker leases and removed their temporary workspaces. Paused
+source audits and existing active-history prefixes stayed unchanged. The
+[timeout cleanup audit](../artifacts/issue27-fix/acceptance/timeout-cleanup.json)
+confirms the timed-out fixture workspace was removed, its recorded workers were
+gone and no inspected process referenced its exact paths. Four unrelated
+processes restricted file-descriptor inspection; all predated the attempt.
+No user service or run was stopped during verification.
+
+The [source audit](../artifacts/issue27-fix/source-verification.json), rechecked
+against the final build, confirms the ontology, supplied test definitions,
+user-edited plan, launcher, configuration files and backend implementation remain
+unchanged from the review snapshot. Three generated, tracked test-cache files
+were restored byte for byte to that snapshot after an inventory command
+regenerated them; no test source or assertion changed. Existing I01–I26 evidence
+and audit histories remain intact.
+
+This verification covers the full **38-case browser tier**, independent formatter
+oracles and the targeted browser/data regressions above. It is not a rerun of the
+complete 539-case catalog or a full-duration baseline simulation. The unchanged
+backend and ontology were verified by source hashes.
+
+**Using the update.** Refresh the GUI to load the rebuilt interface. Ordinary
+readouts now show values such as **≈51 s**. Use **Exact time** to reveal the
+original value, or expand **Edit exact time** to enter a precise timestamp. See
+[the time guide](GUI.md#readable-and-exact-times).

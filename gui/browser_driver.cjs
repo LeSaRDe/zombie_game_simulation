@@ -6,6 +6,7 @@ const {executeExport}=require('./browser_exports.cjs');
 const measurements=require('./browser_measurements.cjs');
 const transport=require('./browser_transport.cjs');
 const commands=require('./browser_commands.cjs');
+const {openExactEditor}=require('./browser_exact_time.cjs');
 let browser,context,page;const pages=new Map(),log=[];
 async function sync(){await page.waitForFunction(()=>{const s=window.__zombieInspection?.app;return s&&!s.pending&&!s.view_pending&&(s.perspective==='agent'?!!s.observation:!!s.view);});await page.waitForTimeout(60);}
 async function command(m){
@@ -49,7 +50,7 @@ async function command(m){
    const control=page.getByLabel('Advanced configuration JSON');const draft=JSON.parse(await control.inputValue());const path=testid.slice(7).replace(/^human_roles\./,'population.human_roles.').split('.');let node=draft;for(const key of path.slice(0,-1))node=node[key]??={};node[path.at(-1)]=Number.isFinite(Number(m.value))?Number(m.value):m.value;
    await control.fill(JSON.stringify(draft,null,2));log.push({action:'fill',testid,actual_control:'Advanced configuration JSON',value:m.value});return {};
   }
-  const target=page.getByTestId(testid);log.push({action:'fill',testid,value:String(m.value)});
+  await openExactEditor(page,testid,log);const target=page.getByTestId(testid);log.push({action:'fill',testid,value:String(m.value)});
   if(await target.evaluate(e=>e.tagName==='SELECT')){
    const value=String(m.value);
    if(['config-human_model','config-zombie_model'].includes(testid)&&!(await target.locator('option').evaluateAll(options=>options.map(option=>option.value))).includes(value)){
@@ -63,7 +64,7 @@ async function command(m){
  if(m.op==='export_import_config'){await page.getByTestId('config-export-format').selectOption(m.format);const pending=page.waitForEvent('download');await page.getByTestId('config-export').click();const downloaded=await pending;const saved=m.path;await downloaded.saveAs(saved);await page.getByTestId('config-import').setInputFiles(saved);await page.waitForTimeout(100);return {path:saved};}
  if(m.op==='cohort_create'){await page.getByTestId('tab-cohorts').click();await page.getByTestId('cohort-name').fill(m.name);await page.getByTestId('cohort-mode').selectOption(m.mode);await page.getByTestId('cohort-status').selectOption(m.predicate.status||'');await page.getByTestId('cohort-type').selectOption(m.predicate.type||'');await page.getByTestId('cohort-include-dead').setChecked(m.include_dead!==false);await page.getByTestId('cohort-save').click();await page.waitForFunction(name=>window.__zombieInspection.app.cohorts.some(c=>c.definition.name===name),m.name);return {};}
  if(m.op==='select_observation'){await page.getByTestId('tab-world').click();await page.getByTestId('agent-search').fill(m.agent);await page.getByTestId('agent-search-select').first().click();await page.getByTestId('perspective').selectOption('agent');await sync();return {};}
- if(m.op==='chart_select'){await page.getByTestId('tab-statistics').click();await page.getByTestId('chart-time').fill(String(m.time));await page.getByTestId('chart-select').click();await sync();return {};}
+ if(m.op==='chart_select'){await page.getByTestId('tab-statistics').click();await openExactEditor(page,'chart-time',log);await page.getByTestId('chart-time').fill(String(m.time));await page.getByTestId('chart-select').click();await sync();return {};}
  if(m.op==='timeline_filter'){if(m.agent){await page.getByTestId('tab-world').click();await page.getByTestId('agent-search').fill(m.agent);await page.getByTestId('agent-search-select').first().click();}await page.getByTestId('tab-events').click();await page.getByTestId('timeline-filter').fill(m.event_type||'');return {};}
  if(m.op==='timeline_select'){await page.getByTestId('tab-events').click();await page.getByTestId('timeline-filter').fill(m.event_type||'');const facts=await page.evaluate(()=>window.__zombieInspection.app);const occurrence=Object.values(facts.timeline_occurrences).find(o=>o.intent_id===m.intent);const records=facts.shownEvents;const index=records.findIndex(e=>(e.occurrence||e.action_id)===occurrence.id);if(index<0)throw Error('Recorded timeline occurrence not visible');await page.getByTestId('timeline-first-event').nth(index).click();return {};}
  if(m.op==='elapse_wall_time'){await page.waitForTimeout(m.milliseconds);return {};}

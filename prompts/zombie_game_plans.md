@@ -30,8 +30,7 @@ This task has been done. The ontology specifications are stored in the folder "o
 Your current step is to identify issues and bugs, and then fix them. 
 
 The following issues are what I have identified:
-  - When using GUI, I was trying to customize the default settings for "Ontology baseline 1,000 agents" by changing the "World length" from 1000 to 200 and changing the "World width" from 1000 to 200. After inputing the new values, I pressed "Validate", and it popped up an error message: "barriers[0]: rectangle must have positive area and lie inside world bounds".
-    - The configuration view should automatically adjust all related settings for a run, unless some custom settings will certainly result in conflicts or invalid settings. You must fix this issue.
+  - When using GUI, I found that in many places showing live time, something like the following frequently is displayed: "127500000000000017/2500000000000000". Apparently, the time value should be well rounded while preserving the precision to some extent. You must fix this.
 
 Other potential issues that are not listed above may also exist. You must carefully and rigorously identify those potential issues as comprehensively as possible. When you identify an issue, you must report it to me first before continuing.
 

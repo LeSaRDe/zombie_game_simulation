@@ -1,3 +1,4 @@
+import {TimeValue} from './TimeValue';
 import {lifecycleLabel} from './runLifecycle';
 import './runViewStatus.css';
 
@@ -44,7 +45,7 @@ export default function RunViewStatus({run, freshness, requested, mode, cursor, 
       <div className="status-readout" data-testid="simulation-status" data-status={run?.status || 'unavailable'}
         data-freshness={freshness} data-time={run?.frontier?.time} data-revision={run?.frontier?.revision}>
         <h2>Simulation <span>— {label.charAt(0).toUpperCase() + label.slice(1)}</span></h2>
-        {run?.frontier?.time != null ? <p className="status-clock"><strong>{String(run.frontier.time)} <small>s</small></strong><span>revision {run.frontier.revision}</span></p>
+        {run?.frontier?.time != null ? <p className="status-clock"><strong><TimeValue value={run.frontier.time}/></strong><span>revision {run.frontier.revision}</span></p>
           : <p>Waiting for execution status.</p>}
         <p className="status-caption">{freshness === 'current' ? 'Latest confirmed execution boundary.'
           : 'Status update delayed or unavailable; these are the last confirmed values.'}</p>
@@ -52,13 +53,14 @@ export default function RunViewStatus({run, freshness, requested, mode, cursor, 
       <div className={`status-readout displayed-${mode}`} data-testid="viewer-status" data-mode={mode}
         data-time={cursor?.time} data-revision={cursor?.revision}>
         <h2>{viewing}</h2>
-        {cursor ? <p className="status-clock"><strong>{cursor.time} <small>s</small></strong><span>revision {cursor.revision}</span></p>
+        {cursor ? <p className="status-clock"><strong><TimeValue value={cursor.time}/></strong><span>revision {cursor.revision}</span></p>
           : <p>No recorded view loaded yet.</p>}
         <p className="status-caption">{waiting ? 'Loading the requested view; the last loaded cursor is shown.'
           : mode === 'live' ? 'Follows newly committed history; the viewer may lag execution.'
           : 'The displayed time belongs to this recorded state.'}</p>
       </div>
     </div>
+    <p className="time-format-help">≈ marks display rounding. Exact time reveals the recorded value; selections keep their exact time and revision.</p>
     {mode === 'replay' && <div className="history-explanation">
       <div><p role="status" data-testid="replay-status-message">You are viewing recorded history. {executionMessage(run, freshness, requested)}</p>
         <p>History selections and replay playback change the view. Use <strong>Pause run</strong> to pause execution.</p></div>

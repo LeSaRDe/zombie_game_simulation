@@ -1,3 +1,4 @@
+const {openExactEditor}=require('./browser_exact_time.cjs');
 /* Prepare research commands exclusively through the rendered controls. */
 async function prepare(page,m,log){
  await page.getByTestId('command-open').click();
@@ -5,7 +6,7 @@ async function prepare(page,m,log){
  await page.getByRole('dialog').getByText('Command reference',{exact:true}).click();
  await page.getByTestId('command-id').fill(m.command_id||m.id);
  if(m.command==='intervention'||m.op==='intervention_form'){
-  await page.getByTestId('command-time').fill(m.at);
+  await openExactEditor(page,'command-time',log);await page.getByTestId('command-time').fill(m.at);
   await page.getByTestId('command-change').fill(JSON.stringify(m.change,null,2));
  }
  log.push({action:m.op,command:m.command||'intervention',command_id:m.command_id||m.id});

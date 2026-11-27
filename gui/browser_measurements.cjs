@@ -1,3 +1,4 @@
+const {openExactEditor}=require('./browser_exact_time.cjs');
 /* Browser-only interaction and measurement helpers; no business API calls. */
 async function installInputLog(page){
  await page.evaluate(()=>{
@@ -117,7 +118,7 @@ async function benchmark(page,m,log){
    await page.getByTestId('cohort-save').click();
    await input('world-tab',()=>page.getByTestId('tab-world').click());
   }else if(iteration===12){
-   await page.getByTestId('replay-exact-time').fill('0');
+   await openExactEditor(page,'replay-exact-time',log);await page.getByTestId('replay-exact-time').fill('0');
    await input('scrub',()=>page.getByTestId('replay-seek').click());
    await input('return-live',()=>page.getByTestId('replay-return-live').click());
   }else if(iteration%2===0){

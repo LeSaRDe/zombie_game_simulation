@@ -1,4 +1,6 @@
 import PopulationChart from './PopulationChart';
+import {TimeValue} from './TimeValue';
+import {timeLabel} from './timeFormat';
 import {MetricCursor,MetricRead,sameCursor} from './useStatisticsReader';
 
 export default function StatisticsPanel({read,selected,mode,visible,waitingForView,onRetry,onSeek,colors,onChartState}:{
@@ -11,13 +13,13 @@ export default function StatisticsPanel({read,selected,mode,visible,waitingForVi
   const lastResources=samples.at(-1)?.resources;
   const map=(value:any)=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const resources=lastResources&&map(lastResources.available_and_reserved)&&map(lastResources.reserved_subset)?lastResources:undefined;
-  const source=read.cursor?`${read.cursor.time} s · revision ${read.cursor.revision}`:'not loaded';
+  const source=read.cursor?`${timeLabel(read.cursor.time)} s · revision ${read.cursor.revision}`:'not loaded';
   return <div className="statistics" aria-busy={read.phase==='loading'||read.phase==='refreshing'}>
     <h2>Population through time</h2>
     <span className={`tag ${stale?'statistics-stale':''}`} data-testid="statistics-cursor">{read.cursor
-      ? stale?`Statistics through ${read.cursor.time} s`:`Metric cursor r${read.cursor.revision} · synchronized`
+      ? stale?`Statistics through ${timeLabel(read.cursor.time)} s`:`Metric cursor r${read.cursor.revision} · synchronized`
       :'Statistics not loaded yet'}</span>
-    {read.cursor&&<span className="statistics-source" data-testid="statistics-source">Source {source}{stale?' · selected view differs':''}</span>}
+    {read.cursor&&<span className="statistics-source" data-testid="statistics-source" data-exact-time={read.cursor.time} data-revision={read.cursor.revision}>Source <TimeValue value={read.cursor.time}/> · revision {read.cursor.revision}{stale?' · selected view differs':''}</span>}
     <p>Counts of persistent identities. Conversion changes type; remains never add to the population. Click a chart or table sample to inspect recorded history at its exact time and revision. Simulation execution continues in its current state.</p>
     <div className={`statistics-status ${read.phase==='failed'?'statistics-error':''}`} data-testid="statistics-status" role={read.phase==='failed'?'alert':'status'}>
       {read.phase==='failed'?<><span>Could not refresh Statistics. {read.error}{read.data&&` Showing the last verified data through ${source}.`}</span><button data-testid="statistics-retry" onClick={onRetry}>Retry Statistics</button></>
@@ -33,6 +35,6 @@ export default function StatisticsPanel({read,selected,mode,visible,waitingForVi
     </section><section><h3>Recorded outcomes</h3><p>Exact event totals through {source}. These totals are distinct from the sampled population curves.</p>
       {read.data&&Object.entries(read.data.event_counts).map(([kind,count])=><div className="measure" key={kind}><span>{kind.replaceAll('_',' ')}</span><strong>{count}</strong></div>)}
     </section></div>
-    <details><summary data-testid="population-table-toggle">Accessible population table</summary><div className="table-scroll"><table tabIndex={0} data-testid="population-table"><thead><tr><th>Time (s)</th><th>Healthy humans</th><th>Infected humans</th><th>Zombies</th><th>Dead identities</th></tr></thead><tbody>{samples.map((sample,index)=><tr key={`${sample.time}:${sample.revision}:${index}`}><td><button className="link" aria-label={`Inspect time ${sample.time} seconds, revision ${sample.revision}`} aria-description="Inspect recorded history. Simulation execution is unchanged." title={`Inspect recorded time ${sample.time} s, revision ${sample.revision}`} onClick={()=>onSeek(String(sample.time),String(sample.revision))}>{String(sample.time)}</button><small className="population-sample-revision" data-testid="population-sample-revision">revision {sample.revision}</small></td><td>{sample.healthy}</td><td>{sample.infected}</td><td>{sample.zombies}</td><td>{sample.dead}</td></tr>)}</tbody></table></div></details>
+    <details><summary data-testid="population-table-toggle">Accessible population table</summary><div className="table-scroll"><table tabIndex={0} data-testid="population-table"><thead><tr><th>Time (s)</th><th>Healthy humans</th><th>Infected humans</th><th>Zombies</th><th>Dead identities</th></tr></thead><tbody>{samples.map((sample,index)=><tr key={`${sample.time}:${sample.revision}:${index}`}><td><button className="link" data-exact-time={String(sample.time)} data-revision={String(sample.revision)} aria-label={`Inspect time ${timeLabel(sample.time).replace("≈","approximately ")} seconds, revision ${sample.revision}`} aria-description="Inspect recorded history. Simulation execution is unchanged." title={`Inspect recorded time ${sample.time} s, revision ${sample.revision}`} onClick={()=>onSeek(String(sample.time),String(sample.revision))}>{timeLabel(sample.time)}</button><small className="population-sample-revision" data-testid="population-sample-revision">revision {sample.revision}</small></td><td>{sample.healthy}</td><td>{sample.infected}</td><td>{sample.zombies}</td><td>{sample.dead}</td></tr>)}</tbody></table></div></details>
   </div>;
 }

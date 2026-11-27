@@ -1,3 +1,4 @@
+const {openExactEditor}=require('../gui/browser_exact_time.cjs');
 /* Independent I25 checks: real UI actions, DOM labels, command journal and ledger. */
 const {chromium,firefox}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
@@ -30,7 +31,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   };
   const select=async(identity)=>{await page.locator(`.sidebar button.run-card[data-run-id="${identity}"]`).click();await ready(identity);};
   const live=async(identity=ids.primary)=>{if((await app()).mode==='replay')await page.getByTestId('replay-return-live').click();await until(async()=>{const a=await app();return a.mode==='live'&&a.view?.mode==='live'&&!a.view_pending;},'live view');await ready(identity);};
-  const seek=async(time)=>{await page.getByTestId('replay-exact-time').fill(time);await page.getByTestId('replay-seek').click();await ready();};
+  const seek=async(time)=>{await openExactEditor(page,'replay-exact-time');await page.getByTestId('replay-exact-time').fill(time);await page.getByTestId('replay-seek').click();await ready();};
   const current=()=>until(async()=>(await attrs('simulation-status')).freshness==='current','fresh run summary');
   const historyZero=async(label)=>{
    await until(async()=>{const a=await app();return a.mode==='replay'&&numeric(a.view?.time)===0&&!a.view_pending;},'zero-time replay');await current();
@@ -55,15 +56,15 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await until(async()=>numeric(await page.getByTestId('chart-time').inputValue())>numeric(inputBefore),'untouched field advances');
   await page.getByTestId('chart-select').click();await ready();
   const untouched=await capture('Untouched Statistics field inspects current cursor');assert.equal(untouched.viewer.mode,'replay');assert(numeric(untouched.viewer.time)>0);assert.match(await page.getByTestId('chart-select').innerText(),/recorded/i);
-  await live();await page.getByTestId('chart-time').fill('1/2');const editedHead=(await head()).frontier.time;
+  await live();await openExactEditor(page,'chart-time');await page.getByTestId('chart-time').fill('1/2');const editedHead=(await head()).frontier.time;
   await until(async()=>numeric((await head()).frontier.time)>numeric(editedHead)+.5,'run advances with edited draft');assert.equal(await page.getByTestId('chart-time').inputValue(),'1/2');
   await page.getByTestId('chart-time').press('Enter');await ready();assert.equal(numeric((await app()).view.time),.5);await capture('Intentional fraction survives live updates and Enter selects it');
   await live();
   for(const draft of ['', 'banana','1/0','-1']){
-   await page.getByTestId('chart-time').fill(draft);await page.getByTestId('chart-select').click();await page.getByTestId('chart-time-error').waitFor();
+   await openExactEditor(page,'chart-time');await page.getByTestId('chart-time').fill(draft);await page.getByTestId('chart-select').click();await page.getByTestId('chart-time-error').waitFor();
    assert.equal(await page.getByTestId('chart-time').getAttribute('aria-invalid'),'true');assert.equal((await app()).mode,'live');report.steps.push({label:'Rejected invalid chart draft',draft,error:await page.getByTestId('chart-time-error').innerText()});
   }
-  await page.getByTestId('chart-time').fill('0');await page.getByTestId('chart-time').press('Enter');await historyZero('Deliberately inspect zero');
+  await openExactEditor(page,'chart-time');await page.getByTestId('chart-time').fill('0');await page.getByTestId('chart-time').press('Enter');await historyZero('Deliberately inspect zero');
   await page.getByTestId('chart-time-reset').click();assert.equal(await page.getByTestId('chart-time').inputValue(),String((await app()).view.time));
   await live();await page.getByTestId('population-table-toggle').click();const first=page.getByTestId('population-table').locator('tbody tr').first().getByRole('button');assert.equal(await first.innerText(),'0');await first.click();await historyZero('First Statistics sample');
   await live();await until(async()=>await page.getByTestId('population-chart').locator('.scatterlayer .trace .points .point').count()>1,'drawn Plotly markers');
@@ -87,11 +88,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   releaseDelay();await page.waitForTimeout(250);const staleArrival=await capture('Late response stays last confirmed');assert.equal(staleArrival.execution.freshness,'last-confirmed');
   await page.unroute(runsPattern);await current();
   // Hold a history response while switching runs; stale content must not return.
-  await live();await page.getByTestId('tab-statistics').click();await page.getByTestId('chart-time').fill('11/4');
+  await live();await page.getByTestId('tab-statistics').click();await openExactEditor(page,'chart-time');await page.getByTestId('chart-time').fill('11/4');
   let viewEntered=false,releaseView;const viewGate=new Promise(resolve=>releaseView=resolve);releases.push(releaseView);
   const viewPattern=`**/api/runs/${ids.primary}/view?*`;
   await page.route(viewPattern,async route=>{const response=await route.fetch();viewEntered=true;await viewGate;try{await route.fulfill({response});}catch{}});
-  await page.getByTestId('replay-exact-time').fill('0');await page.getByTestId('replay-seek').click();await until(()=>viewEntered,'held historical view');
+  await openExactEditor(page,'replay-exact-time');await page.getByTestId('replay-exact-time').fill('0');await page.getByTestId('replay-seek').click();await until(()=>viewEntered,'held historical view');
   await select(ids.alternate);assert.equal(await page.getByTestId('chart-time').inputValue(),'2');releaseView();await page.unroute(viewPattern);await page.waitForTimeout(300);await capture('Switch run discards edited input and late historical response',ids.alternate);
   assert.equal((await app()).view.run_id,ids.alternate);assert.equal((await app()).mode,'live');assert.equal(await page.getByTestId('chart-time').inputValue(),'2');
   await select(ids.primary);await until(async()=>await page.getByTestId('chart-time').inputValue()===String((await app()).view.time),'switch back resets input to selected view');
@@ -101,7 +102,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
    const node=page.getByTestId(testid);assert(await node.isVisible());const box=await node.boundingBox();assert(box&&box.width<=390&&box.x>=0&&box.x+box.width<=391,`${testid} fits narrow screen: ${JSON.stringify(box)}`);
   }
   await page.getByTestId('replay-return-live').focus();await page.keyboard.press('Enter');await live();
-  await page.getByTestId('tab-statistics').focus();await page.keyboard.press('Enter');await page.getByTestId('chart-time').fill('0');await page.getByTestId('chart-time').press('Enter');await ready();await capture('Keyboard history inspection at narrow width');
+  await page.getByTestId('tab-statistics').focus();await page.keyboard.press('Enter');await openExactEditor(page,'chart-time');await page.getByTestId('chart-time').fill('0');await page.getByTestId('chart-time').press('Enter');await ready();await capture('Keyboard history inspection at narrow width');
   await page.screenshot({path:path.join(output,'narrow-history.png'),fullPage:true});await page.setViewportSize({width:1440,height:1100});
   const analysisAudit=await audit(ids.primary,initialAudit.through);
   assert.deepEqual(analysisAudit.commands,initialAudit.commands);assert.equal(analysisAudit.prefix_sha256,initialAudit.prefix_sha256);assert(analysisAudit.head.seconds>initialAudit.head.seconds);
@@ -123,7 +124,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   await page.getByTestId('run-start').click();await status('running','Continue a stopped run while viewing history');
   await page.getByTestId('run-terminate').click();await status('terminated','Explicit Terminate while viewing history');
   await page.screenshot({path:path.join(output,'terminated-history.png'),fullPage:true});
-  await select(ids.completion);await page.getByTestId('replay-exact-time').fill('0');await page.getByTestId('replay-seek').click();await ready(ids.completion);const completedHistory=await capture('Short run before completion',ids.completion);
+  await select(ids.completion);await openExactEditor(page,'replay-exact-time');await page.getByTestId('replay-exact-time').fill('0');await page.getByTestId('replay-seek').click();await ready(ids.completion);const completedHistory=await capture('Short run before completion',ids.completion);
   // Delay the applied Continue receipt until normal polling has observed completion.
   // A historical acknowledgement must not turn that completed summary back to running.
   let ackEntered=false,releaseAck,releaseSummaries,holdSummaries=false;

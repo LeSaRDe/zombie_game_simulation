@@ -1,31 +1,10 @@
 import {MetricCursor, sameCursor} from './useStatisticsReader';
 import {EventRead} from './useEventsReader';
+import {TimeValue} from './TimeValue';
+import {timeLabel} from './timeFormat';
 
 type Obj=Record<string,any>;
-const source=(cursor:MetricCursor)=>`${cursor.time} s · revision ${cursor.revision}`;
-function rowTime(value:string):string {
-  try{
-    const fraction=/^(-?\d+)\/(\d+)$/.exec(value);
-    let numerator:bigint,denominator:bigint;
-    if(fraction){numerator=BigInt(fraction[1]);denominator=BigInt(fraction[2]);}
-    else{
-      const decimal=/^([+-]?)(\d+)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(value);
-      if(!decimal)return value;
-      const exponent=Number(decimal[4]||0)-(decimal[3]||'').length;
-      if(!Number.isSafeInteger(exponent)||Math.abs(exponent)>10000)return value;
-      numerator=BigInt((decimal[1]==='-'?'-':'')+decimal[2]+(decimal[3]||''));
-      denominator=exponent<0?10n**BigInt(-exponent):1n;
-      if(exponent>0)numerator*=10n**BigInt(exponent);
-    }
-    if(denominator===0n)return value;
-    const magnitude=numerator<0n?-numerator:numerator;
-    const scaled=magnitude*1000n;
-    const rounded=(scaled*2n+denominator)/(denominator*2n);
-    const decimals=String(rounded%1000n).padStart(3,'0').replace(/0+$/,'');
-    const label=`${numerator<0n&&rounded>0n?'-':''}${rounded/1000n}${decimals?'.'+decimals:''}`;
-    return `${scaled%denominator===0n?'':'≈'}${label}`;
-  }catch{return value;}
-}
+const source=(cursor:MetricCursor)=>`${timeLabel(cursor.time)} s · revision ${cursor.revision}`;
 export default function EventsPanel({read,selected,mode,following,queryKey,waitingForView,agent,search,onSearch,onClearAgent,onRetry,onLatest,onOlder,onNewer,onSelect}:{
   read:EventRead;selected:MetricCursor;mode:'live'|'replay';following:boolean;queryKey:string;waitingForView:boolean;agent:string;search:string;
   onSearch:(text:string)=>void;onClearAgent:()=>void;onRetry:()=>void;onLatest:()=>void;onOlder:()=>void;onNewer:()=>void;onSelect:(event:Obj,cursor:MetricCursor)=>void;
@@ -39,8 +18,8 @@ export default function EventsPanel({read,selected,mode,following,queryKey,waiti
   const navigable=read.phase==='ready'&&currentPage&&!waitingForView;
   return <div className="timeline-panel" aria-busy={busy}>
     <h2>Event & causal timeline</h2>
-    <p className="events-help">Inspect recorded events in ascending commit sequence. Each page contains at most 500 records. Row times marked ≈ are rounded to three decimal places; hover or select a record for its exact time and causal transition.</p>
-    <span data-testid="events-cursor" className={`tag ${stale?'statistics-stale':''}`}>{read.cursor?`Events through ${measured}${stale?' · previous verified results':''}`:'Events not loaded yet'}</span>
+    <p className="events-help">Inspect recorded events in ascending commit sequence. Each page contains at most 500 records. Times marked ≈ are rounded for display. Ordinary times use up to three decimal places; very small or large times use scientific notation. Select a record for its exact time and causal transition.</p>
+    <span data-testid="events-cursor" data-exact-time={read.cursor?.time} data-revision={read.cursor?.revision} className={`tag ${stale?'statistics-stale':''}`}>{read.cursor?<>Events through <TimeValue value={read.cursor.time}/> · revision {read.cursor.revision}{stale?' · previous verified results':''}</>:'Events not loaded yet'}</span>
     <div className="events-navigation">
       <button data-testid="events-older" disabled={!navigable||!read.data?.page.has_older} onClick={onOlder}>Older</button>
       <button data-testid="events-newer" disabled={!navigable||!read.data?.page.has_newer} onClick={onNewer}>Newer</button>
@@ -67,7 +46,7 @@ export default function EventsPanel({read,selected,mode,following,queryKey,waiti
     </div>
     <p className="events-counts" data-testid="events-counts">{shown.length} matching records · {records.length} loaded{read.data?.page.first_sequence&&` · sequences ${read.data.page.first_sequence}–${read.data.page.last_sequence}`} · ascending durable commit sequence</p>
     <div className="event-list">{shown.map(record=><button data-testid="timeline-first-event" data-event-sequence={record.ledger_sequence} className="event-row" key={record.ledger_sequence} disabled={!read.cursor} onClick={()=>read.cursor&&onSelect(record,read.cursor)}>
-      <span className="event-time" data-exact-time={String(record.time??0)} title={`Exact time: ${String(record.time??0)} s`}><span data-testid="event-time-label" aria-hidden="true">{rowTime(String(record.time??0))} s</span><span className="sr-only">Exact time {String(record.time??0)} seconds.</span><small>r{record.ledger_revision} · sequence {record.ledger_sequence} · phase {record.phase??'—'}</small></span>
+      <span className="event-time" data-exact-time={String(record.time??0)} title={`Exact time: ${String(record.time??0)} s`}><span data-testid="event-time-label" aria-hidden="true">{timeLabel(record.time)} s</span><span className="sr-only">Time {timeLabel(record.time).replace("≈","approximately ")} seconds. Select for the exact time.</span><small>r{record.ledger_revision} · sequence {record.ledger_sequence} · phase {record.phase??'—'}</small></span>
       <span><strong>{record.kind||record.type||'event'}</strong><small>{(record.actor??record.agent_id??record.agent)!=null&&`Actor #${record.actor??record.agent_id??record.agent}`}{(record.target??record.target_id)!=null&&` → #${record.target??record.target_id}`} {record.action||''}</small><small>Inspect this recorded event</small></span>
       <span className="tag">{record.outcome||record.reason||'recorded'}</span>
     </button>)}</div>

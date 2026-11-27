@@ -1,12 +1,15 @@
 import {FormEvent, useEffect, useRef, useState} from 'react';
 import {MetricCursor, sameCursor} from './useStatisticsReader';
 import {CohortRead} from './useCohortReader';
+import {TimeValue} from './TimeValue';
+import {timeLabel} from './timeFormat';
 
 type Obj=Record<string,any>;
 type Draft={name:string;mode:string;type:string;status:string;role:string;model:string;region:string;includeDead:boolean};
 const example:Draft={name:'All humans',mode:'fixed',type:'Human',status:'',role:'',model:'',region:'',includeDead:true};
-const source=(cursor:{time:string;revision:string})=>`${cursor.time} s · revision ${cursor.revision}`;
-const reference=(definition:Obj)=>definition.reference_time==null?`Time unavailable · revision ${definition.reference_revision}`:source({time:String(definition.reference_time),revision:String(definition.reference_revision)});
+const source=(cursor:{time:string;revision:string})=>`${timeLabel(cursor.time)} s · revision ${cursor.revision}`;
+const sourceView=(cursor:{time:string;revision:string})=><><TimeValue value={cursor.time}/> · revision {cursor.revision}</>;
+const reference=(definition:Obj)=>definition.reference_time==null?`Time unavailable · revision ${definition.reference_revision}`:sourceView({time:String(definition.reference_time),revision:String(definition.reference_revision)});
 const number=(value:number)=>value.toLocaleString(undefined,{maximumFractionDigits:2});
 function parsedDraft(draft:Draft){
   const errors:Record<string,string>={};
@@ -71,7 +74,7 @@ export default function CohortPanel({read,selected,waitingForView,onRetry,onCrea
   return <div className="cohort-panel" aria-busy={pending||read.phase==='loading'||read.phase==='refreshing'}>
     <h2>Study groups of agents</h2>
     <p>A cohort is a named group you can follow through recorded history. Fixed cohorts keep the chosen identities; dynamic cohorts reapply their filters at each displayed cursor. Cohorts may overlap.</p>
-    <span className={`tag ${stale?'statistics-stale':''}`} data-testid="cohorts-cursor">{read.cursor?`Cohorts through ${measured}${stale?' · selected view differs':''}`:'Cohorts not loaded yet'}</span>
+    <span className={`tag ${stale?'statistics-stale':''}`} data-testid="cohorts-cursor" data-exact-time={read.cursor?.time} data-revision={read.cursor?.revision}>{read.cursor?<>Cohorts through {sourceView(read.cursor)}{stale?' · selected view differs':''}</>:'Cohorts not loaded yet'}</span>
     <button className="cohort-refresh" data-testid="cohorts-refresh" disabled={read.phase==='loading'||read.phase==='refreshing'||waitingForView} onClick={onRetry} title="Read saved definitions, including changes made in another browser.">Refresh Cohorts</button>
     <div className={`statistics-status ${read.phase==='failed'?'statistics-error':''}`} data-testid="cohorts-status" role={read.phase==='failed'?'alert':'status'}>
       {read.phase==='failed'?<><span>Could not refresh Cohorts. {read.error}{read.data&&` Showing the last verified collection through ${measured}.`}</span><button data-testid="cohorts-retry" onClick={onRetry}>Retry Cohorts</button></>
@@ -85,7 +88,7 @@ export default function CohortPanel({read,selected,waitingForView,onRetry,onCrea
       <fieldset disabled={pending||waitingForView}>
         <legend>Create a cohort</legend>
         <p className="cohort-help">1. Choose a reference time with the main replay controls, or keep the live view. 2. Name and filter the group. 3. Create it and inspect its members below.</p>
-        <p data-testid="cohort-create-reference">Reference for this submission: <strong>{source(selected)}</strong>. The displayed cursor is captured when you choose Create cohort.</p>
+        <p data-testid="cohort-create-reference">Reference for this submission: <strong>{sourceView(selected)}</strong>. The displayed cursor is captured when you choose Create cohort.</p>
         <div className="cohort-presets"><button type="button" data-testid="cohort-example-humans" onClick={()=>reset(true)}>Use All humans example</button><button type="button" data-testid="cohort-clear-filters" onClick={()=>reset(false)}>Clear all filters</button></div>
         <div className="cohort-form">
           <label>Name<input data-testid="cohort-name" value={draft.name} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name?'cohort-name-error':undefined} onChange={event=>edit('name',event.target.value)}/>{fieldErrors.name&&<span className="config-field-error" id="cohort-name-error">{fieldErrors.name}</span>}</label>
@@ -111,7 +114,7 @@ export default function CohortPanel({read,selected,waitingForView,onRetry,onCrea
       return <article className={`cohort-card ${definition.id===created?.id?'cohort-card-created':''}`} key={definition.id} data-testid="cohort-card" data-cohort-id={definition.id}>
         <span className="tag">{definition.mode==='fixed'?'Fixed identities':'Dynamic filters'}</span><h3>{definition.name||'Unnamed cohort'}</h3>
         <p data-testid="cohort-reference">Reference: {reference(definition)}</p>
-        <p data-testid="cohort-measurement">Measured through {measured}{stale?' · stale for the selected view':''}</p>
+        <p data-testid="cohort-measurement">Measured through {read.cursor?sourceView(read.cursor):'not loaded'}{stale?' · stale for the selected view':''}</p>
         <p className="cohort-predicate">{filters(definition)}</p>
         <p>{definition.mode==='fixed'?(definition.include_dead===false?'Initially excluded already-dead identities; later deaths stay in this fixed group.':'Included matching dead identities at the reference cursor; later deaths stay in this fixed group.'):(definition.include_dead===false?'Dead identities excluded from current membership.':'Matching dead identities included in current membership.')}</p>
         <strong className="cohort-number" data-testid="cohort-count">{cohort.denominator}</strong><p>member identities{cohort.present!==cohort.denominator&&` · ${cohort.present} present at this cursor`}</p>
@@ -120,10 +123,10 @@ export default function CohortPanel({read,selected,waitingForView,onRetry,onCrea
         <p data-testid="cohort-populations">{cohort.populations.healthy} healthy · {cohort.populations.infected} infected · {cohort.populations.zombies} zombies · {cohort.populations.dead} dead</p>
         <p data-testid="cohort-mean-life" data-denominator={cohort.mean_life_denominator}>Mean life <strong>{cohort.mean_life_denominator?number(cohort.mean_life):'—'}</strong> · denominator {cohort.mean_life_denominator}</p>
         <p data-testid="cohort-mean-stamina" data-denominator={cohort.mean_stamina_denominator}>Mean stamina <strong>{cohort.mean_stamina_denominator?number(cohort.mean_stamina):'—'}</strong> · denominator {cohort.mean_stamina_denominator}</p>
-        {cohort.human_survival&&<div className="cohort-survival" data-testid="cohort-human-survival"><h4>Human survival</h4><p>{cohort.human_survival.eligible} eligible at entry · {cohort.human_survival.events} events · {cohort.human_survival.censored} right-censored</p><p>{cohort.human_survival.excluded_non_human} initially non-Human identities excluded · {cohort.human_survival.excluded_unknown_entry} without a known entry state · {cohort.human_survival.excluded_dead_at_entry} dead at entry excluded</p><p data-testid="cohort-human-entry">Entry source run <code>{cohort.human_survival.entry_run_id}</code> · {cohort.human_survival.entry_time} s · revision {cohort.human_survival.entry_revision}</p><small>Death or conversion ends Human survival; surviving Humans are right-censored at this measurement cursor.</small></div>}
-        {cohort.identity_survival&&<div className="cohort-survival" data-testid="cohort-identity-survival"><h4>Identity survival</h4><p>{cohort.identity_survival.eligible} eligible at entry · {cohort.identity_survival.events} deaths · {cohort.identity_survival.censored} right-censored</p><p>{cohort.identity_survival.excluded_dead_at_entry} dead at entry excluded · {cohort.identity_survival.excluded_unknown_entry} without a known entry state</p><p data-testid="cohort-identity-entry">Entry source run <code>{cohort.identity_survival.entry_run_id}</code> · {cohort.identity_survival.entry_time} s · revision {cohort.identity_survival.entry_revision}</p><small>Conversion preserves an identity.</small></div>}
+        {cohort.human_survival&&<div className="cohort-survival" data-testid="cohort-human-survival"><h4>Human survival</h4><p>{cohort.human_survival.eligible} eligible at entry · {cohort.human_survival.events} events · {cohort.human_survival.censored} right-censored</p><p>{cohort.human_survival.excluded_non_human} initially non-Human identities excluded · {cohort.human_survival.excluded_unknown_entry} without a known entry state · {cohort.human_survival.excluded_dead_at_entry} dead at entry excluded</p><p data-testid="cohort-human-entry">Entry source run <code>{cohort.human_survival.entry_run_id}</code> · <TimeValue value={cohort.human_survival.entry_time}/> · revision {cohort.human_survival.entry_revision}</p><small>Death or conversion ends Human survival; surviving Humans are right-censored at this measurement cursor.</small></div>}
+        {cohort.identity_survival&&<div className="cohort-survival" data-testid="cohort-identity-survival"><h4>Identity survival</h4><p>{cohort.identity_survival.eligible} eligible at entry · {cohort.identity_survival.events} deaths · {cohort.identity_survival.censored} right-censored</p><p>{cohort.identity_survival.excluded_dead_at_entry} dead at entry excluded · {cohort.identity_survival.excluded_unknown_entry} without a known entry state</p><p data-testid="cohort-identity-entry">Entry source run <code>{cohort.identity_survival.entry_run_id}</code> · <TimeValue value={cohort.identity_survival.entry_time}/> · revision {cohort.identity_survival.entry_revision}</p><small>Conversion preserves an identity.</small></div>}
         <details><summary>Member IDs ({cohort.members.length}) and definition</summary><div className="cohort-member-list" data-testid="cohort-members">{cohort.members.length?cohort.members.map((identity:string)=><code key={identity}>{identity}</code>):<span>No member IDs.</span>}</div><pre>{JSON.stringify(definition,null,2)}</pre></details>
-        <button disabled={!exportCursor} onClick={()=>{if(exportCursor)onExport(cohort,exportCursor);}}>Export cohort</button><p className="cohort-help" data-testid="cohort-export-source">Exports the displayed measurements through {exportCursor?source(exportCursor):'not loaded'}{stale?', including this older source cursor':''}.</p>
+        <button disabled={!exportCursor} onClick={()=>{if(exportCursor)onExport(cohort,exportCursor);}}>Export cohort</button><p className="cohort-help" data-testid="cohort-export-source">Exports the displayed measurements through {exportCursor?sourceView(exportCursor):'not loaded'}{stale?', including this older source cursor':''}.</p>
       </article>;
     })}</div>
     <p className="cohort-help">Creating a cohort saves an analysis definition. It does not change the simulation or its decisions. Averages use the number of member identities present at the measurement cursor; an empty denominator has no defined mean.</p>

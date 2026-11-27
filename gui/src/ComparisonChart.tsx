@@ -1,5 +1,6 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Plotly from 'plotly.js-dist-min';
+import {timeLabel} from './timeFormat';
 import {ComparisonData, ComparisonMetadata, comparisonSeconds} from './useComparisonReader';
 
 type Obj=Record<string,any>;
@@ -44,11 +45,11 @@ export default function ComparisonChart(props:Props) {
             control.pending=false;const current=latest.current,data=current.data;
             if(!current.visible||data?.status!=='ready'||!data.sample_times.length)continue;
             const traces=data.runs.map(run=>({x:run.samples.map(sample=>sample.seconds),y:run.samples.map(sample=>sample[current.metric]),
-              customdata:run.samples.map(sample=>[String(sample.time),String(sample.revision)]),meta:{run_id:run.run_id},
+              customdata:run.samples.map(sample=>[String(sample.time),String(sample.revision),timeLabel(sample.time)]),meta:{run_id:run.run_id},
               type:'scatter' as const,mode:'lines+markers' as const,cliponaxis:false,
               name:`seed ${current.metadata?.[run.run_id]?.seed} · ${run.run_id.slice(0,8)}`,
               line:{color:current.colors[run.run_id],width:2.5},marker:{size:run.samples.length===1?9:4,color:current.colors[run.run_id]},
-              hovertemplate:'%{y} identities<br>Time %{customdata[0]} s · revision %{customdata[1]}<extra>%{fullData.name}</extra>'}));
+              hovertemplate:'%{y} identities<br>Time %{customdata[2]} s · revision %{customdata[1]}<extra>%{fullData.name}</extra>'}));
             const start=comparisonSeconds(data.common_interval.start),end=comparisonSeconds(data.common_interval.end);
             const extent=start===end?[Math.max(0,start-.5),end+.5+(start===0?.5:0)]:[start,end];
             updating++;

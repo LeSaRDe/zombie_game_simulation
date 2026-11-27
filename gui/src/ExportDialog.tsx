@@ -1,3 +1,4 @@
+import {ExactTimeInput} from './TimeValue';
 import React,{useEffect,useRef,useState} from 'react';
 
 type Job={id:string;status:string;active_tasks:number;artifact_url:string;provenance_url:string;error?:string;bytes?:number;[key:string]:unknown};
@@ -27,10 +28,10 @@ export default function ExportDialog({runId,time,revision,onClose}:{runId:string
         <option value="scene_png">World scene · PNG</option><option value="chart_png">Population chart · PNG</option><option value="chart_svg">Population chart · SVG</option>
         <option value="table_csv">Population table · CSV</option><option value="table_parquet">Population table · Parquet</option><option value="replay_animation">Portable replay animation · HTML</option>
       </select></label>
-      <label>Scene time (s)<input data-testid="export-time" value={selected} disabled={active} onChange={e=>setSelected(e.target.value)}/></label>
-      <label>Interval start (s)<input data-testid="export-interval-start" value={start} disabled={active} onChange={e=>setStart(e.target.value)}/></label>
-      <label>Interval end (s)<input data-testid="export-interval-end" value={end} disabled={active} onChange={e=>setEnd(e.target.value)}/></label>
-      <label>Sample interval (s)<input data-testid="export-sample-interval" value={interval} disabled={active} onChange={e=>setInterval(e.target.value)}/></label>
+      <ExactTimeInput label="Scene time (s)" data-testid="export-time" value={selected} disabled={active} onChange={e=>setSelected(e.target.value)}/>
+      <ExactTimeInput label="Interval start (s)" data-testid="export-interval-start" value={start} disabled={active} onChange={e=>setStart(e.target.value)}/>
+      <ExactTimeInput label="Interval end (s)" data-testid="export-interval-end" value={end} disabled={active} onChange={e=>setEnd(e.target.value)}/>
+      <ExactTimeInput label="Sample interval (s)" data-testid="export-sample-interval" value={interval} disabled={active} onChange={e=>setInterval(e.target.value)}/>
       <label>Cohort<select data-testid="export-cohort" value={cohort} disabled={active} onChange={e=>setCohort(e.target.value)}><option value="all">All identities</option>{cohorts.map(item=><option key={item.id||item.name} value={item.id||item.name}>{item.name}</option>)}</select></label>
       <small>Current viewer revision: {revision}. Every artifact includes a provenance file.</small>
       {error&&<p role="alert">{error}</p>}

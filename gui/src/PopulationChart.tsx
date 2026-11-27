@@ -1,6 +1,8 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import Plotly from 'plotly.js-dist-min';
 import {MetricCursor} from './useStatisticsReader';
+import {ExactTimeInput, TimeValue} from './TimeValue';
+import {timeLabel} from './timeFormat';
 
 type Obj=Record<string,any>;
 type Props={samples:Obj[];cursor?:MetricCursor;selected:MetricCursor;mode:'live'|'replay';visible:boolean;colors:Record<string,string>;
@@ -86,11 +88,11 @@ export default function PopulationChart(props:Props) {
             if(!current.visible||!current.samples.length)continue;
             const traces=Object.keys(current.colors).map(name=>({
               x:current.samples.map(sample=>sample.seconds),y:current.samples.map(sample=>sample[name]),
-              customdata:current.samples.map(sample=>[String(sample.time),String(sample.revision)]),
+              customdata:current.samples.map(sample=>[String(sample.time),String(sample.revision),timeLabel(sample.time)]),
               type:'scatter' as const,mode:'lines+markers' as const,cliponaxis:false,
               name:name[0].toUpperCase()+name.slice(1),line:{color:current.colors[name],width:2.5},
               marker:{size:current.samples.length===1?9:4,color:current.colors[name]},
-              hovertemplate:'%{y} identities<br>Time %{customdata[0]} s · revision %{customdata[1]}<extra>%{fullData.name}</extra>',
+              hovertemplate:'%{y} identities<br>Time %{customdata[2]} s · revision %{customdata[1]}<extra>%{fullData.name}</extra>',
             }));
             const lastTime=current.samples.at(-1)!.seconds;
             const xRange=axes.current.following?[0,lastTime>0?lastTime:1]:axes.current.x;
@@ -130,8 +132,8 @@ export default function PopulationChart(props:Props) {
     {props.samples.length>0&&props.samples.at(-1)!.seconds===0&&<p className="chart-note">The initial chart spans one second for visibility. The recorded simulation time is still zero.</p>}
     {error&&<p className="statistics-error" role="alert">Chart unavailable: {error} The population table remains available. <button onClick={()=>setRetry(value=>value+1)}>Retry chart</button></p>}
     <div ref={element} hidden={!props.samples.length} className="plot" data-testid="population-chart" aria-label="Population over simulated time. Click a sample to inspect its recorded time and revision."/>
-    <p className="chart-note" data-testid="chart-source">{props.samples.length&&drawnCursor?`Chart through ${drawnCursor.time} s · revision ${drawnCursor.revision}`:'Waiting for population samples.'}</p>
-    <label>Recorded time to inspect (s)<input data-testid="chart-time" value={chartTime} aria-invalid={Boolean(timeError)} aria-describedby={timeError?'chart-time-help chart-time-error':'chart-time-help'} onChange={event=>{setTimeDraft({runId:props.selected.run_id,text:event.target.value});setTimeError('');}} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();inspectTime();}}}/></label>
+    <p className="chart-note" data-testid="chart-source" data-exact-time={drawnCursor?.time} data-revision={drawnCursor?.revision}>{props.samples.length&&drawnCursor?<>Chart through <TimeValue value={drawnCursor.time}/> · revision {drawnCursor.revision}</>:'Waiting for population samples.'}</p>
+    <ExactTimeInput label="Recorded time to inspect (s)" data-testid="chart-time" value={chartTime} aria-invalid={Boolean(timeError)} aria-describedby={timeError?'chart-time-help chart-time-error':'chart-time-help'} onChange={event=>{setTimeDraft({runId:props.selected.run_id,text:event.target.value});setTimeError('');}} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();inspectTime();}}}/>
     <p className="chart-note" id="chart-time-help">{edited?'Your edited time stays fixed as the simulation advances.':'This field follows the selected view until you edit it.'} Inspecting recorded history changes the viewer only.</p>
     {timeError&&<p className="statistics-error" id="chart-time-error" data-testid="chart-time-error" role="alert">{timeError}</p>}
     <button data-testid="chart-select" onClick={inspectTime}>Inspect recorded time</button>
