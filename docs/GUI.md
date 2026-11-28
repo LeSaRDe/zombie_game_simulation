@@ -1,5 +1,9 @@
 # Local research workspace
 
+For implementation work, see the [GUI object diagram](architecture/gui.svg) and
+[controller guide](ARCHITECTURE.md#gui-composition). React views remain functional;
+composed controller objects own asynchronous behavior and resource cleanup.
+
 New to the simulator? Start with the [friendly user guide](USER_GUIDE.md), which
 walks through a first experiment with screenshots. This page is the detailed GUI
 reference.

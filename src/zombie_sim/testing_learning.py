@@ -118,7 +118,7 @@ def worker_operation(sim,operation,data):
         return {"adapter":data["adapter"],"controlled":controlled}
     env=sim._runtime_learning_adapter
     if operation=="step":
-        for draw in data.get("draws",[]):sim._acceptance_draw_values[(str(draw["intent"]),draw["channel"])]=float(exact_time(draw["value"]))
+        sim.inject_random_values(data.get("draws", []))
         _,discounted,terminated,truncated,info=env.step_intent(normalize_intent(data["intent"]))
         names={"human_alive_time":"alive_human","heal_other":"healing_others","cure_other":"curing_others",
                "damage_human":"damage_to_humans","human_episode_end":"conversion" if info["termination_reason"]=="conversion" else "death"}

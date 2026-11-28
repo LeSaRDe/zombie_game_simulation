@@ -23,6 +23,9 @@ def source_paths():
     # Pin the reviewed fixture authorship too, including explicit Gate/Shelter
     # arrangements; a later helper change must not silently alter the catalog.
     paths += sorted((ROOT / "tests" / "spec").glob("*.py"))
+    paths += sorted((ROOT / "tests" / "architecture").glob("*.py"))
+    paths += [ROOT / "tests/architecture/README.md", ROOT / "docs/DEEP_OOP_REFACTOR_PROPOSAL.md"]
+    paths += [ROOT / "scripts/deep_oop_differential.py", ROOT / "scripts/verify_deep_oop.py"]
     return sorted(paths)
 
 

@@ -1,3 +1,4 @@
+const {fillExact}=require('./verification_time_helpers.cjs');
 /* I08: actual Events navigation compared with independently queried history. */
 const {chromium,firefox}=require('playwright');
 const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');const {randomUUID}=require('node:crypto');
@@ -29,7 +30,7 @@ const fs=require('node:fs');const path=require('node:path');const assert=require
       report.failure_states??=[];report.failure_states.push({label,...evidence});return evidence;
     };
     const select=async(run,wait=true)=>{await page.locator(`.sidebar button.run-card[data-run-id="${run}"]`).click();await page.getByTestId('tab-events').click();if(wait)await aligned(run);};
-    const seek=async time=>{await page.getByTestId('replay-exact-time').fill(String(time));await page.getByTestId('replay-seek').click();};
+    const seek=async time=>{await fillExact(page,'replay-exact-time',time);await page.getByTestId('replay-seek').click();};
     const selectAgent=async identity=>{await page.getByTestId('tab-world').click();await page.getByTestId('agent-search').fill(identity);await page.getByRole('button',{name:'#'+identity,exact:true}).click();await page.getByTestId('tab-events').click();};
     const latest=async(run,time)=>{await page.getByTestId('events-latest').click();await aligned(run,time);};
     const capture=async(label,run)=>{
@@ -54,7 +55,8 @@ const fs=require('node:fs');const path=require('node:path');const assert=require
         assert(row.text.includes('r'+event.ledger_revision));assert(row.text.includes('sequence '+event.ledger_sequence));
       }
       assert.match(await page.getByTestId('events-counts').innerText(),new RegExp(`^${state.shownEvents.length} matching records · ${data.records.length} loaded`));
-      assert.match(await page.getByTestId('events-cursor').innerText(),new RegExp(`^Events through ${data.cursor.time.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')} s`));
+      assert.equal(await page.getByTestId('events-cursor').getAttribute('data-exact-time'),String(data.cursor.time));
+      assert.equal(await page.getByTestId('events-cursor').getAttribute('data-revision'),String(data.cursor.revision));
       const result={label,run_id:run,cursor:data.cursor,following:state.events_following,page:data.page,request:read.request,oracle,time_labels:{checked:rows.length,rounded:roundedTimes}};report.captures.push(result);return result;
     };
     const pattern='**/api/runs/*/timeline?*';

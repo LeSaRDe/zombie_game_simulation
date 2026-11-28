@@ -1,6 +1,12 @@
 """Execute the guide's exact 0.5-second baseline CLI example in a temporary run."""
 from __future__ import annotations
 
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
+
 from collections import Counter
 from fractions import Fraction
 import json
@@ -26,7 +32,7 @@ def inside(agent, footprint, strict=False):
 
 
 def main():
-    output = ROOT / "artifacts/issue10-baseline-cli"
+    output = artifact_output(ROOT / "artifacts/issue10-baseline-cli")
     output.mkdir(parents=True, exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="zombie-issue10-baseline-")).resolve()
     run_dir = scratch / "baseline-check"

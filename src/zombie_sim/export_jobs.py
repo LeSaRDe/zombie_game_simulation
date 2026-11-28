@@ -72,125 +72,212 @@ class Raster:
                 chunk(b'tEXt',b'Description\0'+canonical(metadata).encode())+chunk(b'IDAT',zlib.compress(raw,6))+chunk(b'IEND',b''))
 
 
-def scene_png(scene,provenance):
-    canvas=Raster();world=scene['world'];scale=min(900/float(world['length']),540/float(world['width']))
-    ox=(960-float(world['length'])*scale)/2;oy=(600-float(world['width'])*scale)/2
-    xy=lambda x,y:(ox+float(x)*scale,600-oy-float(y)*scale)
-    canvas.rect(ox,oy,float(world['length'])*scale,float(world['width'])*scale,(227,235,239))
-    for item in scene.get('barriers',{}).values():
-        r=item.get('footprint');
-        if not r:continue
-        x,y=xy(r[0],r[3]);color=(104,125,141) if item.get('type')!='Gate' else (89,163,119) if item.get('mode')=='OPEN' else (188,146,70)
-        canvas.rect(x,y,(r[2]-r[0])*scale,(r[3]-r[1])*scale,color)
-    for item in scene.get('stockpiles',{}).values():
-        x,y=xy(item['x'],item['y']);canvas.rect(x-3,y-3,6,6,(94,90,55))
-    for item in scene.get('agents',{}).values():
-        status='dead' if item.get('life',100)<=0 else 'zombies' if item['type']=='Zombie' else 'infected' if item.get('infection_episode') else 'healthy'
-        canvas.circle(*xy(item['x'],item['y']),3,COLORS[status])
-    canvas.text(30,8,'RECORDED WORLD');canvas.text(30,580,f"TIME {float(exact_time(provenance['time'])):g} S")
-    return canvas.png(provenance)
 
 
-def chart_svg(rows,provenance):
-    maximum=max(1,max((row['total'] for row in rows),default=1));start=float(exact_time(rows[0]['time']));end=float(exact_time(rows[-1]['time']))
-    xy=lambda row,key:(70+820*(float(exact_time(row['time']))-start)/max(1e-12,end-start),520-430*row[key]/maximum)
-    parts=['<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">',
-           '<rect width="960" height="600" fill="#f8fafc"/><g font-family="sans-serif" fill="#253746">',
-           '<text x="70" y="35" font-size="22">Population through recorded time</text>',
-           '<path d="M70 70V520H910" fill="none" stroke="#64748b"/>',
-           f'<text x="20" y="85">{maximum}</text><text x="45" y="525">0</text>',
-           f'<text x="65" y="547">{start:g}</text><text x="875" y="547">{end:g}</text><text x="430" y="575">Time (s)</text>']
-    for index,(key,color) in enumerate(COLORS.items()):
-        value='#'+''.join(f'{part:02x}' for part in color)
-        points=' '.join(f'{x:g},{y:g}' for x,y in (xy(row,key) for row in rows))
-        parts.append(f'<polyline fill="none" stroke="{value}" stroke-width="3" points="{points}"/><rect x="{70+index*205}" y="55" width="12" height="12" fill="{value}"/><text x="{87+index*205}" y="66">{key.capitalize()}</text>')
-    parts.append('</g><metadata>'+html.escape(canonical(provenance))+'</metadata></svg>')
-    return ''.join(parts).encode()
 
 
-def chart_png(rows,provenance):
-    canvas=Raster();canvas.line(70,70,70,520,(100,116,139));canvas.line(70,520,910,520,(100,116,139))
-    maximum=max(1,max(row['total'] for row in rows));start=exact_time(rows[0]['time']);end=exact_time(rows[-1]['time'])
-    canvas.text(70,15,'POPULATION THROUGH RECORDED TIME');canvas.text(400,575,'TIME (S)')
-    canvas.text(10,75,str(maximum));canvas.text(45,515,'0');canvas.text(65,540,f'{float(start):g}');canvas.text(865,540,f'{float(end):g}')
-    for index,(key,color) in enumerate(COLORS.items()):
-        canvas.rect(70+index*205,47,12,12,color);canvas.text(90+index*205,45,key)
-        points=[(70+820*float((exact_time(row['time'])-start)/(end-start or 1)),520-430*row[key]/maximum) for row in rows]
-        if len(points)==1:canvas.circle(*points[0],3,color)
-        for left,right in zip(points,points[1:]):canvas.line(*left,*right,color,3)
-    return canvas.png({**provenance,'series':list(COLORS),'y_axis':'Identities','x_axis':'Time (s)','y_max':maximum})
 
 
-def animation_html(frames,provenance):
-    data=canonical({'provenance':provenance,'frames':frames}).replace('<','\\u003c')
-    return ('''<!doctype html><html lang="en"><meta charset="utf-8"><title>Recorded simulation replay</title>
-<style>body{font:16px system-ui;max-width:1000px;margin:30px auto;padding:20px;background:#f8fafc;color:#253746}svg{max-width:100%;height:auto}button,input{font:inherit}#cursor{width:65%}</style>
-<h1>Recorded simulation replay</h1><div id="frame"></div><p id="time"></p><button id="play">Play</button> <input id="cursor" aria-label="Replay frame" type="range" min="0"><details><summary>Provenance</summary><pre id="provenance"></pre></details>
-<script id="replay-data" type="application/json">'''+data+'''</script><script>const data=JSON.parse(document.getElementById('replay-data').textContent);let i=0,timer;const slider=document.getElementById('cursor');slider.max=data.frames.length-1;function show(){const f=data.frames[i];document.getElementById('frame').innerHTML=f.svg;document.getElementById('time').textContent='Time '+f.time+' s · revision '+f.revision;slider.value=i;}slider.oninput=()=>{i=Number(slider.value);show();};document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;}else timer=setInterval(()=>{i=(i+1)%data.frames.length;show();},250);document.getElementById('play').textContent=timer?'Pause':'Play';};document.getElementById('provenance').textContent=JSON.stringify(data.provenance,null,2);show();</script></html>''').encode()
 
 
-def prepare_export(manager,run_id,request):
-    format=request.get('format','scene_png')
-    if format not in FORMATS:raise ValueError('Unknown export format')
-    history=manager.history(run_id)
-    try:
-        revision=history.revision;latest=history.state_at(revision=revision);frontier=exact_time(latest['time'])
-        selected=exact_time(request.get('time',frontier));interval=request.get('interval',['0',str(frontier)])
-        if not isinstance(interval,list) or len(interval)!=2:raise ValueError('Export interval requires start and end')
-        start,end=map(exact_time,interval);spacing=exact_time(request.get('sample_interval','1'))
-        if not 0<=start<=end<=frontier or not 0<=selected<=frontier:raise ValueError('Export times must lie within committed history')
-        if spacing<=0 or (end-start)/spacing>2000:raise ValueError('Use a positive sample interval with at most 2001 frames')
-        scene=project_state(history.state_at(time=selected,revision=revision),selected)
-        scene=view_bundle(scene)['state']
-        cohort=request.get('cohort','all')
-        definition=None
-        if cohort!='all':
-            summaries=manager.cohorts(run_id,scene)
-            definition=next((deepcopy(row['definition']) for row in summaries if cohort in {row['definition'].get('id'),row['definition'].get('name')}),None)
-            if definition is None:raise ValueError('Unknown saved cohort')
-            members=set(cohort_members(scene,definition));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
-        provenance={'schema':'zombie-sim/export-v1','run_id':run_id,'revision':str(scene['revision']),'source_frontier_revision':str(revision),
-                    'time':str(selected),'interval':[str(start),str(end)],'sample_interval':str(spacing),'cohort':cohort,'format':format}
-        if definition is not None:provenance['cohort_definition']=definition
-        return provenance,scene,str(history.path)
-    finally:history.close()
 
-def render_export(provenance, source_scene, history_path, format):
-    from .storage import History
-    rows=[];frames=[]
-    history=History(history_path,read_only=True)
-    try:
-        t,end=map(exact_time,provenance['interval']);spacing=exact_time(provenance['sample_interval'])
-        while t<=end:
-            scene=project_state(history.state_at(time=t,revision=int(provenance['source_frontier_revision'])),t)
-            if provenance.get('cohort_definition'):
-                members=set(cohort_members(scene,provenance['cohort_definition']));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
-            rows.append({'time':str(t),**populations(scene)})
-            if format=='replay_animation':frames.append({'time':str(t),'revision':str(scene['revision']),'svg':world_svg(scene,900)})
-            t+=spacing
-    finally:history.close()
-    if format=='scene_png':payload=scene_png(source_scene,provenance)
-    elif format=='chart_png':payload=chart_png(rows,provenance)
-    elif format=='chart_svg':payload=chart_svg(rows,provenance)
-    elif format=='table_csv':
-        stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows);payload=stream.getvalue().encode()
-    elif format=='table_parquet':
+
+
+class ExportRendererRegistry:
+    """Explicit export strategies; optional encoders import only when selected."""
+    def __init__(self):
+        self._renderers = {}
+
+    def register(self, name, renderer, *, replace=False):
+        if not isinstance(name, str) or not name or not callable(getattr(renderer, 'render', None)):
+            raise ValueError('An export strategy requires a name and render method')
+        if name in self._renderers and not replace:
+            raise ValueError(f'Export renderer already registered: {name}')
+        self._renderers[name] = renderer
+
+    def __contains__(self, name):
+        return name in self._renderers
+
+    def render(self, name, scene, rows, frames, provenance):
+        try:
+            renderer = self._renderers[name]
+        except KeyError:
+            raise ValueError('Unknown export format') from None
+        return renderer.render(scene, rows, frames, provenance)
+
+    @classmethod
+    def builtins(cls):
+        result = cls()
+        for name, strategy in (('scene_png', ScenePNGRenderer()), ('chart_png', PNGChartRenderer()),
+                               ('chart_svg', SVGChartRenderer()), ('table_csv', CSVTableRenderer()),
+                               ('table_parquet', ParquetTableRenderer()), ('replay_animation', ReplayRenderer())):
+            result.register(name, strategy)
+        return result
+
+
+class ScenePNGRenderer:
+    """Encode one portable recorded-history artifact."""
+    def render(self, source_scene, rows, frames, provenance):
+        scene = source_scene
+        canvas=Raster();world=scene['world'];scale=min(900/float(world['length']),540/float(world['width']))
+        ox=(960-float(world['length'])*scale)/2;oy=(600-float(world['width'])*scale)/2
+        xy=lambda x,y:(ox+float(x)*scale,600-oy-float(y)*scale)
+        canvas.rect(ox,oy,float(world['length'])*scale,float(world['width'])*scale,(227,235,239))
+        for item in scene.get('barriers',{}).values():
+            r=item.get('footprint');
+            if not r:continue
+            x,y=xy(r[0],r[3]);color=(104,125,141) if item.get('type')!='Gate' else (89,163,119) if item.get('mode')=='OPEN' else (188,146,70)
+            canvas.rect(x,y,(r[2]-r[0])*scale,(r[3]-r[1])*scale,color)
+        for item in scene.get('stockpiles',{}).values():
+            x,y=xy(item['x'],item['y']);canvas.rect(x-3,y-3,6,6,(94,90,55))
+        for item in scene.get('agents',{}).values():
+            status='dead' if item.get('life',100)<=0 else 'zombies' if item['type']=='Zombie' else 'infected' if item.get('infection_episode') else 'healthy'
+            canvas.circle(*xy(item['x'],item['y']),3,COLORS[status])
+        canvas.text(30,8,'RECORDED WORLD');canvas.text(30,580,f"TIME {float(exact_time(provenance['time'])):g} S")
+        return canvas.png(provenance)
+
+
+class SVGChartRenderer:
+    """Encode one portable recorded-history artifact."""
+    def render(self, source_scene, rows, frames, provenance):
+        maximum=max(1,max((row['total'] for row in rows),default=1));start=float(exact_time(rows[0]['time']));end=float(exact_time(rows[-1]['time']))
+        xy=lambda row,key:(70+820*(float(exact_time(row['time']))-start)/max(1e-12,end-start),520-430*row[key]/maximum)
+        parts=['<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">',
+               '<rect width="960" height="600" fill="#f8fafc"/><g font-family="sans-serif" fill="#253746">',
+               '<text x="70" y="35" font-size="22">Population through recorded time</text>',
+               '<path d="M70 70V520H910" fill="none" stroke="#64748b"/>',
+               f'<text x="20" y="85">{maximum}</text><text x="45" y="525">0</text>',
+               f'<text x="65" y="547">{start:g}</text><text x="875" y="547">{end:g}</text><text x="430" y="575">Time (s)</text>']
+        for index,(key,color) in enumerate(COLORS.items()):
+            value='#'+''.join(f'{part:02x}' for part in color)
+            points=' '.join(f'{x:g},{y:g}' for x,y in (xy(row,key) for row in rows))
+            parts.append(f'<polyline fill="none" stroke="{value}" stroke-width="3" points="{points}"/><rect x="{70+index*205}" y="55" width="12" height="12" fill="{value}"/><text x="{87+index*205}" y="66">{key.capitalize()}</text>')
+        parts.append('</g><metadata>'+html.escape(canonical(provenance))+'</metadata></svg>')
+        return ''.join(parts).encode()
+
+
+class PNGChartRenderer:
+    """Encode one portable recorded-history artifact."""
+    def render(self, source_scene, rows, frames, provenance):
+        canvas=Raster();canvas.line(70,70,70,520,(100,116,139));canvas.line(70,520,910,520,(100,116,139))
+        maximum=max(1,max(row['total'] for row in rows));start=exact_time(rows[0]['time']);end=exact_time(rows[-1]['time'])
+        canvas.text(70,15,'POPULATION THROUGH RECORDED TIME');canvas.text(400,575,'TIME (S)')
+        canvas.text(10,75,str(maximum));canvas.text(45,515,'0');canvas.text(65,540,f'{float(start):g}');canvas.text(865,540,f'{float(end):g}')
+        for index,(key,color) in enumerate(COLORS.items()):
+            canvas.rect(70+index*205,47,12,12,color);canvas.text(90+index*205,45,key)
+            points=[(70+820*float((exact_time(row['time'])-start)/(end-start or 1)),520-430*row[key]/maximum) for row in rows]
+            if len(points)==1:canvas.circle(*points[0],3,color)
+            for left,right in zip(points,points[1:]):canvas.line(*left,*right,color,3)
+        return canvas.png({**provenance,'series':list(COLORS),'y_axis':'Identities','x_axis':'Time (s)','y_max':maximum})
+
+
+class ReplayRenderer:
+    """Encode one portable recorded-history artifact."""
+    def render(self, source_scene, rows, frames, provenance):
+        data=canonical({'provenance':provenance,'frames':frames}).replace('<','\\u003c')
+        return ('<!doctype html><html lang="en"><meta charset="utf-8"><title>Recorded simulation replay</title>\n<style>body{font:16px system-ui;max-width:1000px;margin:30px auto;padding:20px;background:#f8fafc;color:#253746}svg{max-width:100%;height:auto}button,input{font:inherit}#cursor{width:65%}</style>\n<h1>Recorded simulation replay</h1><div id="frame"></div><p id="time"></p><button id="play">Play</button> <input id="cursor" aria-label="Replay frame" type="range" min="0"><details><summary>Provenance</summary><pre id="provenance"></pre></details>\n<script id="replay-data" type="application/json">'+data+'''</script><script>const data=JSON.parse(document.getElementById('replay-data').textContent);let i=0,timer;const slider=document.getElementById('cursor');slider.max=data.frames.length-1;function show(){const f=data.frames[i];document.getElementById('frame').innerHTML=f.svg;document.getElementById('time').textContent='Time '+f.time+' s · revision '+f.revision;slider.value=i;}slider.oninput=()=>{i=Number(slider.value);show();};document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;}else timer=setInterval(()=>{i=(i+1)%data.frames.length;show();},250);document.getElementById('play').textContent=timer?'Pause':'Play';};document.getElementById('provenance').textContent=JSON.stringify(data.provenance,null,2);show();</script></html>''').encode()
+
+
+class CSVTableRenderer:
+    def render(self, source_scene, rows, frames, provenance):
+        stream=io.StringIO();writer=csv.DictWriter(stream,fieldnames=list(rows[0]))
+        writer.writeheader();writer.writerows(rows)
+        return stream.getvalue().encode()
+
+
+class ParquetTableRenderer:
+    def render(self, source_scene, rows, frames, provenance):
         import pyarrow as pa
         import pyarrow.parquet as pq
         table=pa.Table.from_pylist(rows).replace_schema_metadata({b'zombie_provenance':canonical(provenance).encode()})
-        output=pa.BufferOutputStream();pq.write_table(table,output,compression='zstd');payload=output.getvalue().to_pybytes()
-    else:payload=animation_html(frames,provenance)
-    sidecar={'provenance':provenance,'source_scene':source_scene,'artifact_sha256':hashlib.sha256(payload).hexdigest(),
-             'bytes':len(payload),'sample_count':len(rows),'format':format}
-    return payload,sidecar
+        output=pa.BufferOutputStream();pq.write_table(table,output,compression='zstd')
+        return output.getvalue().to_pybytes()
+
+
+class ExportService:
+    """Pin export inputs, replay recorded samples and select a renderer strategy."""
+    def __init__(self, *, renderers=None, visualization=None, history_factory=None):
+        from .visualization import VisualizationService
+        from .persistence import PersistenceBundleFactory
+        self.renderers = renderers if renderers is not None else ExportRendererRegistry.builtins()
+        self.visualization = visualization if visualization is not None else VisualizationService()
+        self.history_factory = history_factory if history_factory is not None else PersistenceBundleFactory().open_history
+
+    def prepare(self, manager,run_id,request):
+        format=request.get('format','scene_png')
+        if format not in self.renderers:raise ValueError('Unknown export format')
+        history=manager.history(run_id)
+        try:
+            revision=history.revision;latest=history.state_at(revision=revision);frontier=exact_time(latest['time'])
+            selected=exact_time(request.get('time',frontier));interval=request.get('interval',['0',str(frontier)])
+            if not isinstance(interval,list) or len(interval)!=2:raise ValueError('Export interval requires start and end')
+            start,end=map(exact_time,interval);spacing=exact_time(request.get('sample_interval','1'))
+            if not 0<=start<=end<=frontier or not 0<=selected<=frontier:raise ValueError('Export times must lie within committed history')
+            if spacing<=0 or (end-start)/spacing>2000:raise ValueError('Use a positive sample interval with at most 2001 frames')
+            scene=self.visualization.project_state(history.state_at(time=selected,revision=revision),selected)
+            scene=self.visualization.view_bundle(scene)['state']
+            cohort=request.get('cohort','all')
+            definition=None
+            if cohort!='all':
+                summaries=manager.cohorts(run_id,scene)
+                definition=next((deepcopy(row['definition']) for row in summaries if cohort in {row['definition'].get('id'),row['definition'].get('name')}),None)
+                if definition is None:raise ValueError('Unknown saved cohort')
+                members=set(self.visualization.cohort_members(scene,definition));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
+            provenance={'schema':'zombie-sim/export-v1','run_id':run_id,'revision':str(scene['revision']),'source_frontier_revision':str(revision),
+                        'time':str(selected),'interval':[str(start),str(end)],'sample_interval':str(spacing),'cohort':cohort,'format':format}
+            if definition is not None:provenance['cohort_definition']=definition
+            return provenance,scene,history.reader_reference()
+        finally:history.close()
+
+
+    def render(self, provenance, source_scene, history_path, format):
+        rows=[];frames=[]
+        history=self.history_factory(history_path,read_only=True)
+        try:
+            t,end=map(exact_time,provenance['interval']);spacing=exact_time(provenance['sample_interval'])
+            while t<=end:
+                scene=self.visualization.project_state(history.state_at(time=t,revision=int(provenance['source_frontier_revision'])),t)
+                if provenance.get('cohort_definition'):
+                    members=set(self.visualization.cohort_members(scene,provenance['cohort_definition']));scene['agents']={key:value for key,value in scene['agents'].items() if key in members}
+                rows.append({'time':str(t),**self.visualization.populations(scene)})
+                if format=='replay_animation':frames.append({'time':str(t),'revision':str(scene['revision']),'svg':self.visualization.world_svg(scene,900)})
+                t+=spacing
+        finally:history.close()
+        payload=self.renderers.render(format,source_scene,rows,frames,provenance)
+        sidecar={'provenance':provenance,'source_scene':source_scene,'artifact_sha256':hashlib.sha256(payload).hexdigest(),
+                 'bytes':len(payload),'sample_count':len(rows),'format':format}
+        return payload,sidecar
+
+
+def scene_png(scene,provenance):
+    return ScenePNGRenderer().render(scene, (), (), provenance)
+
+def chart_svg(rows,provenance):
+    return SVGChartRenderer().render(None, rows, (), provenance)
+
+def chart_png(rows,provenance):
+    return PNGChartRenderer().render(None, rows, (), provenance)
+
+def animation_html(frames,provenance):
+    return ReplayRenderer().render(None, (), frames, provenance)
+
+_default_exports = ExportService()
+
+
+def prepare_export(manager,run_id,request):
+    return _default_exports.prepare(manager,run_id,request)
+
+
+def render_export(provenance,source_scene,history_path,format):
+    return _default_exports.render(provenance,source_scene,history_path,format)
 
 
 class ExportJobs:
-    def __init__(self,manager):
+    def __init__(self,manager, *, readers=None, executor=None):
         self.manager=manager;self.directory=manager.root/'exports';self.directory.mkdir(exist_ok=True)
-        self.lock=threading.RLock();self.pool=ThreadPoolExecutor(max_workers=2,thread_name_prefix='simulation-export')
+        self.lock=threading.RLock();self.pool=executor if executor is not None else ThreadPoolExecutor(max_workers=2,thread_name_prefix='simulation-export')
         from .read_tasks import ReadPool
-        self.readers=ReadPool(manager.root,size=2,name='exports');self.closing=False
+        self.readers=readers if readers is not None else ReadPool(manager.root,size=2,name='exports');self.closing=False
         self.jobs={};self.gates={}
     def arm_pause(self,run_id):
         with self.lock:self.gates[run_id]=threading.Event()
@@ -269,10 +356,10 @@ class ExportJobs:
             return {'active':sum(job['active_tasks'] for job in self.jobs.values()),'readers':self.readers.status()}
 
 
-def register_export_routes(app,manager):
+def register_export_routes(app,manager, *, jobs=None):
     from fastapi import Body
     from fastapi.responses import FileResponse
-    service=ExportJobs(manager);app.state.exports=service
+    service=jobs if jobs is not None else ExportJobs(manager);app.state.exports=service
     @app.post('/api/runs/{run_id}/exports')
     def create(run_id:str,body:dict=Body(...)):return service.create(run_id,body)
     @app.get('/api/export-jobs/{identifier}')

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-25T15:11:34.998106+00:00",
+  "generated_at_utc": "2026-11-27T16:07:50.983415+00:00",
   "command": [
     "ontology/formal_v0.1/validate.py"
   ],
@@ -546,7 +546,7 @@
     "catalog.ttl": "b2cece0c7c728be4da57624d85ae6e2e304485d1af5014284c9a57b8a6374c2b",
     "shapes.ttl": "4f8aa75e1440542188f98964421e710b85da9fb91c174d26feb3b05f7054f778",
     "ontology.owl": "9c0f8e4a078b2641bd83120d8ecc9f3555b3d2c4eff3371f235022eed75d7618",
-    "manifest.json": "53410a26478422445e94b26e9526689f0b8adf30d0a74facb4c37288dc2c1a70",
+    "manifest.json": "8549dcafa73982cc231b5b0596d8a94b78c5c8df01163d2585aef9c809ca5dd1",
     "baseline.ttl": "70f9edb908b92dbc04f8e6ecee15a17ba7790dca91cb50a0e522865224b014e4",
     "examples.json": "8ce3cf312dc2e66cb5f3c99af2fe3ba6f47765b3df81c6437f74757a857142e9",
     "requirements.txt": "5037b8680c824f72ed2b25f864d265bd2c57039f166fce835ddaea999a79defc",
@@ -558,7 +558,7 @@
     "check_baseline.py": "1968d4949c7fa791c41ff8fbb61685ae6fdddc6e1fd14023d1079c980d0ffad6",
     "check_constraint_boundaries.py": "5ed7826aae0cb7879cd64e1f33d85d705c7df4b1922f14525fb83eea7f009612",
     "OwlCheck.java": "35792f2e56f3318b9abec1c73a3102ac57fce3bf17286499f1af0e3aca3784f9",
-    "../../prompts/zombie_game_plans.md": "05915f055fa33cc00b1dfb3920b835659d3885edcc5c328bfcbb6287972d5311",
+    "../../prompts/zombie_game_plans.md": "368333ab5f8458e2cb96f262e8566c4a5bf1f66b73f7cb7621d39331365ac115",
     "examples/breached_gate_with_integrity.ttl": "7e6bb442ce9e1721f4915c62dc66cbd6d0088c6800bc74f9a235ee867737dde7",
     "examples/causal_cycle.ttl": "3938d00a0cc2f8ebd675d58eb42cafe4afb3d95ea3047bfa3d0b32cf2e40f92d",
     "examples/conversion_heals.ttl": "0b065bb3f0e5869d962623401e024e19fd7e7a466412d92e6bea2eb452ce9c9e",

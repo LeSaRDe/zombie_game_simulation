@@ -62,7 +62,7 @@ class CreationChecks(unittest.TestCase):
                 raw = manager.command_result("initial-create")
                 self.assertEqual(raw["status"], "applied")
                 self.assertNotIn("revision", raw)
-                stored = manager.connection.execute("SELECT request FROM commands WHERE id='initial-create'").fetchone()[0]
+                stored = manager.catalog.command("initial-create")["request"]
                 self.assertNotIn("wait_for_initialization", json.loads(stored))
 
                 repeated = json.loads(create(request).body)
@@ -78,7 +78,7 @@ class CreationChecks(unittest.TestCase):
                 deadline = time.monotonic() + 10
                 while manager._row(identity)["status"] == "initializing" and time.monotonic() < deadline:
                     time.sleep(.01)
-                self.assertEqual(manager._row(identity)["status"], "paused")
+                self.assertEqual(manager._row(identity)["status"], "paused", manager._row(identity).get("error"))
                 advanced = manager.command(identity, "advance", {"command_id": "advance-before-receipt", "time": "1"})
                 self.assertEqual(advanced["status"], "applied")
                 self.assertGreater(int(advanced["revision"]), 0)

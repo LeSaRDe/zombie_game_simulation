@@ -9,14 +9,12 @@ from collections import OrderedDict
 from collections.abc import Sequence
 from copy import deepcopy
 from fractions import Fraction
-from .storage import _unpack
 
 
 class LedgerRecords(Sequence):
     def __init__(self,history,kind=None):
         self.history=history;self.kind=kind;self.pending=[];self.pages=OrderedDict()
-        sql="SELECT sequence FROM events"+(" WHERE kind=?" if kind else "")+" ORDER BY sequence"
-        self.indices=array("Q",(row[0] for row in history.connection.execute(sql,(kind,) if kind else ())))
+        self.indices=array("Q",history.event_positions(kind))
 
     def _record(self,record):
         if self.kind=="decision":
@@ -43,12 +41,7 @@ class LedgerRecords(Sequence):
         if start>=stop:return []
         ids=self.indices[start:stop]
         if not ids:return []
-        sql="SELECT payload FROM events WHERE sequence>=? AND sequence<=?"
-        parameters=[ids[0],ids[-1]]
-        if self.kind:sql+=" AND kind=?";parameters.append(self.kind)
-        sql+=" ORDER BY sequence"
-        with self.history.lock:
-            return [self._record(_unpack(row[0])) for row in self.history.connection.execute(sql,parameters)]
+        return [self._record(record) for record in self.history.event_range(ids[0],ids[-1],self.kind)]
 
     def __getitem__(self,index):
         if isinstance(index,slice):
@@ -79,11 +72,8 @@ class LedgerRecords(Sequence):
 
     def observations_at(self,actor,when):
         """Retrieve authentic dated inputs without retaining all observations."""
-        when=Fraction(str(when));seconds=float(when);epsilon=max(1.,abs(seconds))*1e-14
-        sql=("SELECT e.payload FROM events e JOIN commits c ON c.revision=e.revision "
-             "WHERE e.kind='decision' AND e.actor=? AND c.seconds>=? AND c.seconds<=? ORDER BY e.sequence")
-        with self.history.lock:
-            records=[_unpack(row[0]) for row in self.history.connection.execute(sql,(str(actor),seconds-epsilon,seconds+epsilon))]
+        when=Fraction(str(when))
+        records=self.history.decision_records_at(actor,when)
         records.extend(record for record in self.pending if str(record.get("actor"))==str(actor))
         return [record["observation"] for record in records
                 if Fraction(str(record.get("observation",{}).get("time",0)))==when]

@@ -3,6 +3,12 @@
 Only opening the operating-system browser is intercepted. The menu, launcher,
 HTTP service, simulation worker and durable journals are real.
 """
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 from contextlib import redirect_stdout
 import io
 import json
@@ -43,7 +49,7 @@ def journal(workspace):
 
 
 def main():
-    output = ROOT / "artifacts/issue2-launcher"
+    output = artifact_output(ROOT / "artifacts/issue2-launcher")
     output.mkdir(parents=True, exist_ok=True)
     report = {"passed": False}
     transcript = io.StringIO()

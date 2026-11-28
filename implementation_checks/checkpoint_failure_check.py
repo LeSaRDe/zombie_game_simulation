@@ -11,6 +11,8 @@ from unittest.mock import patch
 
 from zombie_sim.engine import Simulation
 from zombie_sim import runtime
+from zombie_sim.core import runtime_service
+from zombie_sim.persistence import checkpoint as persistence_checkpoint
 
 
 class CheckpointFailureChecks(unittest.TestCase):
@@ -72,7 +74,7 @@ class CheckpointFailureChecks(unittest.TestCase):
             if str(database).endswith(".partial"): kwargs["factory"] = FailingCopy
             return connect(database, *args, **kwargs)
 
-        with patch.object(runtime.sqlite3, "connect", connect_copy):
+        with patch.object(persistence_checkpoint.sqlite3, "connect", connect_copy):
             with self.assertRaises(sqlite3.OperationalError) as error: self.sim.checkpoint(self.checkpoint)
         self.assertTrue(wrote, "Fault must occur after the real SQLite backup and write")
         self.assert_preserved(error, failure)
@@ -80,7 +82,7 @@ class CheckpointFailureChecks(unittest.TestCase):
 
     def test_copy_failure_cleans_only_owned_database_and_companion_paths(self):
         failure = OSError(errno.EIO, "injected copy finalization failure with SQLite companions")
-        copy_history = runtime._copy_history
+        copy_history = persistence_checkpoint.copy_history_prefix
         owned = []
 
         def interrupted_copy(source, destination, revision, state):
@@ -93,7 +95,7 @@ class CheckpointFailureChecks(unittest.TestCase):
                 owned.append(path)
             raise failure
 
-        with patch.object(runtime, "_copy_history", interrupted_copy):
+        with patch.object(persistence_checkpoint, "copy_history_prefix", interrupted_copy):
             with self.assertRaises(OSError) as error: self.sim.checkpoint(self.checkpoint)
         self.assert_preserved(error, failure)
         self.assertTrue(all(not path.exists() for path in owned))
@@ -114,7 +116,7 @@ class CheckpointFailureChecks(unittest.TestCase):
                     raise failure
             return fsync(descriptor)
 
-        with patch.object(runtime.os, "fsync", failing_fsync):
+        with patch.object(runtime_service.os, "fsync", failing_fsync):
             with self.assertRaises(OSError) as error: self.sim.checkpoint(self.checkpoint)
         self.assertTrue(writes)
         self.assert_preserved(error, failure)
@@ -122,7 +124,7 @@ class CheckpointFailureChecks(unittest.TestCase):
 
     def test_registration_failure_restores_markers_without_removing_published_sidecar(self):
         failure = OSError(errno.EIO, "injected registration failure after actual envelope publication")
-        copy_history = runtime._copy_history
+        copy_history = persistence_checkpoint.copy_history_prefix
         temporary_paths = []
 
         def record_temporary(source, destination, revision, state):
@@ -140,7 +142,7 @@ class CheckpointFailureChecks(unittest.TestCase):
                 self.unrelated.append(path)
             raise failure
 
-        with patch.object(runtime, "_copy_history", record_temporary), patch("zombie_sim.faults.hit", fail_registration):
+        with patch.object(persistence_checkpoint, "copy_history_prefix", record_temporary), patch("zombie_sim.faults.hit", fail_registration):
             with self.assertRaises(OSError) as error: self.sim.checkpoint(self.checkpoint)
         self.assert_preserved(error, failure, before_publication=False)
         self.assertTrue(self.sidecar.is_file())
@@ -148,13 +150,13 @@ class CheckpointFailureChecks(unittest.TestCase):
 
     def test_serialization_failure_restores_markers_before_any_temporary_creation(self):
         failure = TypeError("injected unsupported checkpoint value")
-        with patch.object(runtime, "serialize", side_effect=failure):
+        with patch.object(self.sim.services.runtime, "serialize", side_effect=failure):
             with self.assertRaises(TypeError) as error: self.sim.checkpoint(self.checkpoint)
         self.assert_preserved(error, failure)
         self.retry()
 
     def test_temporary_name_collision_never_deletes_another_generation(self):
-        with patch.object(runtime.uuid, "uuid4", return_value=SimpleNamespace(hex="another")):
+        with patch.object(runtime_service.uuid, "uuid4", return_value=SimpleNamespace(hex="another")):
             with self.assertRaises(FileExistsError) as error: self.sim.checkpoint(self.checkpoint)
         self.assert_preserved(error, error.exception)
         self.retry()

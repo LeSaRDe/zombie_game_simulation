@@ -1,0 +1,29 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+agent [label="Agent", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+identity [label="AgentIdentity\nrun_id + agent_id", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-values-py", target="_top", tooltip="src/zombie_sim/domain_model/values.py"];
+state [label="AgentState (abstract)", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+human [label="HumanState\nhunger + inventory + starvation", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+zombie [label="ZombieState", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+role [label="RoleAssignment\nper-agent assignment and charges", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-roles-py", target="_top", tooltip="src/zombie_sim/domain_model/roles.py"];
+definition [label="RoleDefinition\nshared immutable parameters/capabilities", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-roles-py", target="_top", tooltip="src/zombie_sim/domain_model/roles.py"];
+humanroles [label="HumanRoleDefinition\nDoctor · Warrior · Scout · Engineer", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-roles-py", target="_top", tooltip="src/zombie_sim/domain_model/roles.py"];
+zombieroles [label="ZombieRoleDefinition\nTyrant · Runner · Spitter · Screamer", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-roles-py", target="_top", tooltip="src/zombie_sim/domain_model/roles.py"];
+model [label="ModelAssignment", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+profile [label="ProfileResolver + shared ProfileValues\ntype → role → overrides → timed effects", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-profiles-py", target="_top", tooltip="src/zombie_sim/domain_model/profiles.py"];
+history [label="DomainEvent\ntyped before/after state evidence", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-events-py", target="_top", tooltip="src/zombie_sim/domain_model/events.py"];
+agent -> identity [label="1 stable identity", style="solid"];
+agent -> state [label="1 current state", style="solid"];
+human -> state [label="inherits", style="solid"];
+zombie -> state [label="inherits", style="solid"];
+state -> role [label="0..1 active assignment", style="solid"];
+role -> definition [label="shared definition", style="solid"];
+humanroles -> definition [label="inherits", style="solid"];
+zombieroles -> definition [label="inherits", style="solid"];
+state -> model [label="0..1 active controller", style="solid"];
+profile -> state [label="derive current properties", style="solid"];
+history -> state [label="retains dated values", style="solid"];
+}

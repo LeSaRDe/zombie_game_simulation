@@ -1,5 +1,11 @@
 """Exercise the real ./simulate menu through a PTY, including option 10 modes."""
 from __future__ import annotations
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 import hashlib
 import json
 import os
@@ -43,7 +49,7 @@ def run_cli(workspace,port,args,output,label,answers=None):
 
 
 def main():
-    output=ROOT/'artifacts/issue12-menu';output.mkdir(exist_ok=True);scratch=Path(tempfile.mkdtemp(prefix='zombie-i12-menu-'))
+    output=artifact_output(ROOT/'artifacts/issue12-menu');output.mkdir(exist_ok=True);scratch=Path(tempfile.mkdtemp(prefix='zombie-i12-menu-'))
     report={'status':'RUNNING','checks':{},'scratch':str(scratch)}
     try:
         for option,expected in [('1','stopped'),('2','terminated')]:

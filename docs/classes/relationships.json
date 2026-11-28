@@ -1,0 +1,2551 @@
+[
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/history_sequence.py::LedgerRecords",
+    "kind": "composition",
+    "label": "events / decisions / random_draws",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": "Three ledger views attached by attach_histories; root class stores them."
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/interrupts.py::BoundaryProcessPool",
+    "kind": "composition",
+    "label": "_pool",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": "Created lazily by DecisionService through coordinator context; runtime close owns shutdown."
+  },
+  {
+    "source": "src/zombie_sim/storage.py::MemoryStore",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "aggregation",
+    "label": "history",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/storage.py:498",
+    "note": "Injected History may be shared; close() forwards closure. SQLiteStore creates its own instance."
+  },
+  {
+    "source": "src/zombie_sim/storage.py::SQLiteStore",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "composition",
+    "label": "history",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/storage.py:569",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::MemoryStore",
+    "target": "src/zombie_sim/interfaces.py::StateStore",
+    "kind": "realization",
+    "label": "structural store contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/storage.py:498",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::History",
+    "target": "src/zombie_sim/interfaces.py::HistoryReader",
+    "kind": "realization",
+    "label": "structural history contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/storage.py:157",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/history_sequence.py::LedgerRecords",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "association",
+    "label": "history",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/history_sequence.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/framework.py::Experiment",
+    "target": "src/zombie_sim/interfaces.py::SimulationPort",
+    "kind": "composition",
+    "label": "simulation lifetime",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:10",
+    "note": "Injected coordinator lifetime is adopted: Experiment.close calls simulation.close. Default concrete object is Simulation."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::Experiment",
+    "target": "src/zombie_sim/measurements.py::MeasurementRegistry",
+    "kind": "aggregation",
+    "label": "measurements",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:10",
+    "note": "Shared by experiments created from one SimulationFramework; independent default when directly constructed."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::Experiment",
+    "target": "src/zombie_sim/entities.py::WorldView",
+    "kind": "dependency",
+    "label": "returns snapshot",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/framework.py::Experiment",
+    "target": "src/zombie_sim/entities.py::ObservationView",
+    "kind": "dependency",
+    "label": "returns observation",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": "Constructs default or retains injected collaborator."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/modeling.py::ModelRegistry",
+    "kind": "aggregation",
+    "label": "models",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": "Constructs default or retains injected collaborator."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/measurements.py::MeasurementRegistry",
+    "kind": "aggregation",
+    "label": "measurements",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": "Shared with returned experiments."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/interfaces.py::SimulationFactory",
+    "kind": "association",
+    "label": "simulation_factory",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": "Callable structural contract; default value is Simulation class itself."
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/modeling.py::ScenarioBuilder",
+    "kind": "dependency",
+    "label": "creates / accepts scenario",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/framework.py::SimulationFramework",
+    "target": "src/zombie_sim/framework.py::Experiment",
+    "kind": "dependency",
+    "label": "creates / restores",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/framework.py:65",
+    "note": "Returned sessions belong to caller; framework does not retain or close them."
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ModelRegistry",
+    "target": "src/zombie_sim/model_catalog.py::ModelCatalog",
+    "kind": "aggregation",
+    "label": "catalog",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:108",
+    "note": "References DEFAULT_MODEL_CATALOG shared process-wide; not an isolated owned catalog."
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ModelRegistry",
+    "target": "src/zombie_sim/interfaces.py::DecisionModel",
+    "kind": "dependency",
+    "label": "create() result contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:108",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ScenarioBuilder",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "dependency",
+    "label": "build(configuration)",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:143",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/entities.py::FrozenRecord",
+    "kind": "composition",
+    "label": "parameters",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/entities.py::ObservationView",
+    "kind": "dependency",
+    "label": "choose input",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/entities.py::AgentView",
+    "kind": "dependency",
+    "label": "initial_memory input",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/entities.py::Decision",
+    "kind": "dependency",
+    "label": "choose result",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/interfaces.py::BatchDecisionModel",
+    "kind": "realization",
+    "label": "batch decision contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/modeling.py::ObjectDecisionModel",
+    "target": "src/zombie_sim/interfaces.py::RestartableDecisionModel",
+    "kind": "realization",
+    "label": "memory codec contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/modeling.py:18",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/policies.py::UtilityModel",
+    "target": "src/zombie_sim/interfaces.py::BatchDecisionModel",
+    "kind": "realization",
+    "label": "batch decision contract",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/policies.py:568",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/policies.py::UtilityModel",
+    "target": "src/zombie_sim/policies.py::Candidate",
+    "kind": "dependency",
+    "label": "scores candidate records",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/policies.py:568",
+    "note": "Candidates are transient generated decision inputs, not owned fields."
+  },
+  {
+    "source": "src/zombie_sim/domain.py::AgentFactory",
+    "target": "src/zombie_sim/registry.py::OntologyCatalog",
+    "kind": "aggregation",
+    "label": "catalog",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain.py:93",
+    "note": "Default shared semantic catalog or injected catalog."
+  },
+  {
+    "source": "src/zombie_sim/config.py::ConfigurationService",
+    "target": "src/zombie_sim/config_io.py::ConfigurationCodec",
+    "kind": "aggregation",
+    "label": "codec (lazy/default or injected)",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/config.py:114",
+    "note": "Default is lazily constructed; injected codec may be shared."
+  },
+  {
+    "source": "src/zombie_sim/config.py::ConfigurationService",
+    "target": "src/zombie_sim/domain.py::AgentFactory",
+    "kind": "dependency",
+    "label": "default make_agent wrapper",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/config.py:114",
+    "note": "Dependency is indirect through make_agent \u2192 DEFAULT_AGENT_FACTORY.create; field agent_factory is a callable, not necessarily an AgentFactory object."
+  },
+  {
+    "source": "src/zombie_sim/config.py::ConfigurationService",
+    "target": "src/zombie_sim/registry.py::OntologyCatalog",
+    "kind": "dependency",
+    "label": "default ontology providers",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/config.py:114",
+    "note": "Through baseline_graph/provenance function delegates; not a stored catalog instance."
+  },
+  {
+    "source": "src/zombie_sim/entities.py::HistoryCursor",
+    "target": "src/zombie_sim/entities.py::ExactTime",
+    "kind": "association",
+    "label": "time",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/entities.py:70",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/entities.py::Decision",
+    "target": "src/zombie_sim/entities.py::ActionIntent",
+    "kind": "aggregation",
+    "label": "intent",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/entities.py:228",
+    "note": "Immutable value supplied by caller; may be shared."
+  },
+  {
+    "source": "src/zombie_sim/entities.py::AgentView",
+    "target": "src/zombie_sim/entities.py::AgentIdentity",
+    "kind": "dependency",
+    "label": "returns identity",
+    "source_multiplicity": "1",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/entities.py:130",
+    "note": "None for local observations without a run scope."
+  },
+  {
+    "source": "src/zombie_sim/entities.py::AgentView",
+    "target": "src/zombie_sim/entities.py::Point",
+    "kind": "dependency",
+    "label": "returns position",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/entities.py:130",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/entities.py::WorldView",
+    "target": "src/zombie_sim/entities.py::HistoryCursor",
+    "kind": "dependency",
+    "label": "returns cursor",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/entities.py:167",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/entities.py::WorldView",
+    "target": "src/zombie_sim/entities.py::AgentView",
+    "kind": "dependency",
+    "label": "returns agent views",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/entities.py:167",
+    "note": "Views are constructed on access, not held as AgentView objects in world JSON."
+  },
+  {
+    "source": "src/zombie_sim/entities.py::ObservationView",
+    "target": "src/zombie_sim/entities.py::AgentView",
+    "kind": "dependency",
+    "label": "returns self / visible agent views",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/entities.py:183",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/entities.py::ObservationView",
+    "target": "src/zombie_sim/entities.py::ExactTime",
+    "kind": "dependency",
+    "label": "returns time",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/entities.py:183",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/measurements.py::MeasurementRegistry",
+    "target": "src/zombie_sim/interfaces.py::Measurement",
+    "kind": "aggregation",
+    "label": "_measurements by name",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/measurements.py:27",
+    "note": "Injected strategy objects may be shared; the mapping itself is owned."
+  },
+  {
+    "source": "src/zombie_sim/measurements.py::PopulationMeasurement",
+    "target": "src/zombie_sim/interfaces.py::Measurement",
+    "kind": "realization",
+    "label": "pure measurement strategy",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/measurements.py:11",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/measurements.py::PopulationMeasurement",
+    "target": "src/zombie_sim/entities.py::WorldView",
+    "kind": "dependency",
+    "label": "measure(world)",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/measurements.py:11",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::TrainingPipeline",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:29",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::EvaluationPipeline",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:50",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::TrainingPipeline",
+    "target": "src/zombie_sim/learning.py::TrainingConfig",
+    "kind": "composition",
+    "label": "settings (deep copy)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:29",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::TrainingPipeline",
+    "target": "src/zombie_sim/training_pipeline.py::LearningBackend",
+    "kind": "aggregation",
+    "label": "backend",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:29",
+    "note": "Default RecurrentPPOBackend or injected strategy."
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::EvaluationPipeline",
+    "target": "src/zombie_sim/training_pipeline.py::LearningBackend",
+    "kind": "aggregation",
+    "label": "backend",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:50",
+    "note": "Default RecurrentPPOBackend or injected strategy."
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::RecurrentPPOBackend",
+    "target": "src/zombie_sim/training_pipeline.py::LearningBackend",
+    "kind": "realization",
+    "label": "train / evaluate strategy",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:19",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::RecurrentPPOBackend",
+    "target": "src/zombie_sim/learning.py::ControlledAgentEnv",
+    "kind": "dependency",
+    "label": "training / evaluation environments",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:19",
+    "note": "Indirect through preserved learning.train/evaluate kernels."
+  },
+  {
+    "source": "src/zombie_sim/training_pipeline.py::RecurrentPPOBackend",
+    "target": "src/zombie_sim/learning.py::LearnedModel",
+    "kind": "dependency",
+    "label": "training / artifact evaluation",
+    "source_multiplicity": "1",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/training_pipeline.py:19",
+    "note": "Indirect through preserved learning kernels."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::LearnedModel",
+    "target": "src/zombie_sim/learning.py::build_network.<locals>.CandidateActorCritic",
+    "kind": "aggregation",
+    "label": "network",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/learning.py:150",
+    "note": "Typical network from build_network; constructor accepts an injected PyTorch-compatible network."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::ControlledAgentEnv",
+    "target": "src/zombie_sim/engine.py::Simulation",
+    "kind": "aggregation",
+    "label": "sim",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/learning.py:275",
+    "note": "reset creates a simulation; attach adopts an existing simulation, and close closes it. Not always exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::ControlledAgentEnv",
+    "target": "src/zombie_sim/learning.py::CandidateCodec",
+    "kind": "composition",
+    "label": "candidate_codec",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/learning.py:275",
+    "note": "Rebuilt from the current observation/candidates."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::ControlledAgentEnv",
+    "target": "src/zombie_sim/policies.py::Candidate",
+    "kind": "aggregation",
+    "label": "current_candidates",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/learning.py:275",
+    "note": "Candidate records retained for current decision interval."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::CandidateCodec",
+    "target": "src/zombie_sim/policies.py::Candidate",
+    "kind": "dependency",
+    "label": "encodes candidates",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/learning.py:100",
+    "note": "Inspect constructor: stores detached intents/features, not Candidate instances."
+  },
+  {
+    "source": "src/zombie_sim/learning.py::DecisionBatchAEC",
+    "target": "src/zombie_sim/learning.py::ControlledAgentEnv",
+    "kind": "composition",
+    "label": "_env",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/learning.py:450",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/model_catalog.py::ModelCatalog",
+    "target": "src/zombie_sim/policies.py::HumanDefaultModel",
+    "kind": "dependency",
+    "label": "default registered factory",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/model_catalog.py:13",
+    "note": "Catalog stores factories, not instantiated policy objects. Other plugins are registered dynamically."
+  },
+  {
+    "source": "src/zombie_sim/model_catalog.py::ModelCatalog",
+    "target": "src/zombie_sim/policies.py::ZombieDefaultModel",
+    "kind": "dependency",
+    "label": "default registered factory",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/model_catalog.py:13",
+    "note": "Catalog stores factories, not instantiated policy objects. Other plugins are registered dynamically."
+  },
+  {
+    "source": "src/zombie_sim/model_catalog.py::ModelCatalog",
+    "target": "src/zombie_sim/policies.py::RandomLegalModel",
+    "kind": "dependency",
+    "label": "default registered factory",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/model_catalog.py:13",
+    "note": "Catalog stores factories, not instantiated policy objects. Other plugins are registered dynamically."
+  },
+  {
+    "source": "src/zombie_sim/model_catalog.py::ModelCatalog",
+    "target": "src/zombie_sim/learning.py::LearnedModel",
+    "kind": "dependency",
+    "label": "create ppo artifact model",
+    "source_multiplicity": "1",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/model_catalog.py:13",
+    "note": "Indirect through policies.create_model and cached LearnedModel.load."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager; lifetime managed",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Created by default or injected. Workspace close closes the manager; composition is not claimed because injected managers may be shared."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "association",
+    "label": "configuration (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/metrics.py::MetricsService",
+    "kind": "association",
+    "label": "metrics (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/comparison.py::ComparisonService",
+    "kind": "association",
+    "label": "comparison (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/timeline.py::TimelineService",
+    "kind": "association",
+    "label": "timeline (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/visualization.py::VisualizationService",
+    "kind": "association",
+    "label": "visualization (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/application.py::RunRepository",
+    "kind": "association",
+    "label": "repository (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/application.py::WorkerSupervisor",
+    "kind": "association",
+    "label": "workers (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/application.py::HistoryQueryService",
+    "kind": "association",
+    "label": "queries (manager alias)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Aliases the corresponding object held by manager; no second instance is created."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "composition",
+    "label": "_readers (lazy)",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Workspace reader pool; created through a factory, closed by WorkspaceServices.close."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/export_jobs.py::ExportJobs",
+    "kind": "composition",
+    "label": "_exports (lazy)",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": "Factory-created export service lifetime belongs to the workspace."
+  },
+  {
+    "source": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "target": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "kind": "composition",
+    "label": "_shutdown (lazy)",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/services/workspace.py:11",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/application.py::RunRepository",
+    "kind": "aggregation",
+    "label": "repository",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/application.py::WorkerSupervisor",
+    "kind": "aggregation",
+    "label": "workers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/metrics.py::MetricsService",
+    "kind": "aggregation",
+    "label": "metrics",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/comparison.py::ComparisonService",
+    "kind": "aggregation",
+    "label": "comparisons",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/timeline.py::TimelineService",
+    "kind": "aggregation",
+    "label": "timelines",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/visualization.py::VisualizationService",
+    "kind": "aggregation",
+    "label": "visualization",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Default-created collaborator can also be injected; manager close closes repository/workers/metrics, but does not establish exclusive ownership."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/application.py::HistoryQueryService",
+    "kind": "composition",
+    "label": "queries",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::WorkerSupervisor",
+    "target": "src/zombie_sim/application.py::RunRepository",
+    "kind": "aggregation",
+    "label": "repository",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:487",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::WorkerSupervisor",
+    "target": "src/zombie_sim/application.py::RunWorker",
+    "kind": "dependency",
+    "label": "spawns process entry",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/application.py:487",
+    "note": "Separate process through _run_worker; no RunWorker object is held by the parent supervisor."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunWorker",
+    "target": "src/zombie_sim/engine.py::Simulation",
+    "kind": "composition",
+    "label": "simulation",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/application.py:102",
+    "note": "May be absent during initialization/failure; created/restored and closed by the worker. Simulation factory is injectable."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunWorker",
+    "target": "src/zombie_sim/commands.py::ScriptCommandService",
+    "kind": "dependency",
+    "label": "script command via compatibility entry",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/application.py:102",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunRepository",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "dependency",
+    "label": "history_factory",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/application.py:395",
+    "note": "Stores the factory/class, not one persistent History instance."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "dependency",
+    "label": "history(run_id) creates read-only reader",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": "Returned reader is caller-owned; cached readers belong to HistoryQueryService."
+  },
+  {
+    "source": "src/zombie_sim/application.py::RunManager",
+    "target": "src/zombie_sim/cohort_survival.py::SurvivalMeasurement",
+    "kind": "dependency",
+    "label": "cohort survival through compatibility functions",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/application.py:791",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::HistoryQueryService",
+    "target": "src/zombie_sim/application.py::RunRepository",
+    "kind": "aggregation",
+    "label": "repository",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:585",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::HistoryQueryService",
+    "target": "src/zombie_sim/visualization.py::VisualizationService",
+    "kind": "aggregation",
+    "label": "visualization",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/application.py:585",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/application.py::HistoryQueryService",
+    "target": "src/zombie_sim/application.py::_HeadReader",
+    "kind": "composition",
+    "label": "_head_all_readers / cache",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/application.py:585",
+    "note": "Eight cached slots plus temporary readers for requests when all cached readers are busy; retired readers are closed."
+  },
+  {
+    "source": "src/zombie_sim/application.py::_HeadReader",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "composition",
+    "label": "history",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/application.py:54",
+    "note": "Lazily attached; HistoryQueryService closes its reader.history when retiring the containing reader."
+  },
+  {
+    "source": "src/zombie_sim/comparison.py::ComparisonService",
+    "target": "src/zombie_sim/metrics.py::MetricsService",
+    "kind": "aggregation",
+    "label": "metrics",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/comparison.py:51",
+    "note": "Shared injected MetricsService in default RunManager wiring."
+  },
+  {
+    "source": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "target": "src/zombie_sim/services/workspace.py::WorkspaceServices",
+    "kind": "aggregation",
+    "label": "services; app lifecycle closes",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:188",
+    "note": "Default-created or injected; built FastAPI app retains it and closes it on lifespan exit."
+  },
+  {
+    "source": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "target": "src/zombie_sim/server.py::HTTPReadController",
+    "kind": "dependency",
+    "label": "creates during build / socket handling",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/server.py:188",
+    "note": "Controllers are held by route closures in the built FastAPI app, not fields of WorkspaceHTTPApplication. LiveViewSession is per socket."
+  },
+  {
+    "source": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "target": "src/zombie_sim/server.py::ConfigurationHTTPController",
+    "kind": "dependency",
+    "label": "creates during build / socket handling",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/server.py:188",
+    "note": "Controllers are held by route closures in the built FastAPI app, not fields of WorkspaceHTTPApplication. LiveViewSession is per socket."
+  },
+  {
+    "source": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "target": "src/zombie_sim/server.py::RunHTTPController",
+    "kind": "dependency",
+    "label": "creates during build / socket handling",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/server.py:188",
+    "note": "Controllers are held by route closures in the built FastAPI app, not fields of WorkspaceHTTPApplication. LiveViewSession is per socket."
+  },
+  {
+    "source": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "target": "src/zombie_sim/server.py::LiveViewSession",
+    "kind": "dependency",
+    "label": "creates during build / socket handling",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/server.py:188",
+    "note": "Controllers are held by route closures in the built FastAPI app, not fields of WorkspaceHTTPApplication. LiveViewSession is per socket."
+  },
+  {
+    "source": "src/zombie_sim/server.py::HTTPReadController",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "aggregation",
+    "label": "readers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:20",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::ConfigurationHTTPController",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:45",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::ConfigurationHTTPController",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "aggregation",
+    "label": "readers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:45",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::RunHTTPController",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:85",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::RunHTTPController",
+    "target": "src/zombie_sim/command_recovery.py::CommandReceiptService",
+    "kind": "aggregation",
+    "label": "receipts",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:85",
+    "note": "Default-created or injected."
+  },
+  {
+    "source": "src/zombie_sim/server.py::LiveViewSession",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:121",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::LiveViewSession",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "aggregation",
+    "label": "readers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:121",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::LiveViewSession",
+    "target": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "kind": "aggregation",
+    "label": "shutdown",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/server.py:121",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/server.py::run_service.<locals>.DrainingServer",
+    "target": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "kind": "dependency",
+    "label": "app.state.shutdown on signal",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/server.py:431",
+    "note": "Captures the built app in a nested class; accesses its shutdown coordinator."
+  },
+  {
+    "source": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/service_shutdown.py:11",
+    "note": "Coordinates existing collaborators; it does not construct them."
+  },
+  {
+    "source": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "aggregation",
+    "label": "readers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/service_shutdown.py:11",
+    "note": "Coordinates existing collaborators; it does not construct them."
+  },
+  {
+    "source": "src/zombie_sim/service_shutdown.py::ShutdownCoordinator",
+    "target": "src/zombie_sim/export_jobs.py::ExportJobs",
+    "kind": "aggregation",
+    "label": "exports",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/service_shutdown.py:11",
+    "note": "Coordinates existing collaborators; it does not construct them."
+  },
+  {
+    "source": "src/zombie_sim/read_tasks.py::ReadPool",
+    "target": "src/zombie_sim/read_tasks.py::ReadOperationRegistry",
+    "kind": "dependency",
+    "label": "registry_factory in child",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/read_tasks.py:154",
+    "note": "Factory is pickleable; registry instances live only in separate reader processes."
+  },
+  {
+    "source": "src/zombie_sim/read_tasks.py::ReadPool",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "dependency",
+    "label": "read-only manager per child",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/read_tasks.py:154",
+    "note": "Module-level _worker creates manager at read_tasks.py:128 and closes it in finally; parent pool holds process handles, not manager instances."
+  },
+  {
+    "source": "src/zombie_sim/read_tasks.py::ReadOperationRegistry",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager (reader child)",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/read_tasks.py:17",
+    "note": "Child-local read-only manager, not the parent workspace manager."
+  },
+  {
+    "source": "src/zombie_sim/read_tasks.py::ReadOperationRegistry",
+    "target": "src/zombie_sim/export_jobs.py::ExportService",
+    "kind": "composition",
+    "label": "_exports (lazy)",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/read_tasks.py:17",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportService",
+    "target": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "kind": "aggregation",
+    "label": "renderers",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/export_jobs.py:197",
+    "note": "Default-created registry or injected shared registry."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportService",
+    "target": "src/zombie_sim/visualization.py::VisualizationService",
+    "kind": "aggregation",
+    "label": "visualization",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/export_jobs.py:197",
+    "note": "ReadOperationRegistry supplies its child manager visualization instance."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportService",
+    "target": "src/zombie_sim/persistence/contracts.py::HistoryQueryPort",
+    "kind": "dependency",
+    "label": "history_factory; scoped read",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/export_jobs.py:197",
+    "note": "Read-only dated history query port; backend SQL is confined to persistence adapters."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportService",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "dependency",
+    "label": "prepare(manager, ...)",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/export_jobs.py:197",
+    "note": "Manager is an operation argument, not retained in an attribute."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::ScenePNGRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[scene_png]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::PNGChartRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[chart_png]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::SVGChartRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[chart_svg]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::CSVTableRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[table_csv]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::ParquetTableRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[table_parquet]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportRendererRegistry",
+    "target": "src/zombie_sim/export_jobs.py::ReplayRenderer",
+    "kind": "aggregation",
+    "label": "_renderers[replay_animation]",
+    "source_multiplicity": "",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/export_jobs.py:86",
+    "note": "Built-ins register one of this class; arbitrary name registrations can inject/reuse multiple renderer instances."
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ScenePNGRenderer",
+    "target": "src/zombie_sim/export_jobs.py::Raster",
+    "kind": "dependency",
+    "label": "render-local canvas",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/export_jobs.py:118",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::PNGChartRenderer",
+    "target": "src/zombie_sim/export_jobs.py::Raster",
+    "kind": "dependency",
+    "label": "render-local canvas",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/export_jobs.py:159",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportJobs",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "aggregation",
+    "label": "manager",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/export_jobs.py:275",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/export_jobs.py::ExportJobs",
+    "target": "src/zombie_sim/read_tasks.py::ReadPool",
+    "kind": "aggregation",
+    "label": "readers; export-owned by default",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/export_jobs.py:275",
+    "note": "Default is a distinct pool named exports; injectable pool accepted. ExportJobs.close always closes it."
+  },
+  {
+    "source": "src/zombie_sim/command_recovery.py::CommandReceiptService",
+    "target": "src/zombie_sim/application.py::RunManager",
+    "kind": "dependency",
+    "label": "reply/reconcile manager argument",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/command_recovery.py:9",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/commands.py::ScriptCommandService",
+    "target": "src/zombie_sim/engine.py::Simulation",
+    "kind": "dependency",
+    "label": "execute(sim, ...) argument",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/commands.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/cli.py::SimulationCLI",
+    "target": "src/zombie_sim/config.py::ConfigurationService",
+    "kind": "aggregation",
+    "label": "configuration",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/cli.py:257",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/cli.py::SimulationCLI",
+    "target": "src/zombie_sim/cli.py::HeadlessRunController",
+    "kind": "aggregation",
+    "label": "runs",
+    "source_multiplicity": "",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/cli.py:257",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/cli.py::HeadlessRunController",
+    "target": "src/zombie_sim/engine.py::Simulation",
+    "kind": "dependency",
+    "label": "run / continue / finalize",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/cli.py:124",
+    "note": "Simulations are method-local or passed arguments, closed in workflow finalization; no persistent simulation field."
+  },
+  {
+    "source": "src/zombie_sim/cli.py::SimulationCLI",
+    "target": "src/zombie_sim/training_pipeline.py::TrainingPipeline",
+    "kind": "dependency",
+    "label": "train command creates",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/cli.py:257",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/cli.py::SimulationCLI",
+    "target": "src/zombie_sim/training_pipeline.py::EvaluationPipeline",
+    "kind": "dependency",
+    "label": "evaluate command creates",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/cli.py:257",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/cli.py::SimulationCLI",
+    "target": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "kind": "dependency",
+    "label": "gui via serve/create_app",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/cli.py:257",
+    "note": "Indirect through public transport functions, not a stored application collaborator."
+  },
+  {
+    "source": "scripts/simulation_launcher.py::Launcher",
+    "target": "scripts/simulation_launcher.py::API",
+    "kind": "composition",
+    "label": "api",
+    "source_multiplicity": "",
+    "target_multiplicity": "0..1",
+    "evidence": "scripts/simulation_launcher.py:108",
+    "note": "Identity-verified client created lazily; external service itself is not this client object."
+  },
+  {
+    "source": "scripts/simulation_launcher.py::API",
+    "target": "src/zombie_sim/server.py::WorkspaceHTTPApplication",
+    "kind": "dependency",
+    "label": "local HTTP API",
+    "source_multiplicity": "",
+    "target_multiplicity": "",
+    "evidence": "scripts/simulation_launcher.py:83",
+    "note": "Transport boundary; no in-process server reference or shared object ownership."
+  },
+  {
+    "source": "examples/oop_custom_model.py::MeanLivingStamina",
+    "target": "src/zombie_sim/interfaces.py::Measurement",
+    "kind": "realization",
+    "label": "versioned measurement contract",
+    "evidence": "examples/oop_custom_model.py:30",
+    "note": "Declares name/version and measure(world); structural contract, not an explicit base class."
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "kind": "composition",
+    "label": "declared continuation fields",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/state_management/coordinator.py::StateCoordinator",
+    "kind": "composition",
+    "label": "committed state owner",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/game_rules/session.py::GameRuleSet",
+    "kind": "aggregation",
+    "label": "injected/default game rules",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "kind": "composition",
+    "label": "compatible persistence components",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/persistence/contracts.py::PersistenceFactoryPort",
+    "kind": "aggregation",
+    "label": "backend factory",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": "Injected factory contract; the default implementation is PersistenceBundleFactory."
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/core/composition.py::SimulationServices",
+    "kind": "composition",
+    "label": "execution and compatibility services",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/core/composition.py::SimulationServiceFactory",
+    "kind": "aggregation",
+    "label": "execution component bindings",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/game_rules/session.py::ReadProjection",
+    "kind": "composition",
+    "label": "dated observation/research projection",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/execution/commit_context.py::CommitContext",
+    "kind": "dependency",
+    "label": "stage continuation for publication",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/game_rules/session.py::RuleRequest",
+    "kind": "dependency",
+    "label": "typed operation request",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServices",
+    "target": "src/zombie_sim/core/composition.py::SimulationServiceFactory",
+    "kind": "aggregation",
+    "label": "factory",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/core/composition.py:144",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServices",
+    "target": "src/zombie_sim/core/scheduler.py::SchedulerService",
+    "kind": "composition",
+    "label": "lazy execution service",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/core/composition.py:144",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServiceFactory",
+    "target": "src/zombie_sim/core/scheduler.py::SchedulerService",
+    "kind": "dependency",
+    "label": "default constructor",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/composition.py:30",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServices",
+    "target": "src/zombie_sim/core/decisions.py::DecisionService",
+    "kind": "composition",
+    "label": "lazy execution service",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/core/composition.py:144",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServiceFactory",
+    "target": "src/zombie_sim/core/decisions.py::DecisionService",
+    "kind": "dependency",
+    "label": "default constructor",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/composition.py:30",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServices",
+    "target": "src/zombie_sim/core/runtime_service.py::RuntimeService",
+    "kind": "composition",
+    "label": "lazy execution service",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/core/composition.py:144",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/composition.py::SimulationServiceFactory",
+    "target": "src/zombie_sim/core/runtime_service.py::RuntimeService",
+    "kind": "dependency",
+    "label": "default constructor",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/composition.py:30",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/scheduler.py::SchedulerService",
+    "target": "src/zombie_sim/domain_model/activities.py::ScheduledTask",
+    "kind": "dependency",
+    "label": "heap order; exact time and phases",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/scheduler.py:12",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/decisions.py::DecisionService",
+    "target": "src/zombie_sim/game_rules/session.py::ReadProjection",
+    "kind": "dependency",
+    "label": "local observations through facade",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/decisions.py:13",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/decisions.py::DecisionService",
+    "target": "src/zombie_sim/game_rules/session.py::GameRuleSet",
+    "kind": "dependency",
+    "label": "submit inferred proposals through facade",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/decisions.py:13",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/runtime_service.py::RuntimeService",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "kind": "dependency",
+    "label": "explicit continuation codec",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/runtime_service.py:19",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/runtime_service.py::RuntimeService",
+    "target": "src/zombie_sim/persistence/contracts.py::PersistenceFactoryPort",
+    "kind": "dependency",
+    "label": "restore/open compatible history",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/runtime_service.py:19",
+    "note": "Injected factory contract; the default implementation is PersistenceBundleFactory."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::GameRuleSet",
+    "target": "src/zombie_sim/game_rules/handlers.py::ActionHandlerRegistry",
+    "kind": "aggregation",
+    "label": "reviewed handler definitions",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:394",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::GameRuleSet",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "dependency",
+    "label": "create isolated draft workspace",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/game_rules/session.py:394",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::GameRuleSet",
+    "target": "src/zombie_sim/game_rules/session.py::TransitionPlan",
+    "kind": "dependency",
+    "label": "return immutable plan",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/game_rules/session.py:394",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/state_management/world.py::WorldDraft",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/action_lifecycle.py::ActionLifecycle",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/continuous.py::ContinuousEvolution",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/observations.py::ObservationBuilder",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/randomness.py::EventRandom",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/scheduling.py::ScheduleRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/interventions.py::InterventionRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::DamageRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::ResourceRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::InfectionRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::DeathRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::ConversionRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::EffectRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::SignalRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/lifecycle.py::GeometryRules",
+    "kind": "composition",
+    "label": "per-plan collaborator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "target": "src/zombie_sim/game_rules/handlers.py::ActionHandlerRegistry",
+    "kind": "aggregation",
+    "label": "shared stateless handlers",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:106",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/action_lifecycle.py::ActionLifecycle",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/action_lifecycle.py:14",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/continuous.py::ContinuousEvolution",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/continuous.py:9",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/observations.py::ObservationBuilder",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/observations.py:11",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/randomness.py::EventRandom",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/randomness.py:8",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/scheduling.py::ScheduleRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/scheduling.py:8",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/interventions.py::InterventionRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/interventions.py:8",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::DamageRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:8",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::ResourceRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:32",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::InfectionRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:51",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::DeathRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:90",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::ConversionRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:133",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::EffectRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:168",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::SignalRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:189",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/lifecycle.py::GeometryRules",
+    "target": "src/zombie_sim/game_rules/session.py::PlanningSession",
+    "kind": "association",
+    "label": "isolated context",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/lifecycle.py:215",
+    "note": "No storage or Simulation authority is supplied to rules."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/handlers.py::ActionHandlerRegistry",
+    "target": "src/zombie_sim/game_rules/handlers.py::ActionHandler",
+    "kind": "aggregation",
+    "label": "handler per catalog action",
+    "target_multiplicity": "29",
+    "evidence": "src/zombie_sim/game_rules/handlers.py:387",
+    "note": "Registered handlers may be injected and shared; they do not own state."
+  },
+  {
+    "source": "src/zombie_sim/game_rules/handlers.py::ActionHandler",
+    "target": "src/zombie_sim/domain_model/activities.py::ActionDefinition",
+    "kind": "association",
+    "label": "immutable catalog definition",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/handlers.py:47",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/handlers.py::ActionHandler",
+    "target": "src/zombie_sim/game_rules/handlers.py::ActionEvaluation",
+    "kind": "dependency",
+    "label": "typed admission evidence",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/game_rules/handlers.py:47",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/action_lifecycle.py::ActionLifecycle",
+    "target": "src/zombie_sim/domain_model/activities.py::ActionIntent",
+    "kind": "dependency",
+    "label": "admit/reject proposal",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/game_rules/action_lifecycle.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/action_lifecycle.py::ActionLifecycle",
+    "target": "src/zombie_sim/domain_model/activities.py::ActionOccurrence",
+    "kind": "dependency",
+    "label": "start/finish accepted occurrence",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/game_rules/action_lifecycle.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::StateCoordinator",
+    "target": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "kind": "association",
+    "label": "current committed immutable value",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:13",
+    "note": "Replaced only after durable success or resolved transaction identity."
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::StateCoordinator",
+    "target": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "kind": "aggregation",
+    "label": "atomic and history ports",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:13",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::StateCoordinator",
+    "target": "src/zombie_sim/state_management/coordinator.py::UnitOfWork",
+    "kind": "dependency",
+    "label": "begin revision-bound transaction",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:13",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::UnitOfWork",
+    "target": "src/zombie_sim/game_rules/session.py::TransitionPlan",
+    "kind": "association",
+    "label": "validated proposal",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:29",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::UnitOfWork",
+    "target": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "kind": "association",
+    "label": "proposed next world",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:29",
+    "note": "Invisible until the atomic port confirms durability."
+  },
+  {
+    "source": "src/zombie_sim/state_management/coordinator.py::UnitOfWork",
+    "target": "src/zombie_sim/persistence/contracts.py::CommitBundle",
+    "kind": "dependency",
+    "label": "world + runtime + events + receipt",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/state_management/coordinator.py:29",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "target": "src/zombie_sim/persistence/contracts.py::AtomicCommitPort",
+    "kind": "aggregation",
+    "label": "atomic",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/bundle.py:46",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "target": "src/zombie_sim/persistence/contracts.py::HistoryQueryPort",
+    "kind": "aggregation",
+    "label": "history",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/bundle.py:46",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "target": "src/zombie_sim/persistence/checkpoint.py::CheckpointAdapter",
+    "kind": "aggregation",
+    "label": "checkpoints",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/bundle.py:46",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundleFactory",
+    "target": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "kind": "dependency",
+    "label": "construct compatible backend set",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/bundle.py:58",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::AtomicCommitAdapter",
+    "target": "src/zombie_sim/persistence/contracts.py::AtomicCommitPort",
+    "kind": "realization",
+    "label": "structural transaction contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/bundle.py:7",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::History",
+    "target": "src/zombie_sim/persistence/contracts.py::HistoryQueryPort",
+    "kind": "realization",
+    "label": "structural dated query contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/storage.py:157",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/memory.py::InMemoryHistory",
+    "target": "src/zombie_sim/persistence/contracts.py::HistoryQueryPort",
+    "kind": "realization",
+    "label": "structural dated query contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/memory.py:15",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/checkpoint.py::CheckpointAdapter",
+    "target": "src/zombie_sim/persistence/contracts.py::HistoryQueryPort",
+    "kind": "aggregation",
+    "label": "history",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/checkpoint.py:155",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/sqlite_queries.py::SQLiteHistoryQueries",
+    "target": "src/zombie_sim/storage.py::History",
+    "kind": "association",
+    "label": "SQL adapter owner",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/sqlite_queries.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "target": "src/zombie_sim/state_management/persistent.py::PersistentMap",
+    "kind": "association",
+    "label": "immutable collection indexes",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/world.py:39",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "target": "src/zombie_sim/domain_model/agents.py::Agent",
+    "kind": "association",
+    "label": "run-scoped current agents",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/world.py:39",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "target": "src/zombie_sim/state_management/world.py::WorldReadView",
+    "kind": "dependency",
+    "label": "dated read boundary",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/state_management/world.py:39",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldReadView",
+    "target": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "kind": "association",
+    "label": "immutable aggregate",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/world.py:131",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldDraft",
+    "target": "src/zombie_sim/state_management/world.py::WorldReadView",
+    "kind": "association",
+    "label": "read base",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/world.py:194",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldDraft",
+    "target": "src/zombie_sim/state_management/world.py::StateChange",
+    "kind": "dependency",
+    "label": "typed changed entities only",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/state_management/world.py:194",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::StateChange",
+    "target": "src/zombie_sim/domain_model/agents.py::Agent",
+    "kind": "association",
+    "label": "one possible typed value",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/state_management/world.py:31",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::TransitionPlan",
+    "target": "src/zombie_sim/state_management/world.py::StateChange",
+    "kind": "association",
+    "label": "changes",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/game_rules/session.py:32",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::TransitionPlan",
+    "target": "src/zombie_sim/domain_model/events.py::DomainEvent",
+    "kind": "association",
+    "label": "causal event evidence",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/game_rules/session.py:32",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/game_rules/session.py::TransitionPlan",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeSnapshot",
+    "kind": "association",
+    "label": "continuation boundary",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/game_rules/session.py:32",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeSnapshot",
+    "kind": "dependency",
+    "label": "seal immutable cells",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "target": "src/zombie_sim/domain_model/activities.py::ScheduledTask",
+    "kind": "association",
+    "label": "ordered pending work",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "target": "src/zombie_sim/state_management/runtime_values.py::CowDict",
+    "kind": "composition",
+    "label": "branch-owned config/memory wrappers",
+    "target_multiplicity": "2",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:14",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeSnapshot",
+    "target": "src/zombie_sim/state_management/runtime_values.py::MappingCell",
+    "kind": "association",
+    "label": "immutable shared values",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:92",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_values.py::CowDict",
+    "target": "src/zombie_sim/state_management/runtime_values.py::MappingCell",
+    "kind": "association",
+    "label": "persistent base; branch cache",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/runtime_values.py:151",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_values.py::CowList",
+    "target": "src/zombie_sim/state_management/runtime_values.py::SequenceCell",
+    "kind": "association",
+    "label": "shared original list contents",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/runtime_values.py:325",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::Agent",
+    "target": "src/zombie_sim/domain_model/values.py::AgentIdentity",
+    "kind": "association",
+    "label": "persistent identity",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:305",
+    "note": "Identity survives Human-to-Zombie state replacement and terminal death."
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::Agent",
+    "target": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "kind": "association",
+    "label": "current state",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:305",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/roles.py::RoleAssignment",
+    "kind": "association",
+    "label": "active assignment",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/agents.py::ModelAssignment",
+    "kind": "association",
+    "label": "decision controller",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/agents.py::TimedEffect",
+    "kind": "association",
+    "label": "dated modifiers",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/agents.py::EngineFacts",
+    "kind": "association",
+    "label": "continuous anchors",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/agents.py::AgentProjection",
+    "kind": "association",
+    "label": "dated boundary evidence",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::HumanState",
+    "target": "src/zombie_sim/domain_model/resources.py::Inventory",
+    "kind": "association",
+    "label": "portable stocks and reservations",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:280",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/roles.py::RoleAssignment",
+    "target": "src/zombie_sim/domain_model/roles.py::RoleDefinition",
+    "kind": "aggregation",
+    "label": "shared immutable role",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/roles.py:134",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/roles.py::RoleAssignment",
+    "target": "src/zombie_sim/domain_model/roles.py::SpitterRoleState",
+    "kind": "association",
+    "label": "per-assignment consumable charges",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/domain_model/roles.py:134",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/roles.py::RoleRegistry",
+    "target": "src/zombie_sim/domain_model/roles.py::RoleDefinition",
+    "kind": "aggregation",
+    "label": "all eight explicit definitions",
+    "target_multiplicity": "8",
+    "evidence": "src/zombie_sim/domain_model/roles.py:85",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/roles.py::RoleDefinition",
+    "target": "src/zombie_sim/domain_model/profiles.py::ProfileValues",
+    "kind": "association",
+    "label": "immutable role parameters",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/roles.py:13",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/profiles.py::ProfileResolver",
+    "target": "src/zombie_sim/domain_model/roles.py::RoleDefinition",
+    "kind": "dependency",
+    "label": "derive type + role + override + effects",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/domain_model/profiles.py:165",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/codec.py::DomainCodec",
+    "target": "src/zombie_sim/domain_model/agents.py::Agent",
+    "kind": "dependency",
+    "label": "lossless entity import/export",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/domain_model/codec.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/codec.py::DomainCodec",
+    "target": "src/zombie_sim/domain_model/events.py::DomainEvent",
+    "kind": "dependency",
+    "label": "named causal payload codecs",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/domain_model/codec.py:10",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/events.py::DomainEvent",
+    "target": "src/zombie_sim/domain_model/events.py::ActionEventPayload",
+    "kind": "association",
+    "label": "one explicit payload alternative",
+    "target_multiplicity": "0..1",
+    "evidence": "src/zombie_sim/domain_model/events.py:154",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/domain_model/activities.py::ActionOccurrence",
+    "target": "src/zombie_sim/domain_model/activities.py::ActionIntent",
+    "kind": "dependency",
+    "label": "intent identity reference",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/domain_model/activities.py:135",
+    "note": "The occurrence is a durative activity, not an Event subclass."
+  },
+  {
+    "source": "src/zombie_sim/domain_model/activities.py::ScheduledTask",
+    "target": "src/zombie_sim/domain_model/activities.py::ScheduledPayload",
+    "kind": "association",
+    "label": "one named queue task payload",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/activities.py:205",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldDraft",
+    "target": "src/zombie_sim/state_management/world.py::WorldAggregate",
+    "kind": "association",
+    "label": "shared immutable base",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/state_management/world.py:194",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/world.py::WorldDraft",
+    "target": "src/zombie_sim/state_management/world.py::_DraftCollection",
+    "kind": "composition",
+    "label": "materialized local overlays",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/world.py:194",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "target": "src/zombie_sim/persistence/contracts.py::LiveStatePort",
+    "kind": "aggregation",
+    "label": "published live projection",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/bundle.py:46",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundle",
+    "target": "src/zombie_sim/persistence/contracts.py::CheckpointPort",
+    "kind": "aggregation",
+    "label": "portable history and document operations",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/persistence/bundle.py:46",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::MemoryStore",
+    "target": "src/zombie_sim/persistence/contracts.py::LiveStatePort",
+    "kind": "realization",
+    "label": "structural read contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/storage.py:498",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::SQLiteStore",
+    "target": "src/zombie_sim/persistence/contracts.py::LiveStatePort",
+    "kind": "realization",
+    "label": "structural read contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/storage.py:569",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/storage.py::History",
+    "target": "src/zombie_sim/persistence/contracts.py::CommandJournalPort",
+    "kind": "realization",
+    "label": "run-control bookkeeping",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/storage.py:157",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/memory.py::InMemoryHistory",
+    "target": "src/zombie_sim/persistence/contracts.py::CommandJournalPort",
+    "kind": "realization",
+    "label": "run-control bookkeeping",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/memory.py:15",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/persistence/checkpoint.py::CheckpointAdapter",
+    "target": "src/zombie_sim/persistence/contracts.py::CheckpointPort",
+    "kind": "realization",
+    "label": "checkpoint and prefix capabilities",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/checkpoint.py:155",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/engine.py::Simulation",
+    "target": "src/zombie_sim/execution/scheduled_boundary.py::ScheduledBoundary",
+    "kind": "dependency",
+    "label": "creates scheduled transaction guard",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/engine.py:169",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/core/scheduler.py::SchedulerService",
+    "target": "src/zombie_sim/execution/scheduled_boundary.py::ScheduledBoundary",
+    "kind": "dependency",
+    "label": "prepares each due task through context",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/core/scheduler.py:12",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/execution/scheduled_boundary.py::ScheduledBoundary",
+    "target": "src/zombie_sim/engine.py::Simulation",
+    "kind": "association",
+    "label": "execution coordinator",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/execution/scheduled_boundary.py:5",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/execution/scheduled_boundary.py::ScheduledBoundary",
+    "target": "src/zombie_sim/state_management/runtime_state.py::RuntimeState",
+    "kind": "association",
+    "label": "previous owner and staged shell",
+    "target_multiplicity": "2",
+    "evidence": "src/zombie_sim/execution/scheduled_boundary.py:5",
+    "note": "The previous runtime remains available for rollback; the staged shell copies only scheduler-owned mutable containers. Published rule successors are independently isolated."
+  },
+  {
+    "source": "src/zombie_sim/persistence/bundle.py::PersistenceBundleFactory",
+    "target": "src/zombie_sim/persistence/contracts.py::PersistenceFactoryPort",
+    "kind": "realization",
+    "label": "structural backend factory contract",
+    "target_multiplicity": "",
+    "evidence": "src/zombie_sim/persistence/bundle.py:58",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeSnapshot",
+    "target": "src/zombie_sim/state_management/runtime_values.py::SequenceCell",
+    "kind": "association",
+    "label": "immutable sequence values",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:92",
+    "note": ""
+  },
+  {
+    "source": "src/zombie_sim/state_management/runtime_state.py::RuntimeSnapshot",
+    "target": "src/zombie_sim/state_management/runtime_values.py::OpaqueCell",
+    "kind": "association",
+    "label": "private memory ownership cells",
+    "target_multiplicity": "*",
+    "evidence": "src/zombie_sim/state_management/runtime_state.py:92",
+    "note": "Exact custom types and within-memory alias graphs retain deepcopy semantics; cells are shared until writable access."
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentState",
+    "target": "src/zombie_sim/domain_model/profiles.py::ProfileValues",
+    "kind": "association",
+    "label": "type / role / individual profiles",
+    "target_multiplicity": "1..3",
+    "evidence": "src/zombie_sim/domain_model/agents.py:122",
+    "note": "Three named fields may reference equal shared immutable values; no identity or consumable agent state is interned."
+  },
+  {
+    "source": "src/zombie_sim/domain_model/agents.py::AgentProjection",
+    "target": "src/zombie_sim/domain_model/profiles.py::ProfileValues",
+    "kind": "association",
+    "label": "dated projected profile evidence",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/agents.py:98",
+    "note": "Equal numeric values may be shared; AgentState preserves its own wire-field presence."
+  },
+  {
+    "source": "src/zombie_sim/domain_model/profiles.py::EffectiveProfile",
+    "target": "src/zombie_sim/domain_model/profiles.py::ProfileValues",
+    "kind": "association",
+    "label": "resolved immutable source parameters",
+    "target_multiplicity": "1",
+    "evidence": "src/zombie_sim/domain_model/profiles.py:133",
+    "note": ""
+  }
+]

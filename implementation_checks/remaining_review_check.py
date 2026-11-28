@@ -1,5 +1,11 @@
 """Check retained inputs, documentation links and the packaged GUI artifact."""
 from __future__ import annotations
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 import hashlib
 import json
 from pathlib import Path
@@ -46,7 +52,7 @@ def main():
     report = {'status': 'PASS', 'retained_inputs': retained, 'ontology_diff': [],
               'documentation_links_checked': len(checked), 'packaged_assets': assets,
               'note': 'The unchanged user-edited plan is excluded from whitespace checking; its original CRLF/trailing whitespace is retained.'}
-    (ROOT / 'artifacts/remaining-review.json').write_text(json.dumps(report, indent=2) + '\n')
+    artifact_output((ROOT / 'artifacts/remaining-review.json')).write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({**report, 'retained_inputs': len(retained)}, indent=2))
 
 

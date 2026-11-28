@@ -77,11 +77,8 @@ class ShutdownCoordinator:
         self.controls_open=False
         self.phase='reconciling_accepted_commands'
         while self.active_mutations:await asyncio.sleep(.05)
-        def pending():
-            with self.manager.lock:
-                return [dict(row) for row in self.manager.connection.execute("SELECT id,run_id,operation,request FROM commands WHERE status='pending' ORDER BY created,id")]
         while True:
-            commands=await self._operation(pending)
+            commands=await self._operation(self.manager.repository.pending_commands)
             if not commands:break
             for command in commands:
                 # Creation/branch reservations can outlive their original HTTP
@@ -100,11 +97,7 @@ class ShutdownCoordinator:
                     if result['status']=='pending':
                         await self._operation(self.manager.command,command['run_id'],command['operation'],json.loads(command['request']),wait=False)
             await asyncio.sleep(.1)
-        def unfinished_creations():
-            with self.manager.lock:
-                return [dict(row) for row in self.manager.connection.execute(
-                    "SELECT commands.id,commands.request FROM commands JOIN runs ON runs.id=commands.run_id WHERE commands.operation='create' AND runs.status='initializing'")]
-        for creation in await self._operation(unfinished_creations):
+        for creation in await self._operation(self.manager.repository.unfinished_creations):
             import json
             request=json.loads(creation['request'])
             await self._operation(self.manager.create,request['config'],creation['id'],start=request.get('start',False))
@@ -125,9 +118,8 @@ class ShutdownCoordinator:
                 # is no shutdown receipt to retry when admission never wrote
                 # the synthetic ID; preserve that immutable terminal outcome.
                 current=await self._operation(self.manager._row,identifier)
-                with self.manager.lock:
-                    recorded=self.manager.connection.execute('SELECT 1 FROM commands WHERE id=?',(command_id,)).fetchone()
-                if current['status'] in {'completed','terminated'} and recorded is None:
+                recorded=self.manager.repository.command_exists(command_id)
+                if current['status'] in {'completed','terminated'} and not recorded:
                     self.outcomes[identifier]={'status':current['status'],'command_id':None,'cleanup_complete':False}
                     continue
                 raise
@@ -141,7 +133,7 @@ class ShutdownCoordinator:
             rows=await self._operation(self.manager.list_runs)
             for row in rows:
                 self.outcomes.setdefault(row['id'],{}).update(run_status=row['status'],cleanup_complete=row['resource_status']['cleanup_complete'])
-            with self.manager.lock:leases=self.manager.connection.execute('SELECT count(*) FROM worker_leases').fetchone()[0]
+            leases=self.manager.repository.lease_count()
             if not leases and all(row['resource_status']['cleanup_complete'] for row in rows):break
             await asyncio.sleep(.1)
         while self.sockets:await asyncio.sleep(.05)

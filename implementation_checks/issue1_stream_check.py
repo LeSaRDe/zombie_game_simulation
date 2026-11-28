@@ -64,6 +64,9 @@ class StreamChecks(unittest.TestCase):
         self.temporary = TemporaryDirectory(prefix="zombie-issue1-stream-")
         self.app = create_app(self.temporary.name)
         self.manager = self.app.state.manager
+        # Read orchestration now owns snapshots. Keep this race fixture local;
+        # the separate service check exercises the real process-backed reader.
+        self.app.state.readers.call = lambda operation, identity, **options: self.manager.snapshot(identity)
         self.endpoint = next(route.endpoint for route in self.app.routes
                              if getattr(route, "path", "") == "/api/runs/{run_id}/stream")
 
@@ -73,10 +76,10 @@ class StreamChecks(unittest.TestCase):
         self.temporary.cleanup()
 
     def run_stream(self, socket):
-        async def dispatch(function, *args):
+        async def dispatch(function, *args, **kwargs):
             # These manager methods are deterministic fakes. Actual concurrent
             # reconstruction and workers are exercised by issue1_check.py.
-            return function(*args)
+            return function(*args, **kwargs)
 
         with patch("zombie_sim.server.asyncio.to_thread", dispatch):
             asyncio.run(asyncio.wait_for(self.endpoint(socket, "fixture"), timeout=3))

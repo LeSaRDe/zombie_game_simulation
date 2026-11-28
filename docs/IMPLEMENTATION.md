@@ -1,5 +1,11 @@
 # TASK 2 implementation and verification
 
+**Current architecture:** the framework has since been refactored into composed
+OOP services. See the [architecture guide](ARCHITECTURE.md),
+[diagram atlas](architecture/index.html), and [refactor verification](OOP_REFACTOR.md).
+The implementation chronology and original measurements below remain historical
+evidence; their file responsibility descriptions predate the extraction into `core/`.
+
 Implemented on 2026-11-25 from the ontology and the reviewed TASK 2 plan.
 The current plan now authorizes testing against the supplied acceptance suite.
 See [the refinement report](TESTING_REFINEMENT.md) for current acceptance results,

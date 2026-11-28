@@ -1,3 +1,4 @@
+import {EventsReader} from './core/AnalysisReaders';
 import {useEffect, useRef, useState} from 'react';
 import {MetricCursor, sameCursor} from './useStatisticsReader';
 
@@ -29,13 +30,10 @@ export default function useEventsReader({runId,mode,perspective,selectionVersion
     &&(!read.request||read.request.agent===selectedAgent)?read:{phase:'idle'};
   useEffect(()=>{
     if(!runId||perspective!=='researcher'){setRead({phase:'idle'});return;}
-    let disposed=false,inflight=false,last='',failed='';
-    const controller=new AbortController();
     setRead(previous=>previous.cursor?.run_id===runId&&previous.request?.agent===selectedAgent
       ? {...previous,phase:previous.data?'refreshing':'loading',error:undefined}
       : {phase:'loading'});
-    const update=async()=>{
-      if(disposed||inflight||queryRef.current!==queryKey)return;
+    const reader=new EventsReader({current:()=>queryRef.current===queryKey,read:async(signal)=>{
       const selected=latest.current.getCursor();
       if(!selected||selected.run_id!==runId)return;
       const cursor=pinned?.cursor||selected;
@@ -43,43 +41,22 @@ export default function useEventsReader({runId,mode,perspective,selectionVersion
         ...(pinned?.before_sequence?{before_sequence:pinned.before_sequence}:{}),
         ...(pinned?.after_sequence?{after_sequence:pinned.after_sequence}:{})};
       const key=JSON.stringify(request);
-      if(key===last||key===failed)return;
-      inflight=true;
+      if(!reader.accepts(key))return;
       setRead(previous=>({...previous,phase:previous.data?'refreshing':'loading',error:undefined}));
       try{
-        const data=await latest.current.fetchEvents(request,controller.signal);
-        if(disposed||queryRef.current!==queryKey)return;
-        const source={run_id:data.run_id,time:String(data.cursor?.time),revision:String(data.cursor?.revision)};
-        if(!sameCursor(source,cursor)||(data.agent??null)!==selectedAgent)throw Error('Events returned a different source cursor or identity filter. Retry to load the requested page.');
-        if(!Array.isArray(data.records)||!map(data.occurrences)||!map(data.page)
-          ||data.page.limit!==request.limit||data.page.loaded_count!==data.records.length||data.records.length>request.limit
-          ||typeof data.page.has_older!=='boolean'||typeof data.page.has_newer!=='boolean')throw Error('The service returned an incomplete event page.');
-        let previous=-1n;const references=new Set<string>();
-        for(const record of data.records){
-          if(!map(record)||!integer(record.ledger_sequence)||!integer(record.ledger_revision)
-            ||!integer(record.revision_before)||!integer(record.revision_after))throw Error('The service returned an invalid event cursor.');
-          const sequence=BigInt(record.ledger_sequence),revision=BigInt(record.ledger_revision);
-          if(sequence<=0n||sequence<=previous||revision>BigInt(source.revision)
-            ||BigInt(record.revision_after)!==revision||BigInt(record.revision_before)!==(revision>0n?revision-1n:0n)
-            ||(request.before_sequence&&sequence>=BigInt(request.before_sequence))
-            ||(request.after_sequence&&sequence<=BigInt(request.after_sequence)))throw Error('The service returned events outside the requested causal page or order.');
-          previous=sequence;
-          for(const value of [record.occurrence,record.action_id])if(value!=null)references.add(String(value));
-        }
-        if(data.page.first_sequence!==(data.records.length?String(data.records[0].ledger_sequence):null)
-          ||data.page.last_sequence!==(data.records.length?String(data.records.at(-1)!.ledger_sequence):null)
-          ||Object.keys(data.occurrences).some(identity=>!references.has(identity)))throw Error('The service returned inconsistent event page boundaries or unrelated occurrence details.');
+        const data=await latest.current.fetchEvents(request,signal);
+        if(!reader.current)return;
+        const source=reader.validate(data,request);
         const current=latest.current.getCursor();
         if(!current||current.run_id!==runId)return;
         if(!pinned&&mode==='replay'&&!sameCursor(source,current))return;
-        setRead({phase:'ready',cursor:source,data,request,queryKey});last=key;failed='';
+        setRead({phase:'ready',cursor:source,data,request,queryKey});reader.succeeded(key);
       }catch(error:any){
-        if(disposed||controller.signal.aborted||queryRef.current!==queryKey)return;
-        failed=key;setRead(previous=>({...previous,phase:'failed',error:error.message||'Events could not be loaded.'}));
-      }finally{inflight=false;}
-    };
-    void update();const timer=setInterval(()=>void update(),500);
-    return()=>{disposed=true;controller.abort();clearInterval(timer);};
+        if(!reader.current)return;
+        reader.failed(key);setRead(previous=>({...previous,phase:'failed',error:error.message||'Events could not be loaded.'}));
+      }
+    }});
+    reader.start();return()=>reader.dispose();
   },[queryKey,attempt]);
   const navigate=(direction:'older'|'newer')=>{
     const result=visibleRead;

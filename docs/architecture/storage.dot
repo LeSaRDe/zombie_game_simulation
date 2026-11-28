@@ -1,0 +1,27 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+sim [label="Simulation / StateCoordinator", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-coordinator-py", target="_top", tooltip="src/zombie_sim/state_management/coordinator.py"];
+factory [label="PersistenceFactoryPort\ndefault PersistenceBundleFactory", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-bundle-py", target="_top", tooltip="src/zombie_sim/persistence/bundle.py"];
+bundle [label="PersistenceBundle\ncompatible atomic/read/checkpoint adapters", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-bundle-py", target="_top", tooltip="src/zombie_sim/persistence/bundle.py"];
+atomic [label="AtomicCommitPort", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-contracts-py", target="_top", tooltip="src/zombie_sim/persistence/contracts.py"];
+read [label="HistoryQueryPort", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-contracts-py", target="_top", tooltip="src/zombie_sim/persistence/contracts.py"];
+sql [label="History + SQLiteHistoryQueries\nMemoryStore / SQLiteStore", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-sqlite-queries-py", target="_top", tooltip="src/zombie_sim/persistence/sqlite_queries.py"];
+memory [label="InMemoryHistory + MemoryStore\nindependent nondurable backend", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-memory-py", target="_top", tooltip="src/zombie_sim/persistence/memory.py"];
+checkpoint [label="CheckpointAdapter + RuntimeService\nversioned codecs + owned publication generation", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-checkpoint-py", target="_top", tooltip="src/zombie_sim/persistence/checkpoint.py"];
+research [label="Metrics · cohorts · comparison · export", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-metrics-py", target="_top", tooltip="src/zombie_sim/metrics.py"];
+manifest [label="Implementation manifest\nlegacy-read/default restart compatibility", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-versioning-py", target="_top", tooltip="src/zombie_sim/persistence/versioning.py"];
+factory -> bundle [label="creates", style="solid"];
+sim -> bundle [label="injected owner", style="solid"];
+bundle -> atomic [label="write port", style="solid"];
+bundle -> read [label="query port", style="solid"];
+atomic -> sql [label="durable implementation", style="solid"];
+atomic -> memory [label="contract implementation", style="solid"];
+read -> sql [label="dated queries", style="solid"];
+read -> memory [label="same contract", style="solid"];
+research -> read [label="no SQL knowledge", style="solid"];
+checkpoint -> read [label="verified prefix", style="solid"];
+checkpoint -> manifest [label="validate before restore", style="solid"];
+}

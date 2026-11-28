@@ -1,6 +1,12 @@
 """Exercise real HTTP disconnects through production middleware, without a browser."""
 from __future__ import annotations
 
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
+
 import argparse
 import asyncio
 import http.client
@@ -145,7 +151,7 @@ if __name__ == "__main__":
     if args.serve:
         (serve_previous_poll if args.previous else serve)(args.serve, args.port)
     else:
-        output = ROOT / "artifacts/issue2/disconnect"
+        output = artifact_output(ROOT / "artifacts/issue2/disconnect")
         output.mkdir(parents=True, exist_ok=True)
         report = {"passed": False}
         try:

@@ -58,19 +58,12 @@ def main():
                     arrivals.append({"hook": point, "revision": durable[0],
                                      "time": f"{durable[1]}/{durable[2]}", "event_kinds": kinds})
                     with journal:
-                        journal.execute("INSERT INTO commands VALUES(?,?,?,?,?,?,?)", (
-                            name, "control-boundary", operation,
-                            canonical({"command_id": name, "operation": operation}),
-                            "pending", None, 1,
-                        ))
+                        journal.insert_command(name,"control-boundary",operation,
+                                               {"command_id": name, "operation": operation})
                 return original_hit(point, **context)
 
             def controls_waiting():
-                return journal.execute(
-                    "SELECT 1 FROM commands WHERE run_id=? AND status='pending' "
-                    "AND operation NOT IN ('create','branch') LIMIT 1",
-                    ("control-boundary",),
-                ).fetchone() is not None
+                return journal.controls_waiting("control-boundary")
 
             def record_checkpoint(instance, path=None):
                 checkpoint_calls.append({"time": str(instance.time), "revision": instance.revision})

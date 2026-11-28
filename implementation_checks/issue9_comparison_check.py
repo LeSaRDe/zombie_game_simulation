@@ -43,7 +43,7 @@ def counts(state):
 def audit(manager):
     digest = hashlib.sha256()
     # Include continuation/RNG, semantic, control and analysis-definition data.
-    for row in manager.connection.execute("SELECT id,directory FROM runs ORDER BY id"):
+    for row in sorted(manager.catalog.run_rows(), key=lambda row: row["id"]):
         path = Path(row["directory"]) / "run.sqlite"
         digest.update(row["id"].encode())
         if not path.exists():
@@ -55,9 +55,11 @@ def audit(manager):
                     for value in record:
                         data = value if isinstance(value, bytes) else repr(value).encode()
                         digest.update(len(data).to_bytes(8, "big")); digest.update(data)
-    for table in ("runs", "commands", "views"):
-        for record in manager.connection.execute(f"SELECT * FROM {table} ORDER BY rowid"):
-            digest.update(repr(tuple(record)).encode())
+    # Inspect actual stored bytes independently of production query projections.
+    with sqlite3.connect((manager.root / "manager.sqlite").as_uri() + "?mode=ro", uri=True) as catalog:
+        for table in ("runs", "commands", "views"):
+            for record in catalog.execute(f"SELECT * FROM {table} ORDER BY rowid"):
+                digest.update(repr(tuple(record)).encode())
     return digest.hexdigest()
 
 
@@ -68,10 +70,9 @@ def register(manager, identity, path, config, status="terminated"):
             "SELECT revision,time_n,time_d FROM commits ORDER BY revision DESC LIMIT 1").fetchone()
     finally:
         history.close()
-    with manager.connection:
-        manager.connection.execute("INSERT INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)",
-            (identity, str(path.parent), canonical(config), status,
-             canonical({"time": str(Fraction(int(n), int(d))), "revision": str(revision)})))
+    with manager.catalog:
+        manager.catalog.insert_run(identity,path.parent,config,status,
+            frontier={"time": str(Fraction(int(n), int(d))), "revision": str(revision)})
 
 
 def source(manager, identity, revision=None):

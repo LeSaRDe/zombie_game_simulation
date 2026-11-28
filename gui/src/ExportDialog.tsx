@@ -1,26 +1,14 @@
 import {ExactTimeInput} from './TimeValue';
-import React,{useEffect,useRef,useState} from 'react';
-
-type Job={id:string;status:string;active_tasks:number;artifact_url:string;provenance_url:string;error?:string;bytes?:number;[key:string]:unknown};
+import React,{useEffect,useRef,useState,useSyncExternalStore} from 'react';
+import {ExportSession} from './core/ExportSession';
 let inspection:Record<string,unknown>={};
 Object.defineProperty(window,'__zombieExportInspection',{configurable:true,get:()=>structuredClone(inspection)});
-async function request(path:string,body?:Record<string,unknown>):Promise<Job>{
-  const response=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
-  const text=await response.text();let result;
-  try{result=JSON.parse(text);}catch{throw Error(`Export request returned ${response.status}: ${text.slice(0,120)}`);}
-  if(!response.ok)throw Error(result.error||result.detail||'Export request failed');return result;
-}
-
 export default function ExportDialog({runId,time,revision,onClose}:{runId:string;time:string;revision:string;onClose?:()=>void}){
-  const [format,setFormat]=useState('scene_png'),[selected,setSelected]=useState(time),[start,setStart]=useState('0'),[end,setEnd]=useState(time),[interval,setInterval]=useState('1');
-  const [cohort,setCohort]=useState('all'),[cohorts,setCohorts]=useState<{id?:string;name:string}[]>([]);
-  const [job,setJob]=useState<Job|null>(null),[error,setError]=useState(''),[pending,setPending]=useState(false);const details=useRef<HTMLDetailsElement>(null);
-  const active=!!job&&['PENDING','RUNNING','CANCELLING'].includes(job.status);
-  useEffect(()=>{if(!active||!job)return;let cancelled=false;const handle=window.setInterval(()=>{request(`/api/export-jobs/${job.id}`).then(value=>{if(!cancelled)setJob(value);}).catch(e=>{if(!cancelled)setError(e.message);});},100);return()=>{cancelled=true;window.clearInterval(handle);};},[job?.id,active]);
-  useEffect(()=>{let cancelled=false;fetch(`/api/runs/${runId}/cohorts`).then(r=>r.json()).then(rows=>{if(!cancelled&&Array.isArray(rows))setCohorts(rows.map(row=>row.definition));}).catch(()=>{});return()=>{cancelled=true;};},[runId]);
+  const [session]=useState(()=>new ExportSession(runId,time));useSyncExternalStore(session.subscribe,session.getVersion);
+  const {format,setFormat,selected,setSelected,start,setStart,end,setEnd,interval,setInterval,cohort,setCohort,cohorts,job,error,pending,active,begin,cancel}=session;
+  const details=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{session.load(runId);return()=>session.dispose();},[session,runId]);
   useEffect(()=>{inspection={run_id:runId,format,time:selected,interval:[start,end],sample_interval:interval,cohort,job,error};},[runId,format,selected,start,end,interval,cohort,job,error]);
-  async function begin(){setError('');setPending(true);try{setJob(await request(`/api/runs/${runId}/exports`,{format,time:selected,interval:[start,end],sample_interval:interval,cohort}));}catch(e){setError((e as Error).message);}finally{setPending(false);}}
-  async function cancel(){if(!job)return;setError('');try{setJob(await request(`/api/export-jobs/${job.id}/cancel`,{}));}catch(e){setError((e as Error).message);}}
   return <details className="export-menu" ref={details}><summary data-testid="export-open">Export ↗</summary>
     <section aria-label="Export recorded data" style={{padding:16,minWidth:300,maxWidth:420,display:'grid',gap:10}}>
       <strong>Export recorded data</strong><small>Capture a committed history revision. The run continues independently.</small>

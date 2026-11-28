@@ -3,12 +3,12 @@
   "audit_status": "PASS",
   "framework_conformance": "NOT_RUN",
   "meaning": "Structural/source audit only. Mapping does not prove exhaustive semantic coverage.",
-  "source_files": 53,
-  "case_count": 539,
-  "assertion_count": 2645,
+  "source_files": 89,
+  "case_count": 544,
+  "assertion_count": 2694,
   "tiers": {
     "browser": 38,
-    "core": 489,
+    "core": 494,
     "integration": 7,
     "performance": 2,
     "statistical": 2,
@@ -118,7 +118,10 @@
         "SEQ_resources_and_continuity_6",
         "SEQ_resources_and_continuity_7",
         "POL_DEFAULT_WITNESS_BANK",
-        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS"
+        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS",
+        "OOP_IDENTITY_historical_human_survives_converted_projection",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "signal": [
         "ACT_signal_success",
@@ -593,7 +596,8 @@
         "ACT_spit_empty_reservoir_rejected_without_cost",
         "ACT_spit_target_moves_out_before_resolution",
         "POL_DEFAULT_WITNESS_BANK",
-        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS"
+        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS",
+        "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent"
       ],
       "scream": [
         "ACT_scream_success",
@@ -621,7 +625,11 @@
         "BASELINE_full_default_model_run",
         "FORMAL_actual_treatment_trace",
         "FORMAL_actual_conversion_trace",
-        "FORMAL_actual_death_trace"
+        "FORMAL_actual_death_trace",
+        "OOP_IDENTITY_historical_human_survives_converted_projection",
+        "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "V02": [
         "ACT_close_gate_living_occupant_blocks_closure",
@@ -789,7 +797,8 @@
         "generated.damage.r0_8.life100",
         "FORMAL_actual_treatment_trace",
         "FORMAL_actual_conversion_trace",
-        "FORMAL_actual_death_trace"
+        "FORMAL_actual_death_trace",
+        "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie"
       ],
       "V05": [
         "ACT_bite_success",
@@ -876,7 +885,11 @@
         "GUI_CAUSAL_TIMELINE_ATOMIC_CONVERSION",
         "FORMAL_actual_treatment_trace",
         "FORMAL_actual_conversion_trace",
-        "FORMAL_actual_death_trace"
+        "FORMAL_actual_death_trace",
+        "OOP_IDENTITY_historical_human_survives_converted_projection",
+        "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "V08": [
         "ACT_melee_reject_missing_capability",
@@ -916,7 +929,9 @@
         "SYS_MODEL_MEMORY_RESTART",
         "SYS_TRAINING_RELOAD_AND_SPLITS",
         "GUI_EDIT_NEW_AND_MODEL_INTERVENTION",
-        "BASELINE_full_default_model_run"
+        "BASELINE_full_default_model_run",
+        "OOP_IDENTITY_historical_human_survives_converted_projection",
+        "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent"
       ],
       "V09": [
         "ACT_move_success",
@@ -1425,7 +1440,10 @@
         "SEQ_resources_and_continuity_7",
         "STAT_hit_fixed_seed_trials",
         "STAT_claim_fixed_seed_trials",
-        "BASELINE_full_default_model_run"
+        "BASELINE_full_default_model_run",
+        "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "V13": [
         "ACT_pickup_success",
@@ -1503,7 +1521,10 @@
         "SEQ_resources_and_continuity_7",
         "STAT_hit_fixed_seed_trials",
         "STAT_claim_fixed_seed_trials",
-        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS"
+        "POL_ENCODER_ALL_ACTION_ROUNDTRIPS",
+        "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "V14": [
         "ACT_move_success",
@@ -1760,7 +1781,8 @@
         "generated.exposure.r0_8.near_one",
         "generated.exposure.r1.zero",
         "generated.exposure.r1.at_probability",
-        "generated.exposure.r1.near_one"
+        "generated.exposure.r1.near_one",
+        "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie"
       ],
       "V19": [
         "CON_first_valid_winner_miss_cancels_other",
@@ -1889,7 +1911,9 @@
         "SEQ_resources_and_continuity_4",
         "SEQ_resources_and_continuity_5",
         "SEQ_resources_and_continuity_6",
-        "SEQ_resources_and_continuity_7"
+        "SEQ_resources_and_continuity_7",
+        "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent",
+        "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie"
       ],
       "V23": [
         "SYS_CONFIG_EXECUTION_WORKERS",
@@ -1986,7 +2010,10 @@
         "POL_ENCODER_ALL_ACTION_ROUNDTRIPS",
         "FORMAL_actual_treatment_trace",
         "FORMAL_actual_conversion_trace",
-        "FORMAL_actual_death_trace"
+        "FORMAL_actual_death_trace",
+        "OOP_IDENTITY_historical_human_survives_converted_projection",
+        "OOP_CONTINUATION_conversion_cleanup_memory",
+        "OOP_CONTINUATION_conversion_cleanup_sqlite"
       ],
       "V25": [
         "ACT_guard_effect_exclusive_expiry",
@@ -12750,6 +12777,116 @@
       "independent_postchecks": [
         "snapshot_paths",
         "formal_checks"
+      ]
+    },
+    {
+      "id": "OOP_IDENTITY_historical_human_survives_converted_projection",
+      "tier": "core",
+      "requirements": [
+        "V01",
+        "V07",
+        "V08",
+        "V24"
+      ],
+      "actions": [
+        "rest"
+      ],
+      "source": [
+        "docs/DEEP_OOP_REFACTOR_PROPOSAL.md:2,3,4,5,7",
+        "ontology:6.4,7.3,14,16.1"
+      ],
+      "decisions": [],
+      "description": "",
+      "assertions": 15,
+      "independent_postchecks": []
+    },
+    {
+      "id": "OOP_ROLES_spitter_reservoirs_and_recharge_are_per_agent",
+      "tier": "core",
+      "requirements": [
+        "V08",
+        "V12",
+        "V13",
+        "V22"
+      ],
+      "actions": [
+        "spit"
+      ],
+      "source": [
+        "docs/DEEP_OOP_REFACTOR_PROPOSAL.md:2,3,4,5,7",
+        "ontology:6.4,7.3,14,16.1"
+      ],
+      "decisions": [],
+      "description": "",
+      "assertions": 10,
+      "independent_postchecks": []
+    },
+    {
+      "id": "OOP_STATE_TYPES_dead_infected_human_never_becomes_zombie",
+      "tier": "core",
+      "requirements": [
+        "V01",
+        "V04",
+        "V07",
+        "V18",
+        "V22"
+      ],
+      "actions": [],
+      "source": [
+        "docs/DEEP_OOP_REFACTOR_PROPOSAL.md:2,3,4,5,7",
+        "ontology:6.4,7.3,14,16.1"
+      ],
+      "decisions": [],
+      "description": "",
+      "assertions": 10,
+      "independent_postchecks": []
+    },
+    {
+      "id": "OOP_CONTINUATION_conversion_cleanup_memory",
+      "tier": "core",
+      "requirements": [
+        "V01",
+        "V07",
+        "V12",
+        "V13",
+        "V24"
+      ],
+      "actions": [
+        "rest"
+      ],
+      "source": [
+        "docs/DEEP_OOP_REFACTOR_PROPOSAL.md:2,3,4,5,7",
+        "ontology:6.4,7.3,14,16.1"
+      ],
+      "decisions": [],
+      "description": "",
+      "assertions": 7,
+      "independent_postchecks": [
+        "snapshot_paths"
+      ]
+    },
+    {
+      "id": "OOP_CONTINUATION_conversion_cleanup_sqlite",
+      "tier": "core",
+      "requirements": [
+        "V01",
+        "V07",
+        "V12",
+        "V13",
+        "V24"
+      ],
+      "actions": [
+        "rest"
+      ],
+      "source": [
+        "docs/DEEP_OOP_REFACTOR_PROPOSAL.md:2,3,4,5,7",
+        "ontology:6.4,7.3,14,16.1"
+      ],
+      "decisions": [],
+      "description": "",
+      "assertions": 7,
+      "independent_postchecks": [
+        "snapshot_paths"
       ]
     }
   ]

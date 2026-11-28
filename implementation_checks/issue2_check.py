@@ -42,8 +42,7 @@ def fixture_worker(root, identity):
     if scenario == "issue2_initialization_failure":
         journal = application._journal(Path(root) / "manager.sqlite")
         with journal:
-            journal.execute("UPDATE runs SET status='failed',error=? WHERE id=?",
-                            ("Fixture worker initialization failed before publishing a world", identity))
+            journal.update_run(identity, status="failed", error="Fixture worker initialization failed before publishing a world")
         journal.close()
         return
     if scenario == "issue2_initialization_delay":
@@ -105,6 +104,15 @@ def serve(workspace, port):
 
     application.History.state_at = state_at
     manager.snapshot = snapshot
+    # This browser fixture controls response timing/errors to test the view
+    # controller. Production process cancellation is separately exercised by
+    # process_http_cancellation_check.py for all five HTTP read operations.
+    original_reader_call = app.state.readers.call
+    def controlled_read(operation, *args, cancel_event=None, **kwargs):
+        if operation == "snapshot":
+            return manager.snapshot(*args, cancel_event=cancel_event, **kwargs)
+        return original_reader_call(operation, *args, cancel_event=cancel_event, **kwargs)
+    app.state.readers.call = controlled_read
 
     class TraceRequests:
         """Count requests without altering ASGI receive/disconnect behavior."""
@@ -166,7 +174,7 @@ def serve(workspace, port):
                 with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as database:
                     frontier = database.execute("SELECT revision,time_n,time_d FROM commits ORDER BY revision DESC LIMIT 1").fetchone()
             with manager.lock:
-                command_count = manager.connection.execute("SELECT COUNT(*) FROM commands WHERE run_id=?", (row["id"],)).fetchone()[0]
+                command_count = manager.catalog.command_count(row["id"])
             result.append({"id": row["id"], "status": row["status"], "generation": row["generation"],
                            "frontier": frontier, "commands": command_count,
                            "history_bytes": path.stat().st_size if path.exists() else 0})

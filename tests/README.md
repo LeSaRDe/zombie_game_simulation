@@ -1,9 +1,12 @@
 # TASK 2 test suite
 
-The current TASK 2 asks for tests for the framework **to be implemented**. This
-directory delivers executable, ontology-grounded acceptance cases and a tested
-runner. It does not implement the simulation engine. **Framework conformance is
-NOT RUN until a real implementation adapter is connected.**
+This directory provides executable ontology-grounded acceptance cases and an
+independently tested runner connected to the real framework. The approved deeper
+OOP refactor preserves the original 539 semantic cases and adds explicit domain,
+event, ownership and persistence contracts. See
+[architecture/README.md](architecture/README.md) for the new direct tests and
+legacy-continuation corpus. A case catalog or source audit is not an execution
+result; passing conformance requires a report from the real adapter.
 
 Start with [COVERAGE.md](COVERAGE.md) to review the cases by action, invariant and
 GUI requirement. [coverage.json](coverage.json) maps every case to its sources and
@@ -27,23 +30,28 @@ traceability. The third only lists cases. The fourth deliberately exits **2** an
 reports **NOT_RUN** while no implementation adapter is supplied. None of the first
 three commands establishes a passing simulator.
 
-## Connect the implementation later
+## Run the implementation
 
-Implement [ADAPTER_CONTRACT.md](ADAPTER_CONTRACT.md), then select its factory:
+The implementation follows [ADAPTER_CONTRACT.md](ADAPTER_CONTRACT.md). Select its factory:
 
 ```bash
-python -m tests.run_acceptance --adapter zombie_game.testing:create_adapter --tier core
-python -m tests.run_acceptance --adapter zombie_game.testing:create_adapter --match LIF_cure
-python -m tests.run_acceptance --adapter zombie_game.testing:create_adapter --timeout 1800 --report tests/results/full.json
+PYTHONPATH=src .runtimeenv/bin/python -m tests.run_acceptance --adapter zombie_sim.testing:create_adapter --tier core
+PYTHONPATH=src .runtimeenv/bin/python -m tests.run_acceptance --adapter zombie_sim.testing:create_adapter --match LIF_cure
+PYTHONPATH=src .runtimeenv/bin/python -m tests.run_acceptance --adapter zombie_sim.testing:create_adapter --tier browser --timeout 180
 ```
 
-These are future invocation examples; `zombie_game.testing` does not exist yet.
 `ZOMBIE_TEST_ADAPTER` can supply the same factory. No tier selection means **all**
 tiers. A filtered passing run is reported as partial. Tiers are `core`,
 `integration`, `browser`, `statistical`, `training`, and `performance`. The default
 per-case timeout is 60 seconds; explicitly increase it for baseline, PPO, browser
 or replicated benchmarks on the actual machine. Missing features/dependencies,
 unexpected exceptions, timeouts and cleanup failures are errors, never skips.
+
+The full baseline is selected with `--match BASELINE_full_default_model_run` and
+requires an explicit timeout and sufficient disk/memory capacity for its actual
+1,800-second simulated trajectory. Select the provisioned training Python for
+the training tier. Preserve run artifacts and the distinction between current
+execution evidence and earlier release reports.
 
 ## What to review
 

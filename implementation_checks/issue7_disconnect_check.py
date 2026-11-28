@@ -141,9 +141,8 @@ def serve(workspace, port):
         try:
             row = manager._row(identity)
             with manager.lock:
-                commands = manager.connection.execute("SELECT COUNT(*) FROM commands WHERE run_id=?", (identity,)).fetchone()[0]
-                definitions = [list(item) for item in manager.connection.execute(
-                    "SELECT id,definition FROM views WHERE run_id=? ORDER BY id", (identity,))]
+                commands = manager.catalog.command_count(identity)
+                definitions = [list(item) for item in manager.catalog.view_rows(identity)]
             return {"ledger_sha256": digest(reader), "revision": reader.revision,
                     "status": row["status"], "generation": row["generation"],
                     "commands": commands, "definitions": definitions}

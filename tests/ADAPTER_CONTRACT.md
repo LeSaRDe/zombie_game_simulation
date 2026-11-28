@@ -1,13 +1,15 @@
 # Framework adapter contract
 
-This is a test interface for the implementation that will follow TASK 2's current
-test-writing step. There is deliberately no simulator adapter in this repository
-yet. The tests must be connected to the real framework; a replacement miniature
-engine or canned expected responses are not conformance evidence.
+This is the executable test interface connected to the real framework by
+`zombie_sim.testing:create_adapter`. A replacement miniature engine or canned
+expected responses are not conformance evidence. The approved deep-OOP refactor
+retains this wire contract and its original semantic fixtures; additional direct
+ownership, codec and storage-port contracts are documented in
+[architecture/README.md](architecture/README.md).
 
 ## Python boundary
 
-Provide an importable factory, for example `zombie_game.testing:create_adapter`:
+Select the importable factory `zombie_sim.testing:create_adapter`:
 
 ```python
 def create_adapter(*, workdir):

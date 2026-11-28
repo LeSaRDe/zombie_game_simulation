@@ -1,3 +1,4 @@
+const {fillExact}=require('./verification_time_helpers.cjs');
 /* Readable guide screenshots and the actual small-run workflow. No production hooks. */
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
@@ -37,7 +38,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
   };
   const advance=async(id,target)=>{await page.getByTestId('run-pacing').selectOption('1');await until(async()=>(await row(id)).frontier.pacing===1,'pace applied');await page.getByTestId('run-start').click();await until(async()=>seconds((await row(id)).frontier.time)>=target,'continued simulation time');await page.getByTestId('run-pause').click();await until(async()=>(await row(id)).status==='paused','paused again');await until(async()=>{const a=await app(),r=await row(id);return a.view?.revision===String(r.frontier.revision);},'paused world display');};
   const select=async id=>{await page.locator(`.run-card[data-run-id="${id}"]`).click();await until(async()=>{const a=await app();return a.run_id===id&&a.view?.state;},'selected readable run');};
-  const seek=async time=>{await page.getByTestId('replay-exact-time').fill(String(time));await page.getByTestId('replay-seek').click();await until(async()=>{const a=await app();return a.mode==='replay'&&seconds(a.view?.time)===Number(time);},'replay time');};
+  const seek=async time=>{await fillExact(page,'replay-exact-time',time);await page.getByTestId('replay-seek').click();await until(async()=>{const a=await app();return a.mode==='replay'&&seconds(a.view?.time)===Number(time);},'replay time');};
   await page.goto(base);await page.getByTestId('run-chooser').waitFor();await screenshot('01-home','A clean workspace opens on the chooser; opening the service has not created a simulation.');
   const first=await create({seed:123,preview:true});await advance(first,6);
   await page.getByTestId('run-step-transition').click();await until(async()=>await page.getByTestId('run-step-transition').isEnabled(),'transition step applied');

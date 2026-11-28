@@ -45,6 +45,6 @@
     "SCREAMER"
   ],
   "source_plan": "../../prompts/zombie_game_plans.md",
-  "source_plan_sha256": "05915f055fa33cc00b1dfb3920b835659d3885edcc5c328bfcbb6287972d5311",
+  "source_plan_sha256": "368333ab5f8458e2cb96f262e8566c4a5bf1f66b73f7cb7621d39331365ac115",
   "scope": "TASK 1: incremental OWL/SHACL formalization, requirement traceability, and reproducible validation."
 }

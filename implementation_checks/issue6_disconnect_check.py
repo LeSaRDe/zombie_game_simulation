@@ -113,7 +113,7 @@ def serve(workspace, port):
         try:
             row = manager._row(identity)
             with manager.lock:
-                commands = manager.connection.execute("SELECT COUNT(*) FROM commands WHERE run_id=?", (identity,)).fetchone()[0]
+                commands = manager.catalog.command_count(identity)
             return {"ledger_sha256": digest(history), "revision": history.revision,
                     "status": row["status"], "generation": row["generation"], "commands": commands}
         finally:

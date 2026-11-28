@@ -10,6 +10,29 @@ The supplied acceptance suite is connected to the real engine, application and
 browser through a versioned adapter. Current testing evidence and approved
 fixture corrections are recorded in [the refinement report](docs/TESTING_REFINEMENT.md).
 
+For modeling and framework development, start with the **[OOP architecture guide](docs/ARCHITECTURE.md)**,
+the **[interactive diagram atlas](docs/architecture/index.html)**, and the
+[searchable code index](docs/architecture/code-index.html). The
+[deeper OOP implementation guide](docs/DEEP_OOP_REFACTOR.md) explains ownership,
+compatibility and current verification. The [earlier refactor report](docs/OOP_REFACTOR.md)
+remains available as historical evidence.
+Run `PYTHONPATH=src .runtimeenv/bin/python examples/oop_custom_model.py` for a complete
+example of a typed custom policy, a scenario builder, and a research measurement.
+
+The **[whole-project UML class atlas](docs/classes/index.html)** shows inheritance,
+composition, attributes and methods, with [a reading guide](docs/CLASS_DIAGRAM.md)
+and downloadable SVG/DOT diagrams for every subsystem.
+
+The approved **[P1–P7 redesign](docs/DEEP_OOP_REFACTOR_PROPOSAL.md)** introduces typed
+agent states and roles, all 29 action handlers, isolated rule planning, and atomic
+state/runtime/history commits through storage ports. The class atlas describes the
+actual implementation. Read the [extension migration guide](docs/DEEP_OOP_EXTENSION_MIGRATION.md)
+and [ontology-to-code map](docs/ONTOLOGY_IMPLEMENTATION_MAP.md) when evolving the framework.
+The [completed qualification](artifacts/deep-oop-refactor/verification.json) records
+544 passing acceptance cases, including the full 1,000-agent/1,800-second baseline,
+plus architecture, continuation and ontology checks. The implementation guide
+documents measured runtime and memory costs, including expensive full-run exports.
+
 ## Start a simulation
 
 Start with the [friendly user guide](docs/USER_GUIDE.md): a screenshot walkthrough,

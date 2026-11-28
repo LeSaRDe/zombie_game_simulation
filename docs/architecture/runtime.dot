@@ -1,0 +1,22 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+runtime [label="RuntimeState\nexplicit durable field register", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-state-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_state.py"];
+snapshot [label="RuntimeSnapshot\nimmutable cells + field presence", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-state-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_state.py"];
+branch [label="RuntimeState fork\nbranch-owned config / memory wrappers", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-state-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_state.py"];
+mapping [label="MappingCell / SequenceCell / OpaqueCell", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-values-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_values.py"];
+cow [label="CowDict / CowList\nnested mutations remain local", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-values-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_values.py"];
+opaque [label="Opaque private memory\npreserve custom types, aliases and cycles", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-values-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_values.py"];
+journal [label="RuntimeService.capture_delta\nstable cell tokens identify changes", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-core-runtime-service-py", target="_top", tooltip="src/zombie_sim/core/runtime_service.py"];
+codec [label="Explicit JSON / runtime boundary\nplain records preserve list vs tuple", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-value-codec-py", target="_top", tooltip="src/zombie_sim/value_codec.py"];
+runtime -> snapshot [label="seal", style="solid"];
+snapshot -> mapping [label="share immutable values", style="solid"];
+snapshot -> branch [label="fork", style="solid"];
+branch -> cow [label="owns wrappers", style="solid"];
+cow -> mapping [label="reuse until changed", style="solid"];
+branch -> opaque [label="detach on writable access", style="solid"];
+branch -> journal [label="changed continuation", style="solid"];
+journal -> codec [label="encode changed cells only", style="solid"];
+}

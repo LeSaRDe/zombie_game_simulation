@@ -7,7 +7,7 @@ import re
 from tests.assertions import OPERATORS
 
 ROOT = Path(__file__).resolve().parents[1]
-CASE_MODULES = ("actions", "lifecycle_geometry", "systems", "generated", "research", "policies", "formal")
+CASE_MODULES = ("actions", "lifecycle_geometry", "systems", "generated", "research", "policies", "formal", "deep_oop")
 TIERS = {"core", "integration", "browser", "statistical", "performance", "training"}
 
 

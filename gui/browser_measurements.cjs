@@ -124,7 +124,12 @@ async function benchmark(page,m,log){
   }else if(iteration%2===0){
    await input('zoom',()=>page.getByRole('button',{name:iteration%4===0?'Zoom in':'Zoom out',exact:true}).click());
   }else{
-   const canvas=page.locator('.world-frame canvas').first(),box=await canvas.boundingBox();
+   const canvas=page.locator('.world-frame canvas').first();
+   // Execution/status controls can leave the map centre below the viewport.
+   // A real pan requires a visible pointer target, as it does for a user.
+   await canvas.scrollIntoViewIfNeeded();const box=await canvas.boundingBox();
+   const viewport=page.viewportSize();
+   if(!box||!viewport||box.x+box.width/2<0||box.x+box.width/2>=viewport.width||box.y+box.height/2<0||box.y+box.height/2+2>=viewport.height)throw Error('Benchmark pan target is outside the visible viewport');
    await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
    await input('pan',()=>page.mouse.move(box.x+box.width/2+(iteration%4===1?5:-5),box.y+box.height/2+2));
    await page.mouse.up();

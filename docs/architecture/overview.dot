@@ -1,0 +1,30 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+user [label="Researcher / model author", fillcolor="#fff0d8"];
+entry [label="Launcher · CLI · Python framework", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-framework-py", target="_top", tooltip="src/zombie_sim/framework.py"];
+gui [label="Functional React + typed controllers", fillcolor="#e8f2fc", URL="code-index.html#gui-src-views-workspace-tsx", target="_top", tooltip="gui/src/views/Workspace.tsx"];
+http [label="HTTP / managed run worker", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-services-workspace-py", target="_top", tooltip="src/zombie_sim/services/workspace.py"];
+sim [label="Simulation\nexecution coordinator", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-engine-py", target="_top", tooltip="src/zombie_sim/engine.py"];
+rules [label="GameRuleSet\nhandlers + lifecycle + observations", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+state [label="StateCoordinator\nWorldAggregate + RuntimeState", fillcolor="#e5f5eb", URL="code-index.html#src-zombie-sim-state-management-coordinator-py", target="_top", tooltip="src/zombie_sim/state_management/coordinator.py"];
+domain [label="Immutable domain values\nAgent · typed state · role · activity · event", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-agents-py", target="_top", tooltip="src/zombie_sim/domain_model/agents.py"];
+ports [label="PersistenceBundle\natomic write + dated query ports", fillcolor="#e5f5eb", URL="code-index.html#src-zombie-sim-persistence-bundle-py", target="_top", tooltip="src/zombie_sim/persistence/bundle.py"];
+analysis [label="Metrics · cohorts · timeline · exports", fillcolor="#e5f5eb", URL="code-index.html#src-zombie-sim-measurements-py", target="_top", tooltip="src/zombie_sim/measurements.py"];
+model [label="Decision model\nlocal observation + private memory", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-modeling-py", target="_top", tooltip="src/zombie_sim/modeling.py"];
+user -> entry [label="", style="solid"];
+user -> gui [label="", style="solid"];
+gui -> http [label="HTTP / WS", style="solid"];
+http -> sim [label="", style="solid"];
+entry -> sim [label="", style="solid"];
+sim -> rules [label="request + immutable reads", style="solid"];
+rules -> state [label="typed TransitionPlan", style="solid"];
+state -> ports [label="atomic CommitBundle", style="solid"];
+rules -> domain [label="typed values", style="solid"];
+state -> domain [label="authoritative values", style="solid"];
+sim -> model [label="local observations", style="solid"];
+model -> sim [label="intent + new memory", style="solid"];
+analysis -> ports [label="read-only dated queries", style="solid"];
+}

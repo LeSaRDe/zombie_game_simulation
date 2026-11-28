@@ -1,5 +1,11 @@
 """No-replay receipt recovery and completed-export drain boundary regression."""
 from __future__ import annotations
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 import hashlib
 import json
 from pathlib import Path
@@ -51,7 +57,7 @@ def main():
         finally:
             if exports:exports.close()
             manager.close()
-    output=Path(__file__).resolve().parents[1]/'artifacts/issue12-metadata.json';output.write_text(json.dumps(report,indent=2))
+    output=artifact_output(Path(__file__).resolve().parents[1]/'artifacts/issue12-metadata.json');output.write_text(json.dumps(report,indent=2))
     print(json.dumps(report,indent=2))
 
 if __name__=='__main__':main()

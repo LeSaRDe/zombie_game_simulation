@@ -143,7 +143,10 @@ class CompletedRun:
             return self.cache[1:]
         state = self.history.state_at(revision=revision)
         kernel = self.history.runtime_at(revision)
-        require(kernel is not None and kernel.get("schema") == "zombie-sim/runtime-journal-v1",
+        # Both explicitly supported schemas retain the same causal projections
+        # below; v2 adds typed ownership and implementation provenance.
+        require(kernel is not None and kernel.get("schema") in {
+                    "zombie-sim/runtime-journal-v1", "zombie-sim/runtime-journal-v2"},
                 f"Missing runtime boundary {revision}")
         attributes = _decode(kernel["attributes"])
         require(int(state.get("revision", -1)) == revision == int(attributes.get("revision", -1)),

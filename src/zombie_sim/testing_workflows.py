@@ -123,7 +123,7 @@ def _worker(connection,directory,setup,config,mode,checkpoint,plugins):
                 if operation=="script":
                     step=deepcopy(data["step"])
                     if data.get("draws"):
-                        for draw in data["draws"]:sim._acceptance_draw_values[(str(draw["intent"]),draw["channel"])]=float(exact_time(draw["value"]))
+                        sim.inject_random_values(data["draws"])
                     if step["op"] in {"submit","submit_batch","advance","intervene"}:
                         execute_script_command(sim,step["op"],request_numbers({k:v for k,v in step.items() if k!="op"}),data["command_id"])
                         result={"time":str(sim.time),"revision":sim.revision}
@@ -151,7 +151,7 @@ def _worker(connection,directory,setup,config,mode,checkpoint,plugins):
                     try:
                         child=source.branch(data["directory"],seed=sim.seed+1 if data.get("random_alignment")=="independent" else None)
                         try:
-                            child.history.connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                            child.history.flush()
                             result={"parent_run_id":sim.state["run_id"],"child_run_id":child.state["run_id"],"lineage":child.state.get("lineage")}
                         finally:child.close()
                     finally:source.close()

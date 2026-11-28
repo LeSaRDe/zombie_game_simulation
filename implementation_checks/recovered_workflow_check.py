@@ -1,4 +1,10 @@
 """Differential and rejection checks using a real, completed coordinator ledger."""
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 from copy import deepcopy
 import hashlib
 import json
@@ -142,7 +148,7 @@ def main():
         assert hashlib.sha256(ledger.read_bytes()).hexdigest() == digest_before
         report["checks"]["source_primary_bytes_unchanged"] = True
         report["passed"] = True
-    output = Path("artifacts/recovered-workflow-check.json")
+    output = artifact_output(Path("artifacts/recovered-workflow-check.json"))
     output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 

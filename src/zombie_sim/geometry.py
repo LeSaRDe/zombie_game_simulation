@@ -1,11 +1,12 @@
 """Closed-rectangle collision predicates and deterministic visibility routing."""
 from __future__ import annotations
+from collections.abc import Mapping
 import heapq
 import math
 
 
 def point(value):
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         if "position" in value:
             return point(value["position"])
         return float(value["x"]), float(value["y"])
@@ -13,7 +14,7 @@ def point(value):
 
 
 def rect(value):
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         if "footprint" in value:
             return rect(value["footprint"])
         return tuple(float(value[k]) for k in ("xmin", "ymin", "xmax", "ymax"))
@@ -40,7 +41,7 @@ def overlap(a, b, *, strict=False):
 
 
 def _values(barriers):
-    return barriers.values() if isinstance(barriers, dict) else barriers
+    return barriers.values() if isinstance(barriers, Mapping) else barriers
 
 
 def point_blocked(p, barriers):

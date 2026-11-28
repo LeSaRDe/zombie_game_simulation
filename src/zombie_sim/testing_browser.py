@@ -196,12 +196,17 @@ def execute_browser(adapter, request):
                 from .testing_workflows import resolved_config
                 draft=resolved_config(step["draft"])["resolved"];path=adapter.workdir/f"cli-{index}.json";path.write_text(canonical(draft))
                 directory=manager.root/"runs"/f"cli-{uuid.uuid4().hex}"
-                completed=subprocess.run([sys.executable,"-m","zombie_sim.cli","run",str(path),"--output",str(directory)],capture_output=True,text=True,timeout=45)
+                # The same full-population fixture also runs through the GUI.
+                # This is an executor budget, independent of the separately
+                # asserted rendering/input/receipt latency requirements.
+                cli_timeout=float(os.environ.get("ZOMBIE_ACCEPTANCE_CLI_TIMEOUT", "120"))
+                if cli_timeout<=0:raise ValueError("ZOMBIE_ACCEPTANCE_CLI_TIMEOUT must be positive")
+                completed=subprocess.run([sys.executable,"-m","zombie_sim.cli","run",str(path),"--output",str(directory)],capture_output=True,text=True,timeout=cli_timeout)
                 (artifacts/f"cli-{index}.log").write_text(completed.stdout+completed.stderr)
                 if completed.returncode:raise RuntimeError(completed.stderr)
                 manifest=json.loads((directory/"manifest.json").read_text());identity=manifest["run_id"];runs[step["bind_run"]]=identity;paths[step["bind_run"]]=directory/"run.sqlite"
-                with manager.lock,manager.connection:
-                    manager.connection.execute("INSERT OR IGNORE INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)",(identity,str(directory),canonical(manifest["config"]),"completed",canonical({})))
+                with manager.lock,manager.catalog:
+                    manager.catalog.insert_run(identity,directory,manifest["config"],"completed",frontier={},ignore=True)
                 result={"exit_code":completed.returncode,"stdout":completed.stdout}
             elif operation == "fault.arm" and step["point"]=="export_before_encode":
                 app.state.exports.arm_pause(runs[name]);result={"point":step["point"]}

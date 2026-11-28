@@ -1,5 +1,10 @@
 # Learning and evaluation
 
+The CLI and training script now use `TrainingPipeline` and `EvaluationPipeline`,
+which own scenario/settings/seed inputs and an injectable `LearningBackend`.
+See the [training architecture](ARCHITECTURE.md#training-and-evaluation).
+Existing learned-model files and learning algorithms remain hash-compatible.
+
 Install the `learning` dependency extra, then run:
 
 ```sh

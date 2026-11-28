@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-27",
+  "scope": "Proposal and diagram validation only; no refactor implementation or simulator conformance run",
+  "source_files_compared": 329,
+  "changed_source_files": [],
+  "links_checked": 40,
+  "diagram_checks": [
+    {
+      "path": "docs/deep-oop-proposal/domain.svg",
+      "nodes_including_notes": 33,
+      "viewBox": "0.00 0.00 1608.00 1664.00",
+      "xml_parse": "PASS",
+      "visual_inspection": "PASS"
+    },
+    {
+      "path": "docs/deep-oop-proposal/execution.svg",
+      "nodes_including_notes": 33,
+      "viewBox": "0.00 0.00 1590.00 1987.00",
+      "xml_parse": "PASS",
+      "visual_inspection": "PASS"
+    }
+  ],
+  "graphviz": "dot - graphviz version 14.1.2 (0)",
+  "plan_sha256": "368333ab5f8458e2cb96f262e8566c4a5bf1f66b73f7cb7621d39331365ac115",
+  "approval_status": "PENDING_USER_REVIEW",
+  "preserved": [
+    "production implementation",
+    "GUI implementation",
+    "ontology rules and fixtures",
+    "acceptance tests and pins",
+    "prior artifacts and audit history"
+  ]
+}

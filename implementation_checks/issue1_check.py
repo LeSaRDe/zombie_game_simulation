@@ -181,7 +181,7 @@ def service(workspace, port):
                 "files": sorted(path.name for path in directory.iterdir()
                                 if not path.name.startswith("test-") and not path.name.endswith(("-wal", "-shm"))),
                 "processes": json.loads(processes.read_text()) if processes.exists() else None,
-                "lease_count": manager.connection.execute("SELECT COUNT(*) FROM worker_leases WHERE run_id=?", (identity,)).fetchone()[0]}
+                "lease_count": len(manager.catalog.leases(identity))}
 
     @app.get("/__issue1/barrier/{identity}/{name}/{action}")
     def fixture_barrier(identity: str, name: str, action: str):
@@ -271,11 +271,9 @@ def service(workspace, port):
                         original.backup(copied)
                     finally:
                         copied.close(); original.close()
-                    with probe.connection:
-                        probe.connection.execute(
-                            "INSERT INTO runs(id,directory,config,status,generation,frontier) VALUES(?,?,?,?,?,?)",
-                            (f"copy-{index}", str(directory), source["config"], "terminated",
-                             source["generation"], source["frontier"]))
+                    with probe.catalog:
+                        probe.catalog.insert_run(f"copy-{index}", directory, json.loads(source["config"]), "terminated",
+                            generation=source["generation"], frontier=json.loads(source["frontier"]) if source["frontier"] else None)
                     directories.append(directory)
 
                 # This separate copied ledger holds a genuine multi-megabyte
@@ -290,11 +288,11 @@ def service(workspace, port):
                     wal_bytes = (directories[0] / "run.sqlite-wal").stat().st_size
                     assert wal_bytes >= 8 * 1048576
                     first_head = probe.read_head("copy-0")
-                    first_connection = probe._head_readers["copy-0"].history.connection
+                    first_connection = probe.queries._head_readers["copy-0"].history.connection
                     reader_before = probe.head_diagnostics()
                     for _ in range(40):
                         assert probe.read_head("copy-0")["revision"] == first_head["revision"]
-                        assert probe._head_readers["copy-0"].history.connection is first_connection
+                        assert probe.queries._head_readers["copy-0"].history.connection is first_connection
                     reader_after = probe.head_diagnostics()
                     assert reader_after["opened"] == reader_before["opened"]
                     assert not first_connection.in_transaction
@@ -315,7 +313,7 @@ def service(workspace, port):
                     pass
                 else:
                     raise AssertionError("Evicted head connection remained open")
-                remaining_connections = [entry.history.connection for entry in probe._head_readers.values()]
+                remaining_connections = [entry.history.connection for entry in probe.queries._head_readers.values()]
                 fd_peak = len(list(Path("/proc/self/fd").iterdir()))
                 assert fd_peak <= fd_before + 3 * capacity + 8, (fd_before, fd_peak, capacity)
             finally:

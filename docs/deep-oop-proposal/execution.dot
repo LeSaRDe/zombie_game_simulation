@@ -1,0 +1,96 @@
+digraph Execution {
+  graph [rankdir=TB, bgcolor="#ffffff", pad=0.35, nodesep=0.30, ranksep=0.65, fontname="DejaVu Sans", fontsize=18, labelloc=t, label="PROPOSED • Execution and persistence\nRules propose • state coordinates • adapters persist", compound=true];
+  node [shape=record, style="rounded,filled", fillcolor="#eff6ff", color="#93b4db", fontname="DejaVu Sans", fontsize=11, margin="0.13,0.09"];
+  edge [color="#52647b", fontname="DejaVu Sans", fontsize=9, arrowsize=0.75];
+
+  Facade [label="{Simulation|existing public API|advance / observe / checkpoint}"];
+  Runner [label="{SimulationRunner|scheduler; rule set; state coordinator|advance_to_boundary()}"];
+  Scheduler [label="{Scheduler|typed ScheduledTask queue|next_boundary()\norder_and_dispatch()}"];
+  Task [label="{ScheduledTask|due time; phase; order key\ntyped payload; generation token}", fillcolor="#f3f4f6"];
+  Runtime [label="{RuntimeState|clock; queue; RNG; identity counters\nmodel memory; decision readiness}", fillcolor="#f3f4f6"];
+  Facade -> Runner [dir=both, arrowtail=diamond, arrowhead=none];
+  Runner -> Scheduler [dir=both, arrowtail=diamond, arrowhead=none];
+  Scheduler -> Task [style=dashed, label="orders work"];
+  Scheduler -> Runtime [style=dashed, label="stages updates"];
+
+  subgraph cluster_rules {
+    label="Game behavior — no mutable coordinator or storage handle"; color="#c8bcdd"; style=rounded; fontsize=14;
+    node [fillcolor="#f6f1fc", color="#b9a2d4"];
+    Rules [label="{GameRuleSet|action / system handler registry\nshared semantic rules|plan(request, view, context)}"];
+    Handler [label="{ActionHandler «abstract»|validate_admission() / declare_access()\nadmit() / resolve() / cancel()}"];
+    Lifecycle [label="{ActionLifecycle|costs; reservations; result/cooldown rules|admit() / resolve() / cancel()}"];
+    Concrete [label="{29 concrete action handlers|MoveHandler … TreatInfectionHandler\n… BiteHandler … ScreamHandler}"];
+    System [label="{System handlers|conversion; death; starvation\nrecharge; expiry; interventions}"];
+    Intent [label="{ActionIntent|proposal + observation reference}", fillcolor="#f3f4f6"];
+    Occurrence [label="{ActionOccurrence|admitted attempt; reservations\ntimes; outcome; caused events}", fillcolor="#f3f4f6"];
+    Plan [label="{TransitionPlan|read versions; typed changes; event drafts\nschedule / RNG / memory updates}", fillcolor="#fff8e6", color="#dcc37a"];
+    Event [label="{DomainEvent|ID; exact time; revision; causes\nparticipants; typed payload}", fillcolor="#f3f4f6"];
+    Rules -> Handler [style=dashed, label="dispatches"];
+    Rules -> System [style=dashed, label="dispatches"];
+    Rules -> Lifecycle [dir=both, arrowtail=diamond, arrowhead=none];
+    Handler -> Concrete [dir=back, arrowtail=empty];
+    Lifecycle -> Handler [style=dashed, label="invokes specific contract"];
+    Lifecycle -> Intent [style=dashed, label="validates"];
+    Lifecycle -> Occurrence [style=dashed, label="stages lifecycle"];
+    Handler -> Plan [style=dashed, label="returns"];
+    System -> Plan [style=dashed, label="returns"];
+    Plan -> Event [style=dashed, label="draft facts"];
+  }
+  Runner -> Rules [style=dashed, label="requests plan"];
+
+  subgraph cluster_state {
+    Runtime;
+    label="State ownership and transaction boundary"; color="#bdcee1"; style=rounded; fontsize=14;
+    node [fillcolor="#eff6ff", color="#93b4db"];
+    Coordinator [label="{StateCoordinator|world; runtime; persistence ports|begin() / committed_view()}"];
+    Uow [label="{UnitOfWork|isolated staged changes\nexpected revision; transaction ID|stage() / validate() / commit()}"];
+    Read [label="{WorldReadPort «interface»|view(cursor) / read_many()}"];
+    World [label="{WorldAggregate|typed current world\nreferences / quantity invariants}"];
+    Bundle [label="{CommitBundle|world + runtime delta\nevents + command receipt}", fillcolor="#fff8e6", color="#dcc37a"];
+    Result [label="{CommitResult|revision; exact cursor\nevent sequence range}", fillcolor="#f3f4f6"];
+    Coordinator -> Uow [style=dashed, label="creates"];
+    Coordinator -> World [dir=both, arrowtail=diamond, arrowhead=none];
+    Coordinator -> Read [style=dashed, arrowhead=empty, label="provides"];
+    Uow -> Bundle [style=dashed, label="builds after validation"];
+    Uow -> Result [style=dashed, label="returns after durability"];
+  }
+  Coordinator -> Runtime [dir=both, arrowtail=diamond, arrowhead=none];
+  Runner -> Coordinator [style=dashed, label="submits / reads"];
+  Rules -> Read [style=dashed, label="immutable view"];
+  Plan -> Uow [style=dashed, label="staged input"];
+
+  subgraph cluster_storage {
+    label="Storage ports and concrete adapters"; color="#a5cbbd"; style=rounded; fontsize=14;
+    node [fillcolor="#edf8f3", color="#9dc6b6"];
+    Commit [label="{AtomicCommitPort «interface»|commit(bundle, revision, transaction_id)\nresolve_transaction(id)}"];
+    Live [label="{LiveStatePort «interface»|read committed entities\npublish/rebuild committed cache}"];
+    History [label="{HistoryQueryPort «interface»|state_at() / iter_events()\niter_commits() / command_result()\nhead() / origin() / cursor_at() / runtime_at()}"];
+    Checkpoint [label="{CheckpointPort «interface»|save(bundle) / load(reference)\nexport_prefix()}"];
+    Factory [label="{PersistenceBundleFactory|construct compatible adapter bundle}"];
+    SqlCommit [label="{SQLiteCommitAdapter|one durable transaction\nworld / runtime / events / receipt}"];
+    Memory [label="{MemoryLiveStateAdapter|committed typed cache}"];
+    SqlLive [label="{SQLiteLiveStateAdapter|live rows in shared transaction}"];
+    SqlRead [label="{SQLiteHistoryQueryAdapter|SQL and indexing stay here}"];
+    FileCheckpoint [label="{FileCheckpointAdapter|atomic file publication\nexplicit versioned codecs}"];
+    Commit -> SqlCommit [dir=back, style=dashed, arrowtail=empty];
+    Live -> Memory [dir=back, style=dashed, arrowtail=empty];
+    Live -> SqlLive [dir=back, style=dashed, arrowtail=empty];
+    History -> SqlRead [dir=back, style=dashed, arrowtail=empty];
+    Checkpoint -> FileCheckpoint [dir=back, style=dashed, arrowtail=empty];
+    Factory -> SqlCommit [style=dashed, label="wires compatible bundle"];
+    Factory -> Memory [style=dashed]; Factory -> SqlLive [style=dashed];
+  }
+  Uow -> Commit [style=dashed, label="one commit"];
+  Coordinator -> Live [style=dashed, label="committed data"];
+  Clients [label="{Research / application clients|history, metrics, exports, visualization\ncontrol/recovery and checkpoint service}"];
+  Clients -> History [style=dashed]; Clients -> Checkpoint [style=dashed];
+  Note [shape=note, fillcolor="#fff8e6", color="#dcc37a", label="Memory mode still uses the durable journal.\nDo not independently pair writers that cannot commit atomically.\nWorkspace catalog receipts reconcile from the run ledger.\nTyped intents, future tasks and committed events are different objects."];
+  Legend [shape=note, fillcolor="#fafafa", color="#c7c7c7", label="Hollow triangle: inheritance / dashed interface implementation\nFilled diamond: ownership • dashed arrow: dependency/data flow\nSelected target classes; full concrete registry is in the proposal."];
+  Note -> SqlCommit [constraint=false, style=dotted, arrowhead=none];
+  
+  Event -> Coordinator [style=invis, weight=20];
+  Result -> Factory [style=invis, weight=20];
+  FileCheckpoint -> Note [style=invis, weight=20];
+  Note -> Legend [style=invis];
+  Factory -> Clients [style=invis];
+}

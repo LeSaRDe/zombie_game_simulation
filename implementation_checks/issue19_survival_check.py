@@ -1,6 +1,12 @@
 """Independent risk-set oracle using a real cure/conversion/death/movement history."""
 from __future__ import annotations
 
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
+
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -65,10 +71,9 @@ def definitions(manager, run_id, *, entry_time="0", conversion_time="3"):
 
 
 def register(manager,sim,directory):
-    with manager.connection:
-        manager.connection.execute("INSERT INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)",
-            (sim.state["run_id"],str(directory),canonical(sim.config),"terminated",
-             canonical({"revision":str(sim.revision),"time":str(sim.time),"pacing":0})))
+    with manager.catalog:
+        manager.catalog.insert_run(sim.state["run_id"],directory,sim.config,"terminated",
+            frontier={"revision":str(sim.revision),"time":str(sim.time),"pacing":0})
 
 
 def main():
@@ -176,7 +181,7 @@ def main():
                           measurement_version="zombie-sim/cohort-survival-v3")
         finally:
             manager.close(); sim.close()
-    Path("artifacts/issue19-survival.json").write_text(json.dumps(report, indent=2) + "\n")
+    artifact_output(Path("artifacts/issue19-survival.json")).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: len(v) if k.endswith("cursors") else v for k, v in report.items()}, indent=2))
 
 

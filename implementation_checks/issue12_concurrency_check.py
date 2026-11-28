@@ -5,6 +5,12 @@ The retained histories use 20,000 checksum-valid no-op revisions at time zero;
 they measure replay retention, not a 20,000-step scientific simulation.
 """
 from __future__ import annotations
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
@@ -26,17 +32,16 @@ from zombie_sim.read_tasks import _worker as real_reader
 from zombie_sim.application import _run_worker as real_writer
 
 
-def held_reader(root,pipe):
-    from zombie_sim import read_tasks
-    original=read_tasks.execute
-    def execute(manager,operation,args,kwargs):
-        marker=Path(root)/('hold-'+operation)
-        if marker.exists():
-            (Path(root)/f'entered-{operation}-{os.getpid()}').touch()
-            while marker.exists():time.sleep(.05) # deliberately ignores cancellation
-        return original(manager,operation,args,kwargs)
-    read_tasks.execute=execute
-    real_reader(root,pipe)
+def held_reader(root, pipe, registry_factory=None):
+    from zombie_sim.read_tasks import ReadOperationRegistry
+    class HeldRegistry(registry_factory or ReadOperationRegistry):
+        def execute(self, operation, args, kwargs):
+            marker=Path(root)/('hold-'+operation)
+            if marker.exists():
+                (Path(root)/f'entered-{operation}-{os.getpid()}').touch()
+                while marker.exists():time.sleep(.05) # deliberately ignores cancellation
+            return super().execute(operation,args,kwargs)
+    real_reader(root,pipe,HeldRegistry)
 
 
 def held_writer(root,rid):
@@ -276,7 +281,7 @@ def lost_ack_and_validation(root,output):
 
 def main():
     if len(sys.argv)>1 and sys.argv[1]=='--serve':serve(sys.argv[2],int(sys.argv[3]));return
-    output=ROOT/'artifacts/issue12-concurrency';output.mkdir(exist_ok=True);scratch=Path(tempfile.mkdtemp(prefix='zombie-i12-concurrent-'))
+    output=artifact_output(ROOT/'artifacts/issue12-concurrency');output.mkdir(exist_ok=True);scratch=Path(tempfile.mkdtemp(prefix='zombie-i12-concurrent-'))
     report={'status':'RUNNING','scratch':str(scratch),'checks':{}}
     try:
         for label,function in [('accepted_writes_and_checkpoint',accepted_writes),('long_history_exports',long_reads_and_exports),('natural_completion_race',horizon_race),('lost_ack_and_validation',lost_ack_and_validation)]:

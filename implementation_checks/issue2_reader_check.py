@@ -37,10 +37,8 @@ class ReaderChecks(unittest.TestCase):
         finally:
             simulation.close()
         self.manager = RunManager(self.root)
-        with self.manager.connection:
-            self.manager.connection.execute(
-                "INSERT INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)",
-                (self.identity, str(directory), canonical(config), "terminated", canonical(frontier)))
+        with self.manager.catalog:
+            self.manager.catalog.insert_run(self.identity,directory,config,"terminated",frontier=frontier)
         self.digest = self.ledger_digest()
 
     def ledger_digest(self):

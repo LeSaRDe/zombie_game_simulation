@@ -140,8 +140,10 @@ const {randomUUID} = require('node:crypto');
       if(!loading.includes('Loading recorded history')||loading.includes('Initializing'))throw Error(`Incorrect history loading message: ${loading}`);
       const knownReference=await page.getByTestId('viewer-loading').locator('.viewer-run-reference').innerText();
       const recordedBoundary=beforeCancel.find(row=>row.id===ids.baseline).frontier;
-      const displayedBoundary=knownReference.match(/committed ([\d,.]+) s · revision (\d+)/);
-      if(!displayedBoundary||Number(displayedBoundary[1].replaceAll(',',''))!==Number(recordedBoundary[1])/Number(recordedBoundary[2])||Number(displayedBoundary[2])!==recordedBoundary[0]){
+      const exactBoundary=await page.getByTestId('viewer-loading').locator('.viewer-run-reference .time-value').getAttribute('data-exact-time');
+      const [shownN,shownD='1']=exactBoundary.split('/');
+      const displayedRevision=knownReference.match(/ · revision (\d+)$/);
+      if(!displayedRevision||BigInt(shownN)*BigInt(recordedBoundary[2])!==BigInt(recordedBoundary[1])*BigInt(shownD)||Number(displayedRevision[1])!==recordedBoundary[0]){
         throw Error(`History loading panel lost the known committed boundary: ${JSON.stringify({knownReference,recordedBoundary})}`);
       }
       await page.screenshot({path:path.join(output,'history-loading.png'),fullPage:true});

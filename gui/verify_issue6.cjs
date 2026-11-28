@@ -1,3 +1,4 @@
+const {fillExact}=require('./verification_time_helpers.cjs');
 /* I06 browser verification: actual Plotly data/ranges vs committed history. */
 const {chromium,firefox}=require('playwright');const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');const {randomUUID}=require('node:crypto');
 (async()=>{
@@ -19,11 +20,11 @@ const {chromium,firefox}=require('playwright');const fs=require('node:fs');const
       const data=state.metrics_state.data;assert(data.samples.length>0);assert.equal(snapshot.traces.length,4);
       for(const[index,key]of['healthy','infected','zombies','dead'].entries()){
         assert.deepEqual(snapshot.traces[index].x,data.samples.map(s=>s.seconds),label+' x');assert.deepEqual(snapshot.traces[index].y,data.samples.map(s=>s[key]),label+' '+key);
-        assert.deepEqual(snapshot.traces[index].customdata,data.samples.map(s=>[String(s.time),String(s.revision)]),label+' exact cursor');assert(snapshot.traces[index].mode.includes('markers'));
+        assert.deepEqual(snapshot.traces[index].customdata.map(row=>row.slice(0,2)),data.samples.map(s=>[String(s.time),String(s.revision)]),label+' exact cursor');assert(snapshot.traces[index].mode.includes('markers'));
       }
       assert.equal(String(data.samples.at(-1).revision),state.metrics_cursor.revision);assert.equal(seconds(data.samples.at(-1).time),seconds(state.metrics_cursor.time));
       assert.deepEqual(await page.getByTestId('population-table').locator('thead th').allTextContents(),['Time (s)','Healthy humans','Infected humans','Zombies','Dead identities']);
-      const table=await page.getByTestId('population-table').locator('tbody tr').evaluateAll(rows=>rows.map(row=>{const time=row.cells[0].querySelector('button'),revision=row.cells[0].querySelector('[data-testid=population-sample-revision]');if(time.getAttribute('aria-label')!==`Inspect time ${time.textContent} seconds, ${revision.textContent}`)throw Error('Missing exact accessible sample cursor');return [time.textContent,revision.textContent.replace(/^revision /,''),...Array.from(row.cells).slice(1).map(cell=>cell.textContent)];}));
+      const table=await page.getByTestId('population-table').locator('tbody tr').evaluateAll(rows=>rows.map(row=>{const time=row.cells[0].querySelector('button'),revision=row.cells[0].querySelector('[data-testid=population-sample-revision]');if(time.getAttribute('aria-label')!==`Inspect time ${time.textContent.replace("≈","approximately ")} seconds, ${revision.textContent}`)throw Error('Missing exact accessible sample cursor');return [time.getAttribute('data-exact-time'),revision.textContent.replace(/^revision /,''),...Array.from(row.cells).slice(1).map(cell=>cell.textContent)];}));
       assert.deepEqual(table,data.samples.map(s=>[String(s.time),String(s.revision),String(s.healthy),String(s.infected),String(s.zombies),String(s.dead)]),label+' accessible table');
       const checked=await call('/__issue6/oracle',{run_id:run,metrics:data});assert(checked.passed);
       const c=await chart();assert.equal(c.listener_sets,1);if(c.following){assert.equal(snapshot.range[0],0);assert(snapshot.range[1]>=Math.max(1e-9,seconds(state.metrics_cursor.time)));}
@@ -31,7 +32,7 @@ const {chromium,firefox}=require('playwright');const fs=require('node:fs');const
     };
     const advance=async(time)=>{await command(runs.small,'advance',{time:String(time)});await aligned(runs.small,String(time));};
     const zoom=async()=>{await page.getByTestId('population-chart').scrollIntoViewIfNeeded();const box=await page.locator('[data-testid="population-chart"] .nsewdrag').boundingBox();assert(box);await page.mouse.move(box.x+box.width*.15,box.y+box.height*.2);await page.mouse.down();await page.mouse.move(box.x+box.width*.55,box.y+box.height*.8,{steps:12});await page.mouse.up();await until(async()=>(await chart())?.following===false,'manual zoom');return(await chart()).xaxis_range;};
-    const seek=async(time)=>{await page.getByTestId('chart-time').fill(String(time));await page.getByTestId('chart-select').click();};
+    const seek=async(time)=>{await fillExact(page,'chart-time',time);await page.getByTestId('chart-select').click();};
     const faultPattern='**/api/runs/*/metrics?*';
     await page.goto(base);await select(runs.small);const start=await capture('small-time-zero',runs.small);assert.equal(start.point_count,1);assert.equal((await page.getByTestId('population-chart').evaluate(node=>node.querySelectorAll('.point').length)),4);assert.match(await page.locator('.chart-note').first().innerText(),/time is still zero/);await page.screenshot({path:path.join(output,'initial-statistics.png'),fullPage:true});
     const stepReceipt=await command(runs.small,'step');assert(BigInt(stepReceipt.revision)>BigInt(start.revision),'Step must commit a new semantic revision');await aligned(runs.small,stepReceipt.time,stepReceipt.revision);const repeated=await capture('same-time-new-revision',runs.small);assert.equal(seconds(repeated.time),0);assert(BigInt(repeated.revision)>BigInt(start.revision));
@@ -49,6 +50,7 @@ const {chromium,firefox}=require('playwright');const fs=require('node:fs');const
     for(const[mode,time]of[['wrong-cursor',9],['truncated',10],['empty',11]]){
       await page.route(faultPattern,async route=>{const response=await route.fetch(),data=await response.json();if(mode==='wrong-cursor'){data.cursor.revision=String(BigInt(data.cursor.revision)-1n);data.revision=data.cursor.revision;}else if(mode==='truncated')data.samples=data.samples.slice(0,-1);else data.samples=[];await route.fulfill({response,json:data});});
       await command(runs.small,'advance',{time:String(time)});await until(async()=>{const a=await app();return mode==='empty'?a.metrics_state?.phase==='ready'&&a.metrics_state.data.samples.length===0:a.metrics_state?.phase==='failed';},mode);
+      await until(async()=>new RegExp(mode==='empty'?'No population samples':'different source|missing.*frontier').test(await page.getByTestId('statistics-status').innerText()),mode+' rendered status');
       if(mode==='empty'){assert.match(await page.getByTestId('statistics-status').innerText(),/No population samples/);assert.equal(await page.getByTestId('population-chart').isVisible(),false);}else assert.match(await page.getByTestId('statistics-status').innerText(),/different source|missing.*frontier/);
       await page.unroute(faultPattern);await page.getByTestId('statistics-retry').click();await capture(mode+'-recovered',runs.small);
     }

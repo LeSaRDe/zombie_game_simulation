@@ -1,5 +1,11 @@
 # Decision models
 
+For new object-oriented plugins, use `ObjectDecisionModel` and return typed
+`Decision` / `ActionIntent` objects. See the [modeling architecture](ARCHITECTURE.md#add-a-model-with-private-memory)
+and [runnable example](../examples/oop_custom_model.py). The adapter initializes
+private memory and supports custom memory codecs through a versioned JSON envelope.
+The legacy policy contract below remains supported unchanged.
+
 `zombie_sim.policies` supplies `HumanDefaultModel` and `ZombieDefaultModel`, with
 `defaultHuman/v1` and `defaultZombie/v1` versioned registry names. The short names
 `defaultHuman` and `defaultZombie` are aliases. `randomLegal/v1` samples uniformly

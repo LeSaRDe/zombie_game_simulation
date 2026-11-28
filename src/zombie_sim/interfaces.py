@@ -1,0 +1,79 @@
+"""Public structural contracts for model, storage and research extensions.
+
+Existing implementations satisfy these protocols without inheriting from them.
+The internal coordinator ports live in ``zombie_sim.core``.
+"""
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+from random import Random
+from typing import Any, Protocol, runtime_checkable
+
+from .entities import WorldView
+
+Record = dict[str, Any]
+DecisionResult = tuple[Record, Any, Record]
+
+
+@runtime_checkable
+class DecisionModel(Protocol):
+    def initialize_memory(self, agent: Record) -> Any: ...
+    def decide(self, observation: Record, memory: Any, rng: Random) -> DecisionResult: ...
+    def manifest(self) -> Record: ...
+
+
+class BatchDecisionModel(DecisionModel, Protocol):
+    def decide_batch(self, observations: list[Record], memories: list[Any],
+                     rngs: list[Random]) -> list[DecisionResult]: ...
+
+
+class RestartableDecisionModel(DecisionModel, Protocol):
+    def encode_memory(self, memory: Any) -> Any: ...
+    def decode_memory(self, payload: Any) -> Any: ...
+
+
+@runtime_checkable
+class HistoryReader(Protocol):
+    @property
+    def revision(self) -> int: ...
+    def state_at(self, time: Any = None, revision: Any = None, *, check_cancelled: Any = None) -> Record: ...
+    def events(self, start: Any = 0, end: Any = None, kind: str | None = None,
+               agent_id: Any = None, limit: int | None = None, latest: bool = False) -> list[Record]: ...
+    def get_metadata(self, key: str, default: Any = None) -> Any: ...
+    def close(self) -> None: ...
+
+
+@runtime_checkable
+class StateStore(Protocol):
+    version: int
+    def read_view(self, time: Any = None, revision: Any = None) -> Record: ...
+    def read_many(self, keys: Iterable[str]) -> Record: ...
+    def commit(self, state: Record, expected_version: int | None = None,
+               records: Iterable[Record] = (), transaction_id: str | None = None,
+               *, runtime_delta: Any = None, command_result: Any = None) -> int: ...
+    def commit_delta(self, delta: Any, expected_version: int | None = None,
+                     records: Iterable[Record] = (), transaction_id: str | None = None,
+                     *, runtime_delta: Any = None, command_result: Any = None) -> int: ...
+    def close(self) -> None: ...
+
+
+@runtime_checkable
+class SimulationPort(Protocol):
+    def snapshot(self) -> Record: ...
+    def observe(self, aid: Any) -> Record: ...
+    def advance_until(self, until: Any, max_events: int | None = None,
+                      return_snapshot: bool = True, should_yield: Any = None) -> Record | None: ...
+    def submit_intents(self, intents: Any, **options: Any) -> Any: ...
+    def checkpoint(self, path: Any = None) -> Any: ...
+    def close(self) -> None: ...
+
+
+class SimulationFactory(Protocol):
+    def __call__(self, config: Record | None = None, **options: Any) -> SimulationPort: ...
+
+
+class Measurement(Protocol):
+    """A pure researcher measurement over a detached committed snapshot."""
+    name: str
+    version: str
+    def measure(self, world: WorldView) -> Mapping[str, Any]: ...

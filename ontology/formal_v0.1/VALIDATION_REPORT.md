@@ -2,7 +2,7 @@
 
 Overall result: **PASS — 62/62 recorded checks met their expected outcomes.**
 
-Execution timestamp (UTC): `2026-11-13T03:09:07.701236+00:00`.
+Execution timestamp (UTC): `2026-11-27T16:07:50.983415+00:00`.
 
 Expected-failure fixtures count as successful tests only when they fail at the named expected constraint. A validation exception or an unrelated violation alone is not counted as a successful negative test.
 
@@ -12,7 +12,7 @@ Expected-failure fixtures count as successful tests only when they fail at the n
 - RDFLib: `7.6.0`
 - pySHACL: `0.40.2`; SHACL Core/SPARQL, explicit RDFS inference; SHACL-JS disabled.
 - Owlready2: `0.51` supplies the HermiT/OWLAPI JAR. The actual checks call HermiT and OWLAPI through `OwlCheck.java`.
-- Java: `openjdk version "21.0.13.0.3" 2026-10-24`
+- Java: `openjdk version "21.0.13.1" 2026-11-17`
 - HermiT JAR SHA-256: `97e53f519720a0a2e328556e03b806aa239347c85e57637a935e6433ed2ad3a8`
 
 The full [machine-readable report](reports/validation.json) records versions, SHA-256 values and individual outcomes. Each SHACL fixture has text and RDF validation reports under `reports/`. OWL reports identify profile violations, consistency and unsatisfiable classes.
@@ -92,7 +92,7 @@ Working directory: /home/fmeng/workspace/zombie_game_simulation
 
 Python executable: /home/fmeng/workspace/zombie_game_simulation/ontology/formal_v0.1/.venv/bin/python
 
-Java executable: /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+Java executable: /usr/bin/java
 
 ## Meaning of this result
 

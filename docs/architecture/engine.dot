@@ -1,0 +1,27 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+sim [label="Simulation._run_rule", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-engine-py", target="_top", tooltip="src/zombie_sim/engine.py"];
+request [label="RuleRequest", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+rules [label="GameRuleSet", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+session [label="PlanningSession\nisolated WorldDraft + runtime fork", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+handlers [label="ActionHandlerRegistry\n29 named handlers", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-handlers-py", target="_top", tooltip="src/zombie_sim/game_rules/handlers.py"];
+lifecycle [label="Damage / Resource / Infection / Death /\nConversion / Effect / Signal / Geometry rules", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-lifecycle-py", target="_top", tooltip="src/zombie_sim/game_rules/lifecycle.py"];
+plan [label="TransitionPlan\nStateChange + DomainEvent + RuntimeSnapshot", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+coordinator [label="StateCoordinator + UnitOfWork\nvalidate revision, invariants and references", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-coordinator-py", target="_top", tooltip="src/zombie_sim/state_management/coordinator.py"];
+world [label="WorldAggregate\nimmutable typed authoritative values", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-world-py", target="_top", tooltip="src/zombie_sim/state_management/world.py"];
+runtime [label="RuntimeState\nexact queue + memory + counters", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-runtime-state-py", target="_top", tooltip="src/zombie_sim/state_management/runtime_state.py"];
+sim -> request [label="construct", style="solid"];
+sim -> rules [label="read-only world + snapshot", style="solid"];
+request -> rules [label="", style="solid"];
+rules -> session [label="new per request", style="solid"];
+session -> handlers [label="dispatch", style="solid"];
+session -> lifecycle [label="apply semantic rules", style="solid"];
+session -> plan [label="return", style="solid"];
+sim -> coordinator [label="begin/commit plan", style="solid"];
+plan -> coordinator [label="", style="solid"];
+coordinator -> world [label="replace after durability", style="solid"];
+sim -> runtime [label="adopt confirmed continuation", style="solid"];
+}

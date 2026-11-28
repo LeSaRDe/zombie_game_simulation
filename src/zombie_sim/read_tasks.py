@@ -14,30 +14,72 @@ import time
 import uuid
 
 
-def execute(manager, operation, args, kwargs):
-    if operation in {'snapshot', 'comparison', 'timeline', 'cohort_view'}:
-        return getattr(manager, operation)(*args, **kwargs)
-    if operation == 'preview':
-        from .config import resolve_config, initialize_world
-        from .visualization import view_bundle
-        resolved = resolve_config(args[0])
-        return {'resolved': resolved, 'view': view_bundle(initialize_world(resolved), mode='preview'), 'artifact_id': uuid.uuid4().hex}
-    if operation == 'prepare_export':
-        from .export_jobs import prepare_export
-        return prepare_export(manager, *args, **kwargs)
-    if operation == 'render_export':
-        from .export_jobs import render_export
-        return render_export(*args, **kwargs)
-    run_id = args[0]
-    history = manager.history(run_id)
-    try:
-        if operation == 'events':
-            return history.events(*args[1:], **kwargs)
-        if operation == 'metrics':
-            from .visualization import sampled_metrics
-            return sampled_metrics(history, *args[1:], **kwargs)
-        if operation == 'observation':
-            agent_id, revision, index = args[1:]
+class ReadOperationRegistry:
+    """Named read operations with explicit private-reader ownership.
+
+    Subclasses may register additional read-only operations when constructing a
+    child. The pool accepts a pickleable registry factory, not live services or
+    database connections, so process isolation and cancellation stay intact.
+    """
+    def __init__(self, manager):
+        self.manager = manager
+        self._handlers = {}
+        self._exports = None
+        for name in ('snapshot', 'comparison', 'timeline', 'cohort_view'):
+            self.register(name, getattr(manager, name))
+        for name in ('preview', 'prepare_export', 'render_export', 'events', 'metrics', 'observation', 'legacy_export'):
+            self.register(name, getattr(self, '_' + name))
+
+    def register(self, name, handler, *, replace=False):
+        if not isinstance(name, str) or not name or not callable(handler):
+            raise ValueError('A read operation requires a name and callable handler')
+        if name in self._handlers and not replace:
+            raise ValueError(f'Read operation already registered: {name}')
+        self._handlers[name] = handler
+
+    def execute(self, operation, args, kwargs):
+        try:
+            handler = self._handlers[operation]
+        except KeyError:
+            raise ValueError(f'Unknown read operation: {operation}') from None
+        return handler(*args, **kwargs)
+
+    def _preview(self, config):
+        resolved = self.manager.configuration.resolve(config)
+        return {'resolved': resolved,
+                'view': self.manager.visualization.view_bundle(self.manager.configuration.initialize(resolved), mode='preview'),
+                'artifact_id': uuid.uuid4().hex}
+
+    @property
+    def exports(self):
+        if self._exports is None:
+            from .export_jobs import ExportService
+            self._exports = ExportService(visualization=self.manager.visualization)
+        return self._exports
+
+    def _prepare_export(self, *args, **kwargs):
+        return self.exports.prepare(self.manager, *args, **kwargs)
+
+    def _render_export(self, *args, **kwargs):
+        return self.exports.render(*args, **kwargs)
+
+    def _events(self, run_id, *args, **kwargs):
+        history = self.manager.history(run_id)
+        try:
+            return history.events(*args, **kwargs)
+        finally:
+            history.close()
+
+    def _metrics(self, run_id, *args, **kwargs):
+        history = self.manager.history(run_id)
+        try:
+            return self.manager.metrics.sampled_metrics(history, *args, **kwargs)
+        finally:
+            history.close()
+
+    def _observation(self, run_id, agent_id, revision, index):
+        history = self.manager.history(run_id)
+        try:
             records = history.events(end=revision, agent_id=agent_id)
             decisions = [r for r in records if r.get('kind') == 'decision' or r.get('observation') is not None]
             if not decisions: raise ValueError('No recorded decision observation at this cursor')
@@ -45,11 +87,16 @@ def execute(manager, operation, args, kwargs):
             selected = decisions[-1 if index is None else index]
             if selected.get('observation') is None: raise ValueError('This decision records a reconstruction reference; direct observation capture was not enabled')
             return {'perspective':'recorded_observation','decision':selected.get('id'),'time':selected.get('time'),'revision':selected.get('ledger_revision'),'observation':selected['observation']}
-        if operation == 'legacy_export':
+
+        finally:
+            history.close()
+
+    def _legacy_export(self, run_id, format, selected_time, revision, start, end):
+        history = self.manager.history(run_id)
+        try:
             from .storage import canonical
             from .visualization import events_csv, world_svg, replay_animation
-            format, selected_time, revision, start, end = args[1:]
-            view = manager.snapshot(run_id, selected_time, revision)
+            view = self.manager.snapshot(run_id, selected_time, revision)
             if format == 'svg': return world_svg(view['state']), 'image/svg+xml', f'{run_id}-{view["revision"]}.svg'
             if format == 'csv': return events_csv(history.events(end=revision)), 'text/csv', f'{run_id}-events.csv'
             if format == 'animation': return replay_animation(history, start, end or selected_time, run_id=run_id), 'text/html', f'{run_id}-replay.html'
@@ -64,21 +111,29 @@ def execute(manager, operation, args, kwargs):
                 return buffer.getvalue().to_pybytes(), 'application/octet-stream', f'{run_id}-events.parquet'
             if format != 'json': raise ValueError('HTTP view exports support json, csv, svg, parquet and animation')
             return canonical(view), 'application/json', f'{run_id}-{view["revision"]}.json'
-        raise ValueError(f'Unknown read operation: {operation}')
-    finally:
-        history.close()
+
+        finally:
+            history.close()
 
 
-def _worker(root, channel):
+def execute(manager, operation, args, kwargs):
+    """Compatibility dispatcher using the manager's own operation registry."""
+    if not hasattr(manager, '_read_operations'):
+        manager._read_operations = ReadOperationRegistry(manager)
+    return manager._read_operations.execute(operation, args, kwargs)
+
+
+def _worker(root, channel, registry_factory=ReadOperationRegistry):
     from .application import RunManager
     manager = RunManager(root, read_only=True)
+    registry = registry_factory(manager)
     try:
         while True:
             message = channel.recv()
             if message is None: return
             operation, args, kwargs, destination = message
             try:
-                value = (True, execute(manager, operation, args, kwargs))
+                value = (True, registry.execute(operation, args, kwargs))
             except Exception as error:
                 from .application import RunInitializing,ViewCancelled
                 from .config import ConfigError
@@ -97,8 +152,9 @@ def _worker(root, channel):
 
 
 class ReadPool:
-    def __init__(self, root, size=2, name='analysis'):
+    def __init__(self, root, size=2, name='analysis', *, registry_factory=ReadOperationRegistry):
         self.root = str(root); self.size = size; self.name = name
+        self.registry_factory = registry_factory
         self.condition = threading.Condition(); self.closing = False
         self.slots = [{'process':None,'pipe':None,'busy':False,'pid':None} for _ in range(size)]
         self.temporary = tempfile.TemporaryDirectory(prefix=f'zombie-{name}-')
@@ -134,7 +190,7 @@ class ReadPool:
             if slot['process'] is None:
                 context = multiprocessing.get_context('spawn')
                 parent, child = context.Pipe()
-                process = context.Process(target=_worker, args=(self.root, child), name=f'zombie-{self.name}', daemon=True)
+                process = context.Process(target=_worker, args=(self.root, child, self.registry_factory), name=f'zombie-{self.name}', daemon=True)
                 try:process.start()
                 except BaseException:
                     parent.close();child.close();process.close();raise

@@ -1,0 +1,27 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+queue [label="ScheduledTask heap\nFraction time, phase, priority, serial", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-domain-model-activities-py", target="_top", tooltip="src/zombie_sim/domain_model/activities.py"];
+boundary [label="ScheduledBoundary\nretain prior runtime; stage heap + decision set", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-execution-scheduled-boundary-py", target="_top", tooltip="src/zombie_sim/execution/scheduled_boundary.py"];
+rules [label="GameRuleSet.plan\nimmutable WorldReadView + RuntimeSnapshot", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+draft [label="PlanningSession\nread set, changed entities, causal events", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+plan [label="TransitionPlan\nexpected revision + typed changes", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-game-rules-session-py", target="_top", tooltip="src/zombie_sim/game_rules/session.py"];
+validate [label="UnitOfWork\nstale-read + transition validation", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-state-management-coordinator-py", target="_top", tooltip="src/zombie_sim/state_management/coordinator.py"];
+bundle [label="CommitBundle\nworld delta + runtime delta + events + receipt", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-contracts-py", target="_top", tooltip="src/zombie_sim/persistence/contracts.py"];
+atomic [label="AtomicCommitPort.commit\nrevision + transaction identity", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-contracts-py", target="_top", tooltip="src/zombie_sim/persistence/contracts.py"];
+resolve [label="resolve_transaction\nrecover uncertain commit outcome", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-persistence-contracts-py", target="_top", tooltip="src/zombie_sim/persistence/contracts.py"];
+publish [label="Publish immutable WorldAggregate\nadopt RuntimeState; notify ledger views", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-engine-py", target="_top", tooltip="src/zombie_sim/engine.py"];
+queue -> boundary [label="due work", style="solid"];
+boundary -> rules [label="reversible preparation", style="solid"];
+rules -> draft [label="", style="solid"];
+draft -> plan [label="", style="solid"];
+plan -> validate [label="", style="solid"];
+validate -> bundle [label="", style="solid"];
+bundle -> atomic [label="", style="solid"];
+atomic -> publish [label="durable success", style="solid"];
+atomic -> resolve [label="outcome unknown", style="solid"];
+resolve -> publish [label="identity confirmed", style="solid"];
+atomic -> boundary [label="failure before publication: restore", style="dashed"];
+}

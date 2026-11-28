@@ -1,0 +1,150 @@
+{
+  "definitions": 438,
+  "implementation_definitions": 324,
+  "verification_definitions": 114,
+  "by_language": {
+    "Python": 410,
+    "TypeScript": 28
+  },
+  "by_group": {
+    "examples": 2,
+    "gui": 28,
+    "verification": 114,
+    "operations": 7,
+    "engine": 24,
+    "application": 22,
+    "persistence": 25,
+    "analysis": 19,
+    "domain": 92,
+    "models": 11,
+    "rules": 55,
+    "contracts": 8,
+    "learning": 10,
+    "state": 21
+  },
+  "by_kind": {
+    "class": 283,
+    "interface": 9,
+    "abstract class": 4,
+    "exception": 25,
+    "dataclass": 99,
+    "protocol": 18
+  },
+  "reviewed_relationships": 268,
+  "declared_inheritance_and_implements": 218,
+  "external_base_references": 23,
+  "scope": "All named Python class declarations and TypeScript class/interface declarations in source roots; includes nested classes and verification code. External dependency implementations, historical artifacts, generated bundles, pure functions, anonymous runtime-generated types and TS type aliases are not project class definitions.",
+  "source_roots": [
+    "src/zombie_sim",
+    "gui/src",
+    "scripts",
+    "examples",
+    "tests",
+    "implementation_checks",
+    "ontology/formal_v0.1"
+  ],
+  "diagrams": {
+    "overview": {
+      "classes": 23,
+      "boundary_classes": 0,
+      "relationships": 23,
+      "name": "overview"
+    },
+    "application-all": {
+      "classes": 322,
+      "boundary_classes": 0,
+      "relationships": 375,
+      "name": "application-all"
+    },
+    "whole-project": {
+      "classes": 438,
+      "boundary_classes": 23,
+      "relationships": 486,
+      "name": "whole-project"
+    },
+    "domain": {
+      "classes": 92,
+      "boundary_classes": 17,
+      "relationships": 102,
+      "name": "domain"
+    },
+    "rules": {
+      "classes": 55,
+      "boundary_classes": 15,
+      "relationships": 82,
+      "name": "rules"
+    },
+    "state": {
+      "classes": 21,
+      "boundary_classes": 12,
+      "relationships": 39,
+      "name": "state"
+    },
+    "engine": {
+      "classes": 24,
+      "boundary_classes": 25,
+      "relationships": 44,
+      "name": "engine"
+    },
+    "contracts": {
+      "classes": 8,
+      "boundary_classes": 9,
+      "relationships": 12,
+      "name": "contracts"
+    },
+    "models": {
+      "classes": 11,
+      "boundary_classes": 11,
+      "relationships": 24,
+      "name": "models"
+    },
+    "persistence": {
+      "classes": 25,
+      "boundary_classes": 12,
+      "relationships": 39,
+      "name": "persistence"
+    },
+    "application": {
+      "classes": 22,
+      "boundary_classes": 14,
+      "relationships": 60,
+      "name": "application"
+    },
+    "analysis": {
+      "classes": 19,
+      "boundary_classes": 10,
+      "relationships": 30,
+      "name": "analysis"
+    },
+    "learning": {
+      "classes": 10,
+      "boundary_classes": 6,
+      "relationships": 16,
+      "name": "learning"
+    },
+    "gui": {
+      "classes": 28,
+      "boundary_classes": 0,
+      "relationships": 12,
+      "name": "gui"
+    },
+    "operations": {
+      "classes": 7,
+      "boundary_classes": 3,
+      "relationships": 6,
+      "name": "operations"
+    },
+    "examples": {
+      "classes": 2,
+      "boundary_classes": 2,
+      "relationships": 2,
+      "name": "examples"
+    },
+    "verification": {
+      "classes": 114,
+      "boundary_classes": 26,
+      "relationships": 75,
+      "name": "verification"
+    }
+  }
+}

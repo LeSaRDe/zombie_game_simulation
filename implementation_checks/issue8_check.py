@@ -158,7 +158,7 @@ def serve(workspace, port):
                                 digest.update(len(encoded).to_bytes(8, "big")); digest.update(encoded)
                         sizes[table] = count
             with manager.lock:
-                commands = manager.connection.execute("SELECT COUNT(*) FROM commands WHERE run_id=?", (row["id"],)).fetchone()[0]
+                commands = manager.catalog.command_count(row["id"])
             result.append({"id": row["id"], "status": row["status"], "generation": row["generation"], "frontier": row["frontier"],
                            "commands": commands, "history_and_runtime_digest": digest.hexdigest(), "rows": sizes})
         return result

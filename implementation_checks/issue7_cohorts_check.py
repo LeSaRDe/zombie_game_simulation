@@ -60,8 +60,8 @@ def audit(path, manager, run_id):
                     encoded = value if isinstance(value, bytes) else repr(value).encode()
                     digest.update(len(encoded).to_bytes(8, "big")); digest.update(encoded)
     with manager.lock:
-        row = dict(manager.connection.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone())
-        commands = manager.connection.execute("SELECT COUNT(*) FROM commands WHERE run_id=?", (run_id,)).fetchone()[0]
+        row = manager.catalog.run(run_id)
+        commands = manager.catalog.command_count(run_id)
     return {"ledger_sha256": digest.hexdigest(), "rows": sizes, "run": row, "commands": commands}
 
 
@@ -153,10 +153,9 @@ def run_check(output):
             ])
             for time in ("1/2", "1", "3/2", "2", "3", "4"):
                 simulation.advance_until(time, return_snapshot=False)
-            with manager.connection:
-                manager.connection.execute("INSERT INTO runs(id,directory,config,status,frontier) VALUES(?,?,?,?,?)",
-                    (run_id, str(directory), canonical(simulation.config), "terminated",
-                     canonical({"revision": str(simulation.revision), "time": str(simulation.time), "pacing": 0})))
+            with manager.catalog:
+                manager.catalog.insert_run(run_id,directory,simulation.config,"terminated",
+                    frontier={"revision": str(simulation.revision), "time": str(simulation.time), "pacing": 0})
             before = audit(path, manager, run_id)
             runtime_before = canonical(simulation.serialize())
             history = History(path, read_only=True)
@@ -207,9 +206,9 @@ def run_check(output):
                 legacy_bytes = canonical(legacy)
                 minimal_legacy = {"id": "legacy-minimal", "mode": "dynamic", "reference_revision": "0"}
                 minimal_bytes = canonical(minimal_legacy)
-                with manager.connection:
-                    manager.connection.execute("INSERT INTO views VALUES(?,?,?)", (run_id, "legacy", legacy_bytes))
-                    manager.connection.execute("INSERT INTO views VALUES(?,?,?)", (run_id, "legacy-minimal", minimal_bytes))
+                with manager.catalog:
+                    manager.catalog.save_view(run_id,legacy)
+                    manager.catalog.save_view(run_id,minimal_legacy)
                 definitions["legacy"] = legacy
                 definitions["legacy-minimal"] = minimal_legacy
                 observations = []; count = 0
@@ -241,10 +240,10 @@ def run_check(output):
                 assert final["currently infected"]["denominator"] == 0
                 assert sorted(final["initially infected"]["members"]) == ["converter", "patient"]
                 assert sum(item["denominator"] for item in final.values()) > len(simulation.state["agents"]), "Overlapping cohorts are not a partition"
-                assert manager.connection.execute("SELECT definition FROM views WHERE id='legacy'").fetchone()[0] == legacy_bytes
-                assert manager.connection.execute("SELECT definition FROM views WHERE id='legacy-minimal'").fetchone()[0] == minimal_bytes
+                assert dict(manager.catalog.view_rows())["legacy"] == legacy_bytes
+                assert dict(manager.catalog.view_rows())["legacy-minimal"] == minimal_bytes
                 assert isinstance(manager.cohorts(run_id), list), "Existing manager callers retain list results"
-                definitions_before = list(manager.connection.execute("SELECT id,definition FROM views ORDER BY id"))
+                definitions_before = manager.catalog.view_rows()
                 base = {"name": "invalid", "mode": "dynamic", "predicate": {}, "reference_revision": "0"}
                 invalid = {
                     "blank name": dict(base, name="  "), "nonstring name": dict(base, name=23),
@@ -269,7 +268,7 @@ def run_check(output):
                     "duplicate explicit member": dict(base, mode="fixed", members=["patient", "patient"]),
                 }
                 failures = {label: rejects(lambda definition=definition: manager.save_cohort(run_id, definition)) for label, definition in invalid.items()}
-                assert list(manager.connection.execute("SELECT id,definition FROM views ORDER BY id")) == definitions_before
+                assert manager.catalog.view_rows() == definitions_before
                 cancelled = threading.Event(); cancelled.set()
                 try:
                     manager.cohort_view(run_id, time="1/3", cancel_event=cancelled)

@@ -1,0 +1,68 @@
+digraph Domain {
+  graph [rankdir=TB, bgcolor="#ffffff", pad=0.35, nodesep=0.30, ranksep=0.65, fontname="DejaVu Sans", fontsize=18, labelloc=t, label="PROPOSED • Domain model\nPersistent identity, explicit state inheritance, composed roles", compound=true];
+  node [shape=record, style="rounded,filled", fillcolor="#eff6ff", color="#93b4db", fontname="DejaVu Sans", fontsize=11, margin="0.13,0.09"];
+  edge [color="#52647b", fontname="DejaVu Sans", fontsize=9, arrowsize=0.75];
+
+  subgraph cluster_identity {
+    label="Identity and current state"; color="#bdcee1"; style=rounded; fontsize=14;
+    World [label="{WorldAggregate|revision; bounds\ncurrent entity registry|read(identity)\nvalidate(changes)}"];
+    Agent [label="{Agent|identity; created_at\ncurrent_state: AgentState|state_at_current_revision()}"];
+    Identity [label="{AgentIdentity|run_id\nagent_id}", fillcolor="#f3f4f6"];
+    State [label="{AgentState «abstract»|life; stamina; position\nactive action; cooldowns; effects|derived_status()\napplicable_profile()}"];
+    Human [label="{HumanState|hunger; inventory\ninfection episode reference}", fillcolor="#e9f8ef"];
+    Zombie [label="{ZombieState|zombie profile}", fillcolor="#f7f0fc"];
+    Inventory [label="{Inventory|stocks; reservations|mass()\navailable(resource)}", fillcolor="#f3f4f6"];
+    Episode [label="{InfectionEpisode|onset; deadline; outcome\nsource and closure revision}", fillcolor="#f3f4f6"];
+    Model [label="{ModelAssignment|model/version; parameters\ninterval; agent identity}", fillcolor="#f3f4f6"];
+    World -> Agent [dir=both, arrowtail=diamond, arrowhead=none, label="current entries 0..*"];
+    Agent -> Identity [dir=both, arrowtail=diamond, arrowhead=none, label="1 stable key"];
+    Agent -> State [dir=both, arrowtail=diamond, arrowhead=none, label="1 current value"];
+    State -> Human [dir=back, arrowtail=empty]; State -> Zombie [dir=back, arrowtail=empty];
+    Human -> Inventory [dir=both, arrowtail=diamond, arrowhead=none, label="1"];
+    Human -> Episode [style=dashed, label="0..1 active reference"];
+    State -> Model [style=dashed, label="1 while alive"];
+  }
+
+  subgraph cluster_roles {
+    label="Role definitions and per-agent assignment"; color="#c8bcdd"; style=rounded; fontsize=14;
+    node [fillcolor="#f6f1fc", color="#b9a2d4"];
+    Assignment [label="{RoleAssignment|agent identity; interval\nversioned definition reference|compatible_with(state)}"];
+    RoleState [label="{RoleState «abstract»|per-assignment state facts}"];
+    SpitterState [label="{SpitterRoleState|charges; reserved charges\nnext recharge time}"];
+    Role [label="{RoleDefinition «abstract»|role_id; version; profile overrides|capabilities()\nassignment / retirement policy}"];
+    HR [label="HumanRoleDefinition «abstract»"];
+    ZR [label="ZombieRoleDefinition «abstract»"];
+    Doctor [label="DoctorRole"]; Warrior [label="WarriorRole"]; Scout [label="ScoutRole"]; Engineer [label="EngineerRole"];
+    Tyrant [label="TyrantRole"]; Runner [label="RunnerRole"]; Spitter [label="SpitterRole"]; Screamer [label="ScreamerRole"];
+    Assignment -> Role [dir=both, arrowtail=odiamond, arrowhead=none, label="1 frozen definition"];
+    Assignment -> RoleState [dir=both, arrowtail=diamond, arrowhead=none, label="0..1"];
+    RoleState -> SpitterState [dir=back, arrowtail=empty];
+    Role -> HR [dir=back, arrowtail=empty]; Role -> ZR [dir=back, arrowtail=empty];
+    HR -> Doctor [dir=back, arrowtail=empty]; HR -> Warrior [dir=back, arrowtail=empty]; HR -> Scout [dir=back, arrowtail=empty]; HR -> Engineer [dir=back, arrowtail=empty];
+    ZR -> Tyrant [dir=back, arrowtail=empty]; ZR -> Runner [dir=back, arrowtail=empty]; ZR -> Spitter [dir=back, arrowtail=empty]; ZR -> Screamer [dir=back, arrowtail=empty];
+  }
+  State -> Assignment [style=dashed, label="0..1 active reference"];
+
+  subgraph cluster_space {
+    label="Environment"; color="#a5cbbd"; style=rounded; fontsize=14;
+    node [fillcolor="#edf8f3", color="#9dc6b6"];
+    Spatial [label="{SpatialEntity «abstract»|identity; geometry}"];
+    Barrier [label="{Barrier «abstract»|movement / vision blocking}"];
+    Obstacle [label="PermanentObstacle"];
+    Gate [label="{Gate|mode; integrity; shelter reference}"];
+    Barricade [label="{Barricade|integrity; creator reference}"];
+    Shelter [label="{Shelter|interior; wall / gate references}"];
+    Stockpile [label="{Stockpile|portable resource stocks}"];
+    Remains [label="{Remains|dead source identity; biomass}"];
+    Spatial -> Barrier [dir=back, arrowtail=empty]; Spatial -> Shelter [dir=back, arrowtail=empty]; Spatial -> Stockpile [dir=back, arrowtail=empty]; Spatial -> Remains [dir=back, arrowtail=empty];
+    Barrier -> Obstacle [dir=back, arrowtail=empty]; Barrier -> Gate [dir=back, arrowtail=empty]; Barrier -> Barricade [dir=back, arrowtail=empty];
+  }
+  World -> Spatial [constraint=false, dir=both, arrowtail=diamond, arrowhead=none, label="environment entries 0..*"];
+  Note [shape=note, fillcolor="#fff8e6", color="#dcc37a", label="Conversion replaces HumanState with ZombieState.\nAgentIdentity stays the same; historical values stay immutable.\nRoles are optional assignments, not permanent agent subclasses.\nHuman and Zombie deaths retain their terminal state variant."];
+  Legend [shape=note, fillcolor="#fafafa", color="#c7c7c7", label="Hollow triangle: inheritance • filled diamond: owns\nOpen diamond: shared definition • dashed arrow: reference\nSelected target classes; value objects/codecs omitted for readability."];
+  Note -> Agent [constraint=false, style=dotted, arrowhead=none];
+  Model -> Assignment [style=invis, weight=20];
+  Doctor -> Spatial [style=invis, weight=20];
+  Remains -> Note [style=invis, weight=20];
+  Note -> Legend [style=invis];
+}

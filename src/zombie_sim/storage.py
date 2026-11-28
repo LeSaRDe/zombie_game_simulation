@@ -131,11 +131,30 @@ def _stage_locked(state,patch):
         raise
 
 
+def _request_checksum(kind, payload, records, runtime_delta, command_result):
+    return hashlib.sha256(canonical([kind,payload,list(records),runtime_delta,command_result]).encode()).hexdigest()
+
+
+def _existing_transaction(store, transaction_id, checksum):
+    from .persistence.contracts import TransactionMismatch
+    if not transaction_id:return None
+    if store.history is not None:
+        return store.history.transaction_revision(transaction_id, checksum)
+    previous=store._transactions.get(transaction_id)
+    if previous:
+        if previous[0]!=checksum:raise TransactionMismatch("Transaction identity reused with different content")
+        return previous[1]
+    return None
+
+
 class VersionConflict(RuntimeError):
     """A stale writer cannot commit over a newer published revision."""
 
 
-class History:
+from .persistence.sqlite_queries import SQLiteHistoryQueries
+
+
+class History(SQLiteHistoryQueries):
     """Lossless event/delta journal with periodic full-state anchors.
 
     ``state_at`` returns the last committed state at/before a time.  Continuous
@@ -187,6 +206,10 @@ class History:
           CREATE TABLE IF NOT EXISTS runtime_commits (
             revision INTEGER PRIMARY KEY, patch BLOB NOT NULL, anchor BLOB,
             checksum TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS transaction_requests (transaction_id TEXT PRIMARY KEY, checksum TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS transaction_receipts (
+            transaction_id TEXT PRIMARY KEY, revision INTEGER NOT NULL,
+            first_sequence INTEGER, last_sequence INTEGER, command_result BLOB);
           CREATE TABLE IF NOT EXISTS control_commands (
             command_id TEXT PRIMARY KEY, status TEXT NOT NULL,
             revision INTEGER NOT NULL, payload BLOB NOT NULL);
@@ -202,15 +225,17 @@ class History:
         return self.connection.execute("SELECT COALESCE(MAX(revision),-1) FROM commits").fetchone()[0]
 
     def append(self, time=0, event=None, delta=None, snapshot=None, transaction_id=None,
-               *, records=(), revision=None, in_transaction=False, runtime_delta=None, command_result=None):
+               *, records=(), revision=None, in_transaction=False, runtime_delta=None, command_result=None, request_checksum=None):
         from .faults import hit
         with self.lock:
             if self.read_only:
                 raise RuntimeError("Cannot append to a read-only history view")
             txid = transaction_id or f"revision:{self.revision + 1}"
-            previous = self.connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (txid,)).fetchone()
-            if previous:
-                return previous[0]
+            records=list(records)
+            request_checksum=request_checksum or _request_checksum("append",[str(exact_time(time)),event,delta,snapshot],records,runtime_delta,command_result)
+            previous=self.transaction_revision(txid,request_checksum)
+            if previous is not None:
+                return previous
             rev = self.revision + 1 if revision is None else int(revision)
             if rev != self.revision + 1:
                 raise VersionConflict(f"Expected revision {self.revision + 1}, got {rev}")
@@ -246,17 +271,18 @@ class History:
                 hit("history_write",revision=rev)
                 if not in_transaction:
                     self.connection.execute("BEGIN IMMEDIATE")
-                    existing = self.connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (txid,)).fetchone()
-                    if existing:
+                    existing=self.transaction_revision(txid,request_checksum)
+                    if existing is not None:
                         self.connection.rollback()
                         _rollback_patch(undo)
-                        return existing[0]
+                        return existing
                     actual = self.revision
                     if rev != actual + 1:
                         raise VersionConflict(f"Expected revision {actual + 1}, got {rev}")
                 self.connection.execute("INSERT INTO commits VALUES(?,?,?,?,?,?,?,?)", (
                     rev, txid, str(t.numerator), str(t.denominator), float(t), payload, anchor,
                     hashlib.sha256(payload).hexdigest()))
+                self.connection.execute("INSERT INTO transaction_requests VALUES(?,?)",(txid,request_checksum))
                 runtime_state = self._runtime_state
                 if runtime_delta is not None:
                     if in_transaction:runtime_state=stage_patch(self._runtime_state or {},runtime_delta)
@@ -266,11 +292,14 @@ class History:
                     self.connection.execute("INSERT INTO runtime_commits VALUES(?,?,?,?)", (rev, runtime_blob, runtime_anchor, hashlib.sha256(runtime_blob).hexdigest()))
                 if command_result is not None:
                     self._write_control(command_result, command_result.get("control", {}), rev)
+                first_sequence=last_sequence=None
                 for record in rows:
                     actor = record.get("actor", record.get("agent_id", record.get("agent")))
                     cursor = self.connection.execute("INSERT INTO events(revision,kind,actor,payload) VALUES(?,?,?,?)", (
                         rev, str(record.get("kind", record.get("type", "event"))), str(actor) if actor is not None else None,
                         _pack(record)))
+                    if first_sequence is None:first_sequence=cursor.lastrowid
+                    last_sequence=cursor.lastrowid
                     ids = {str(actor)} if actor is not None else set()
                     for key in ("target", "target_id"):
                         if record.get(key) is not None:
@@ -278,6 +307,8 @@ class History:
                     ids.update(str(x) for x in record.get("targets", []))
                     self.connection.executemany("INSERT OR IGNORE INTO participants VALUES(?,?)",
                                                 [(x, cursor.lastrowid) for x in ids])
+                self.connection.execute("INSERT INTO transaction_receipts VALUES(?,?,?,?,?)",
+                    (txid,rev,first_sequence,last_sequence,_pack(command_result) if command_result is not None else None))
                 if not in_transaction:
                     hit("before_history_commit",revision=rev)
                     self.connection.commit()
@@ -488,12 +519,10 @@ class MemoryStore:
 
     def commit(self, state, expected_version=None, records=(), transaction_id=None, *, runtime_delta=None, command_result=None):
         with self.lock:
-            if transaction_id in self._transactions:
-                return self._transactions[transaction_id]
-            if self.history is not None and transaction_id:
-                row = self.history.connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (transaction_id,)).fetchone()
-                if row:
-                    return row[0]
+            records=list(records)
+            checksum=_request_checksum("state",state,records,runtime_delta,command_result)
+            previous=_existing_transaction(self,transaction_id,checksum)
+            if previous is not None:return previous
             if expected_version is not None and int(expected_version) != self.version:
                 raise VersionConflict(f"Expected version {expected_version}, current version is {self.version}")
             staged = copy.deepcopy(state)
@@ -501,22 +530,20 @@ class MemoryStore:
             if self.history is not None:
                 version = self.history.append(staged.get("time", 0), snapshot=staged, records=records,
                                               transaction_id=transaction_id, runtime_delta=runtime_delta, command_result=command_result,
-                                              revision=version)
+                                              revision=version, request_checksum=checksum)
             self._state, self.version = staged, version
             if transaction_id:
-                self._transactions[transaction_id] = version
+                self._transactions[transaction_id] = (checksum,version)
             return version
 
     export_snapshot = read_view
 
     def commit_delta(self, delta, expected_version=None, records=(), transaction_id=None, *, runtime_delta=None, command_result=None):
         with self.lock:
-            if transaction_id in self._transactions:
-                return self._transactions[transaction_id]
-            if self.history is not None and transaction_id:
-                row = self.history.connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (transaction_id,)).fetchone()
-                if row:
-                    return row[0]
+            records=list(records)
+            checksum=_request_checksum("delta",delta,records,runtime_delta,command_result)
+            previous=_existing_transaction(self,transaction_id,checksum)
+            if previous is not None:return previous
             if expected_version is not None and int(expected_version) != self.version:
                 raise VersionConflict(f"Expected version {expected_version}, current version is {self.version}")
             staged,undo = _stage_locked(self._state, delta)
@@ -525,13 +552,13 @@ class MemoryStore:
                 if self.history is not None:
                     revision = self.history.append(staged.get("time", 0), delta=delta, records=records,
                                                    transaction_id=transaction_id, runtime_delta=runtime_delta, command_result=command_result,
-                                                   revision=revision)
+                                                   revision=revision, request_checksum=checksum)
             except BaseException:
                 _rollback_patch(undo)
                 raise
             self._state, self.version = staged, revision
             if transaction_id:
-                self._transactions[transaction_id] = revision
+                self._transactions[transaction_id] = (checksum,revision)
             return revision
 
     def close(self):
@@ -539,7 +566,7 @@ class MemoryStore:
             self.history.close()
 
 
-class SQLiteStore(MemoryStore):
+class SQLiteStore:
     def __init__(self, path, initial=None):
         self.history = History(path)
         self.lock = self.history.lock
@@ -561,6 +588,16 @@ class SQLiteStore(MemoryStore):
         else:
             self._state = self.read_view()
 
+    def read_many(self, keys):
+        view=self.read_view()
+        return {key:view.get(key) for key in keys}
+
+    def close(self):
+        self.history.close()
+
+    def export_snapshot(self, time=None, revision=None):
+        return self.read_view(time,revision)
+
     def _write_entities(self, state):
         rows = []
         for key, value in state.items():
@@ -571,7 +608,7 @@ class SQLiteStore(MemoryStore):
                 rows.append((key, "", _pack({"value": value})))
         self.history.connection.executemany("INSERT OR REPLACE INTO live_entities VALUES(?,?,?)", rows)
 
-    def _begin_commit(self, expected_version, transaction_id=None):
+    def _begin_commit(self, expected_version, transaction_id=None, request_checksum=None):
         connection = self.history.connection
         connection.execute("BEGIN IMMEDIATE")
         try:
@@ -582,10 +619,10 @@ class SQLiteStore(MemoryStore):
                 self.history._runtime_state = self.history.runtime_at()
                 self.version = actual
             if transaction_id:
-                existing = connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (transaction_id,)).fetchone()
-                if existing:
+                existing=self.history.transaction_revision(transaction_id,request_checksum)
+                if existing is not None:
                     connection.rollback()
-                    return existing[0]
+                    return existing
             if expected_version is not None and int(expected_version) != actual:
                 raise VersionConflict(f"Expected version {expected_version}, durable version is {actual}")
         except BaseException:
@@ -608,11 +645,11 @@ class SQLiteStore(MemoryStore):
     def commit(self, state, expected_version=None, records=(), transaction_id=None, *, runtime_delta=None, command_result=None):
         with self.lock:
             connection = self.history.connection
-            if transaction_id:
-                row = connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (transaction_id,)).fetchone()
-                if row:
-                    return row[0]
-            duplicate = self._begin_commit(expected_version, transaction_id)
+            records=list(records)
+            checksum=_request_checksum("state",state,records,runtime_delta,command_result)
+            previous=_existing_transaction(self,transaction_id,checksum)
+            if previous is not None:return previous
+            duplicate = self._begin_commit(expected_version, transaction_id, checksum)
             if duplicate is not None:
                 return duplicate
             old_history = self.history._state
@@ -621,7 +658,7 @@ class SQLiteStore(MemoryStore):
                 staged = copy.deepcopy(state)
                 rev = self.history.append(staged.get("time", 0), snapshot=staged, records=records,
                                           transaction_id=transaction_id, in_transaction=True,
-                                          runtime_delta=runtime_delta, command_result=command_result)
+                                          runtime_delta=runtime_delta, command_result=command_result, request_checksum=checksum)
                 connection.execute("UPDATE live_state SET revision=?,payload=? WHERE singleton=1", (rev, _pack(staged)))
                 connection.execute("DELETE FROM live_entities")
                 self._write_entities(staged)
@@ -640,11 +677,11 @@ class SQLiteStore(MemoryStore):
     def commit_delta(self, delta, expected_version=None, records=(), transaction_id=None, *, runtime_delta=None, command_result=None):
         with self.lock:
             connection = self.history.connection
-            if transaction_id:
-                row = connection.execute("SELECT revision FROM commits WHERE transaction_id=?", (transaction_id,)).fetchone()
-                if row:
-                    return row[0]
-            duplicate = self._begin_commit(expected_version, transaction_id)
+            records=list(records)
+            checksum=_request_checksum("delta",delta,records,runtime_delta,command_result)
+            previous=_existing_transaction(self,transaction_id,checksum)
+            if previous is not None:return previous
+            duplicate = self._begin_commit(expected_version, transaction_id, checksum)
             if duplicate is not None:
                 return duplicate
             previous = self.history._state
@@ -653,7 +690,7 @@ class SQLiteStore(MemoryStore):
                 staged = stage_patch(self._state, delta)
                 revision = self.history.append(staged.get("time", 0), delta=delta, records=records,
                                                transaction_id=transaction_id, in_transaction=True,
-                                               runtime_delta=runtime_delta, command_result=command_result)
+                                               runtime_delta=runtime_delta, command_result=command_result, request_checksum=checksum)
                 collections = {op[1][0] for op in delta if op[1]}
                 if any(not op[1] for op in delta):
                     connection.execute("DELETE FROM live_entities")

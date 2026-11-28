@@ -1,0 +1,33 @@
+digraph architecture {
+rankdir=TB;
+graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.6", fontname="DejaVu Sans", fontsize=17];
+node [shape=box, style="rounded,filled", color="#a4b4c8", fontname="DejaVu Sans", fontsize=12, margin="0.16,0.12"];
+edge [color="#64748b", fontcolor="#475569", fontname="DejaVu Sans", fontsize=10, arrowsize=0.7];
+framework [label="SimulationFramework\nconfiguration + model registry + factories", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-framework-py", target="_top", tooltip="src/zombie_sim/framework.py"];
+builder [label="ScenarioBuilder\nvalidated, detached configuration records", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-modeling-py", target="_top", tooltip="src/zombie_sim/modeling.py"];
+experiment [label="Experiment\nadvance · observe · snapshot · checkpoint\nexplicit close / context manager", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-framework-py", target="_top", tooltip="src/zombie_sim/framework.py"];
+world [label="WorldView → AgentView\nHistoryCursor + scoped AgentIdentity", fillcolor="#e5f5eb", URL="code-index.html#src-zombie-sim-entities-py", target="_top", tooltip="src/zombie_sim/entities.py"];
+observe [label="ObservationView → AgentView\nlocal immutable facts; unscoped local IDs", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-entities-py", target="_top", tooltip="src/zombie_sim/entities.py"];
+model [label="ObjectDecisionModel (abstract)\nchoose / initial_memory / memory codecs", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-modeling-py", target="_top", tooltip="src/zombie_sim/modeling.py"];
+decision [label="Decision → ActionIntent\nexisting ontology action vocabulary", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-entities-py", target="_top", tooltip="src/zombie_sim/entities.py"];
+registry [label="ModelRegistry / ModelCatalog\nlegacy factory compatibility + metadata", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-modeling-py", target="_top", tooltip="src/zombie_sim/modeling.py"];
+measure [label="MeasurementRegistry\npure versioned Measurement strategies", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-measurements-py", target="_top", tooltip="src/zombie_sim/measurements.py"];
+train [label="TrainingPipeline / EvaluationPipeline\nscenario · splits · output · backend", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-training-pipeline-py", target="_top", tooltip="src/zombie_sim/training_pipeline.py"];
+backend [label="LearningBackend protocol\nRecurrentPPOBackend", fillcolor="#fff0d8", URL="code-index.html#src-zombie-sim-training-pipeline-py", target="_top", tooltip="src/zombie_sim/training_pipeline.py"];
+learning [label="ControlledAgentEnv / DecisionBatchAEC\nCandidateCodec / LearnedModel\nbyte-preserved learning kernels", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-learning-py", target="_top", tooltip="src/zombie_sim/learning.py"];
+builtin [label="HumanDefaultModel / ZombieDefaultModel\nRandomLegalModel / UtilityModel\nbyte-preserved policy kernels", fillcolor="#e8f2fc", URL="code-index.html#src-zombie-sim-policies-py", target="_top", tooltip="src/zombie_sim/policies.py"];
+framework -> builder [label="", style="solid"];
+framework -> experiment [label="", style="solid"];
+framework -> registry [label="", style="solid"];
+experiment -> world [label="snapshot", style="solid"];
+experiment -> observe [label="observe", style="solid"];
+observe -> model [label="choose input", style="solid"];
+model -> decision [label="", style="solid"];
+registry -> model [label="creates", style="solid"];
+registry -> builtin [label="creates", style="solid"];
+experiment -> measure [label="", style="solid"];
+world -> measure [label="read-only input", style="solid"];
+train -> backend [label="injectable", style="dashed"];
+backend -> learning [label="", style="solid"];
+learning -> registry [label="model artifact", style="solid"];
+}

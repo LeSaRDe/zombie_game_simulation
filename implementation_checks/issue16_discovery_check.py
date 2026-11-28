@@ -1,6 +1,12 @@
 """Verify registration costs and audit retention without reconstructing scenes."""
 from __future__ import annotations
 
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
+
 import hashlib
 import json
 from pathlib import Path
@@ -82,7 +88,7 @@ def main():
         assert before == {str(path): digest(path) for path in files}
         report["checks"].append("All source manifests and SQLite history bytes retained")
         report["passed"] = True
-    output = Path("artifacts/issue16-discovery.json")
+    output = artifact_output(Path("artifacts/issue16-discovery.json"))
     output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 

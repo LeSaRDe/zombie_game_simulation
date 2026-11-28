@@ -1,3 +1,4 @@
+const {fillExact}=require('./verification_time_helpers.cjs');
 /* I07: real cohort creation and history inspection, checked against full snapshots. */
 const {chromium, firefox} = require('playwright');
 const fs = require('node:fs');
@@ -48,7 +49,7 @@ const {randomUUID} = require('node:crypto');
       if (wait) await aligned(run);
     };
     const seek = async time => {
-      await page.getByTestId('replay-exact-time').fill(String(time));
+      await fillExact(page,'replay-exact-time',time);
       await page.getByTestId('replay-seek').click();
     };
     const capture = async (label,run) => {
@@ -61,8 +62,10 @@ const {randomUUID} = require('node:crypto');
         const card = page.locator(`[data-cohort-id="${row.definition.id}"]`);
         assert.equal(await card.getByTestId('cohort-count').innerText(),String(row.denominator));
         assert.deepEqual((await card.getByTestId('cohort-members').locator('code').allTextContents()).sort(),[...row.members].sort());
-        assert.equal(await card.getByTestId('cohort-reference').innerText(),`Reference: ${row.definition.reference_time} s · revision ${row.definition.reference_revision}`);
-        assert.equal(await card.getByTestId('cohort-measurement').innerText(),`Measured through ${data.cursor.time} s · revision ${data.cursor.revision}`);
+        assert.equal(await card.getByTestId('cohort-reference').locator('.time-value').getAttribute('data-exact-time'),String(row.definition.reference_time));
+        assert((await card.getByTestId('cohort-reference').innerText()).endsWith(` · revision ${row.definition.reference_revision}`));
+        assert.equal(await card.getByTestId('cohort-measurement').locator('.time-value').getAttribute('data-exact-time'),String(data.cursor.time));
+        assert((await card.getByTestId('cohort-measurement').innerText()).endsWith(` · revision ${data.cursor.revision}`));
         assert.equal(await card.getByTestId('cohort-populations').innerText(),`${row.populations.healthy} healthy · ${row.populations.infected} infected · ${row.populations.zombies} zombies · ${row.populations.dead} dead`);
         for (const metric of ['life','stamina']) {
           const value = card.getByTestId(`cohort-mean-${metric}`);

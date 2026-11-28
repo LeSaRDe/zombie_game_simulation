@@ -5,6 +5,12 @@ read/native work; the service terminates only its own read-only children. Writer
 SIGSTOP models an atomic checkpoint delay and is always resumed by this driver.
 """
 from __future__ import annotations
+
+try:
+    from implementation_checks.check_output import artifact_output
+except ModuleNotFoundError:
+    from check_output import artifact_output
+
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stdout
 import hashlib
@@ -223,7 +229,7 @@ def foreground(scratch,output):
 
 
 def main():
-    output=ROOT/'artifacts/issue12';output.mkdir(exist_ok=True)
+    output=artifact_output(ROOT/'artifacts/issue12');output.mkdir(exist_ok=True)
     scratch=Path(tempfile.mkdtemp(prefix='zombie-i12-check-'))
     report={'status':'RUNNING','scratch':str(scratch),'checks':{},'limitations':['Baseline initializes all 1000 agents at time 0; this is not an 1800-second baseline performance claim.','Reader/native stalls use exact owned child SIGSTOP; authoritative writer is resumed rather than killed.']}
     try:

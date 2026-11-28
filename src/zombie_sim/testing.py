@@ -7,7 +7,7 @@ explicit boundary between the suite's normalized wire schema and production API.
 from __future__ import annotations
 
 from copy import deepcopy
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from fractions import Fraction
 import json
 import math
@@ -89,7 +89,7 @@ def fixture_config(setup, config=None):
 
 def _wire(value,aliases=None,key=None):
     aliases=aliases or {}
-    if isinstance(value,dict):
+    if isinstance(value,Mapping):
         return {aliases.get(k,k):_wire(v,aliases,k) for k,v in value.items()}
     if isinstance(value,Sequence) and not isinstance(value,(str,bytes)):return [_wire(v,aliases,key) for v in value]
     if isinstance(value,str):return aliases.get(value,value)
@@ -164,16 +164,8 @@ def normalize_trace(sim,aliases=None):
 class ControlledSimulation(Simulation):
     """Keyed random-value injection; ordinary engine computes every probability."""
     def __init__(self,*args,draws=None,**kwargs):
-        self._acceptance_draw_values={(str(d["intent"]),d["channel"]):float(Fraction(str(d["value"]))) for d in (draws or [])}
-        if any(not 0<=value<1 for value in self._acceptance_draw_values.values()):raise ValueError("Injected random values must lie in [0,1)")
         super().__init__(*args,**kwargs)
-
-    def _random(self,domain,key):
-        occurrence=getattr(self,"occurrences",{}).get(key,{})
-        token=(str(occurrence.get("intent_id",key)),domain)
-        if domain in {"hit","infection"} and token in self._acceptance_draw_values:
-            return self._acceptance_draw_values[token]
-        return super()._random(domain,key)
+        self.inject_random_values(draws or [])
 
 
 class FrameworkTestAdapter:

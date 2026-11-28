@@ -2,73 +2,66 @@
 from __future__ import annotations
 from copy import deepcopy
 from fractions import Fraction
+from functools import lru_cache
 from .registry import ROLES, TYPE_ACTIONS
+from .domain_model import Agent, AgentState, RoleRegistry, TimedEffect
+from .domain_model.profiles import ProfileValues, ProfileResolver, HUMAN_PROFILE, ZOMBIE_PROFILE
 
 RESOURCES = ("FOOD", "MEDICAL_SUPPLY", "MATERIAL")
-TYPE_PROFILES = {
-    "Human": {"base_speed": 2.0, "base_sense_r": 40.0, "movement_cost": .10, "rest_rate": 4.0, "base_damage_resistance": 0.0, "max_life": 100, "max_stamina": 100.0, "hunger_rate": .05, "combat_skill": .35, "melee_damage": 16, "medical_skill": .20, "infection_resistance": .20, "carry_capacity": 10},
-    "Zombie": {"base_speed": 1.6, "base_sense_r": 35.0, "movement_cost": .08, "rest_rate": 3.0, "base_damage_resistance": 0.0, "max_life": 100, "max_stamina": 100.0, "attack_skill": .40, "virulence": .45, "claw_damage": 14, "bite_damage": 6, "feed_healing": 8, "feed_energy": 12.0},
-}
+TYPE_PROFILES = {"Human": HUMAN_PROFILE.to_record(), "Zombie": ZOMBIE_PROFILE.to_record()}
 
 
 def status(agent):
-    if agent["life"] == 0:
-        return "DEAD"
-    if agent["type"] == "Zombie":
-        return "ACTIVE"
-    return "INFECTED" if agent.get("infection_episode") else "HEALTHY"
+    state = agent.current_state if isinstance(agent, Agent) else agent
+    if isinstance(state, AgentState):
+        return state.status
+    return AgentState.classify(state.get("type"), state["life"], state.get("infection_episode"))
 
 
 def action_status(agent):
-    return "DEAD" if agent["life"] == 0 else "BUSY" if agent.get("active_action") else "IDLE"
+    state = agent.current_state if isinstance(agent, Agent) else agent
+    if isinstance(state, AgentState):
+        return state.action_status
+    return AgentState.classify_action(state["life"], state.get("active_action"))
 
 
 def capabilities(agent):
-    if agent["life"] == 0:
+    state = agent.current_state if isinstance(agent, Agent) else agent
+    if isinstance(state, AgentState):
+        return list(state.capabilities)
+    if state["life"] == 0:
         return []
-    return sorted(set(TYPE_ACTIONS[agent["type"]]) | set(ROLES.get(agent.get("role"), {}).get("actions", [])))
+    registry = RoleRegistry.default()
+    role = registry.get(state.get("role"))
+    return sorted(set(registry.type_capabilities(state["type"])) | set(role.actions if role else ()))
+
+
+@lru_cache(maxsize=2048)
+def _typed_profile_values(items):
+    return ProfileValues.from_record({key: float.fromhex(value) if kind is float else value
+                                      for key, kind, value in items})
+
+
+def _profile_source(record):
+    return _typed_profile_values(tuple((key, type(value), value.hex() if type(value) is float else value)
+                                       for key, value in record.items()))
 
 
 def profile(agent, time=None):
-    """Return freshly derived facts; callers cannot mutate canonical profile state."""
-    result = deepcopy(TYPE_PROFILES[agent["type"]])
-    result.update(agent.get("type_profile", {}))
-    role = ROLES.get(agent.get("role"), {})
-    result.update({k: v for k,v in role.items() if isinstance(v,(int,float)) and not isinstance(v,bool)})
-    result.update(agent.get("role_profile", {}))
-    result.update(agent.get("profile", {}))
-    result["speed"] = result["base_speed"]
-    result["sense_r"] = result["base_sense_r"]
-    result["damage_resistance"] = result["base_damage_resistance"]
-    result["rally_bonus"] = 0.0
-    if agent["type"] == "Human":
-        result["infection_resistance_effective"] = result["infection_resistance"]
-        if "carry_capacity" in agent:
-            result["carry_capacity"] = agent["carry_capacity"]
-    effects = agent.get("effects", {})
-    for effect in effects.values() if isinstance(effects,dict) else effects:
-        if not isinstance(effect,dict):
-            continue
-        if time is not None:
-            now=Fraction(str(time))
-            if now < Fraction(str(effect.get("start_at",0))) or (effect.get("end_at") is not None and now >= Fraction(str(effect["end_at"]))):
-                continue
-        kind = effect.get("kind",effect.get("type", "")).lower()
-        value = effect.get("value",effect.get("strength"))
-        if kind == "guard" and agent.get("role") == "WARRIOR":
-            result["damage_resistance"] = max(result["damage_resistance"],float(value if value is not None else effect.get("resistance",.6)))
-        elif kind == "recon" and agent.get("role") == "SCOUT":
-            result["sense_r"] = max(result["sense_r"],float(value if value is not None else effect.get("radius",85)))
-        elif kind == "prophylaxis" and agent["type"] == "Human":
-            result["infection_resistance_effective"] = max(result["infection_resistance_effective"],float(value if value is not None else effect.get("resistance",.8)))
-        elif kind in ("rally", "rallied") and agent["type"] == "Zombie":
-            result["rally_bonus"] = max(result["rally_bonus"],float(value if value is not None else effect.get("hit_bonus",.1)))
-    active = agent.get("active_action")
-    if agent.get("role") == "RUNNER" and isinstance(active,dict) and active.get("action",active.get("name")) == "dash":
-        result["speed"] *= result.get("dash_multiplier",1.5)
-    if agent["life"] == 0:
-        result["speed"] = result["sense_r"] = 0.0
-    return result
+    """Compatibility record boundary around the typed domain profile resolver."""
+    state = agent.current_state if isinstance(agent, Agent) else agent
+    if isinstance(state, AgentState):
+        return state.effective_profile(time).to_record()
+    effects = state.get("effects", {})
+    typed_effects = tuple(TimedEffect.from_record(effect) for effect in (effects.values() if isinstance(effects, dict) else effects) if isinstance(effect, dict))
+    active = state.get("active_action")
+    action = active.get("action", active.get("name")) if isinstance(active, dict) else None
+    return ProfileResolver.resolve(state["type"], state["life"], RoleRegistry.default().get(state.get("role")),
+        type_profile=_profile_source(state.get("type_profile", {})),
+        role_profile=_profile_source(state.get("role_profile", {})),
+        individual_profile=_profile_source(state.get("profile", {})),
+        carry_capacity=state.get("carry_capacity"), effects=typed_effects, at=time,
+        current_action=action).to_record()
 
 
 def decision_model_assignment(model_id,version=None,parameters=None,*,agent_type=None):
@@ -97,27 +90,54 @@ def decision_model_assignment(model_id,version=None,parameters=None,*,agent_type
     return result
 
 
+class AgentFactory:
+    """Create canonical agent records from a validated catalog and model resolver.
+
+    Identity, biology, role and controller assignment remain separate fields.
+    A custom assignment resolver can be supplied without changing agent schema.
+    """
+
+    def __init__(self, catalog=None, assignment_resolver=None):
+        from .registry import DEFAULT_CATALOG
+        self.catalog = DEFAULT_CATALOG if catalog is None else catalog
+        self.roles = RoleRegistry.from_catalog(self.catalog)
+        self.assignment_resolver = assignment_resolver or decision_model_assignment
+
+    def create(self, identifier, kind="Human", role=None, **overrides):
+        agent = {"id": str(identifier), "type": kind, "role": role, "life": 100,
+                 "stamina": 100.0, "x": 0.0, "y": 0.0, "created_at": "0",
+                 "infection_episode": None, "cooldowns": {}, "effects": {},
+                 "active_action": None, "model_assignment": None,
+                 "profile": {}, "last_state_event_id": "initialization", "revision": 0}
+        if kind == "Human":
+            agent.update(hunger=20.0,inventory={r:0 for r in RESOURCES},reserved={r:0 for r in RESOURCES},carry_capacity=self.catalog.roles.get(role,{}).get("carry_capacity",10),starvation_started_at=None,next_starvation_damage_at=None)
+            if role == "DOCTOR":
+                agent["inventory"]["MEDICAL_SUPPLY"] = 1
+            elif role == "ENGINEER":
+                agent["inventory"]["MATERIAL"] = 1
+        elif role == "SPITTER":
+            agent.update(spit_charges=self.catalog.roles[role]["max_spit_charges"],reserved_charges=0,next_charge_at=None)
+        agent.update(deepcopy(overrides))
+        if "model_assignment" not in overrides:
+            agent["model_assignment"]=self.assignment_resolver(kind+"DefaultModel",agent_type=kind)
+        elif isinstance(agent["model_assignment"],dict) and agent["model_assignment"].get("model_id"):
+            assignment=agent["model_assignment"]
+            agent["model_assignment"]={**assignment,**self.assignment_resolver(assignment["model_id"],assignment.get("version"),assignment.get("parameters"),agent_type=kind)}
+        if kind == "Human":
+            agent["inventory"] = {r:agent["inventory"].get(r,0) for r in RESOURCES}
+            agent["reserved"] = {r:agent["reserved"].get(r,0) for r in RESOURCES}
+        # Scenario seeds are consumed by initial_state before an agent enters
+        # the world. They are not durable biological-state properties.
+        initialization = {key: agent.pop(key) for key in ("initial_infection",) if key in agent}
+        return {**AgentState.from_record(agent, roles=self.roles, trusted=True).to_record(), **initialization}
+
+    def create_agent(self, identifier, run_id, kind="Human", role=None, **overrides):
+        """Create a run-scoped typed entity; ``create`` retains the record API."""
+        return Agent.from_record(self.create(identifier, kind, role, **overrides), run_id, roles=self.roles)
+
+
+DEFAULT_AGENT_FACTORY = AgentFactory()
+
+
 def make_agent(identifier, kind="Human", role=None, **overrides):
-    agent = {"id": str(identifier), "type": kind, "role": role, "life": 100,
-             "stamina": 100.0, "x": 0.0, "y": 0.0, "created_at": "0",
-             "infection_episode": None, "cooldowns": {}, "effects": {},
-             "active_action": None, "model_assignment": None,
-             "profile": {}, "last_state_event_id": "initialization", "revision": 0}
-    if kind == "Human":
-        agent.update(hunger=20.0,inventory={r:0 for r in RESOURCES},reserved={r:0 for r in RESOURCES},carry_capacity=ROLES.get(role,{}).get("carry_capacity",10),starvation_started_at=None,next_starvation_damage_at=None)
-        if role == "DOCTOR":
-            agent["inventory"]["MEDICAL_SUPPLY"] = 1
-        elif role == "ENGINEER":
-            agent["inventory"]["MATERIAL"] = 1
-    elif role == "SPITTER":
-        agent.update(spit_charges=ROLES[role]["max_spit_charges"],reserved_charges=0,next_charge_at=None)
-    agent.update(deepcopy(overrides))
-    if "model_assignment" not in overrides:
-        agent["model_assignment"]=decision_model_assignment(kind+"DefaultModel",agent_type=kind)
-    elif isinstance(agent["model_assignment"],dict) and agent["model_assignment"].get("model_id"):
-        assignment=agent["model_assignment"]
-        agent["model_assignment"]={**assignment,**decision_model_assignment(assignment["model_id"],assignment.get("version"),assignment.get("parameters"),agent_type=kind)}
-    if kind == "Human":
-        agent["inventory"] = {r:agent["inventory"].get(r,0) for r in RESOURCES}
-        agent["reserved"] = {r:agent["reserved"].get(r,0) for r in RESOURCES}
-    return agent
+    return DEFAULT_AGENT_FACTORY.create(identifier, kind, role, **overrides)
